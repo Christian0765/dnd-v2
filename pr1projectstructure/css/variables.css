@@ -1,0 +1,57 @@
+:root {
+  /* ── Colors ── */
+  --parchment:       #f5ead2;
+  --parchment-dark:  #e8d5a8;
+  --parchment-mid:   #f2e6cc;
+  --parchment-light: #fdf4e0;
+  --ink:             #1a1208;
+  --ink-light:       #4a3520;
+  --red:             #7a1515;
+  --gold:            #9a7000;
+  --gold-light:      #c4920a;
+  --accent:          #c4920a;
+  --accent-rgb:      196,146,10;
+  --border:          #7a5a28;
+  --border-light:    #b08840;
+  --green:           #285a18;
+  --bg:              #111008;
+  --shadow-deep:     #080604;
+
+  /* ── Dark header/modal backgrounds ── */
+  --header-bg-1:     #1f1006;
+  --header-bg-2:     #0d0802;
+  --modal-bg-1:      #1a1208;
+  --modal-bg-2:      #0d0a05;
+  --modal-text:      #ffffff;
+
+  /* ── RGB values for rgba() usage ── */
+  --border-rgb:      122,90,40;
+  --danger-rgb:      122,21,21;
+  --success-rgb:     40,90,24;
+  --accent-rgb:      196,146,10;
+  --light-text-rgb:  245,230,200;
+
+  /* ── Semantic aliases ── */
+  --danger-color:    #7a1515;
+  --success-color:   #285a18;
+  --stat-color:      #7a1515;
+
+  /* ── Gradients ── */
+  --bg-gradient:     radial-gradient(ellipse at 50% 0%, #2a1a06 0%, #080604 100%);
+  --sheet-bg:        linear-gradient(160deg, #f5ead2 0%, #e8d5a8 50%, #f2e6cc 100%);
+  --ability-bg:      linear-gradient(135deg, #fdf4e0 60%, #e8d5a8 100%);
+  --item-card-bg:    linear-gradient(135deg, #fdf4e0 60%, #e8d5a8 100%);
+
+  /* ── Typography ── */
+  --font-heading:    'Cinzel', serif;
+  --font-body:       'Crimson Text', serif;
+
+  /* ── Spacing ── */
+  --radius-sm:       2px;
+  --radius-md:       3px;
+  --radius-lg:       5px;
+
+  /* ── Transitions ── */
+  --transition-fast: 0.15s ease;
+  --transition-med:  0.25s ease;
+}

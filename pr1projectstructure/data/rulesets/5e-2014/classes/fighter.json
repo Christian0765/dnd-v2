@@ -1,0 +1,69 @@
+{
+  "name": "Fighter",
+  "hitDie": "d10",
+  "primaryAbility": "str",
+  "savingThrows": ["str", "con"],
+  "proficiencies": {
+    "armor": ["Heavy", "Medium", "Light", "Shields"],
+    "weapons": ["Martial", "Simple"],
+    "tools": [],
+    "skills": ["Choose 2: Acrobatics, Animal Handling, Athletics, History, Insight, Intimidation, Perception, Survival"]
+  },
+  "features": [
+    {
+      "level": 1,
+      "name": "Second Wind",
+      "category": "action",
+      "formula": "1d10 + {level}",
+      "recharge": "Short rest",
+      "description": "Bonus action: regain HP equal to 1d10 + your fighter level. Once per short or long rest."
+    },
+    {
+      "level": 2,
+      "name": "Action Surge",
+      "category": "action",
+      "recharge": "Short rest",
+      "description": "Take one additional action on your turn. Once per short rest. Twice at level 17."
+    },
+    {
+      "level": 3,
+      "name": "Superiority Dice",
+      "category": "maneuver",
+      "die": "d8",
+      "countByLevel": { "3": 4, "7": 5, "10": 5, "15": 6, "18": 6 },
+      "recharge": "Short rest",
+      "description": "Spend superiority dice to fuel maneuvers. Die size increases to d10 at level 10 and d12 at level 18."
+    },
+    {
+      "level": 3,
+      "name": "Precision Attack",
+      "category": "maneuver",
+      "description": "Spend 1 superiority die before attack. Add the result to the attack roll."
+    },
+    {
+      "level": 3,
+      "name": "Menacing Attack",
+      "category": "maneuver",
+      "description": "On a hit, spend 1 superiority die. Add to damage. Target must make WIS save or be Frightened."
+    },
+    {
+      "level": 3,
+      "name": "Pushing Attack",
+      "category": "maneuver",
+      "description": "On a hit, spend 1 superiority die. Add to damage. Target must make STR save or be pushed 15 ft."
+    },
+    {
+      "level": 7,
+      "name": "Know Your Enemy",
+      "category": "passive",
+      "description": "Spend 1 minute observing a creature. DM compares two stats to yours."
+    },
+    {
+      "level": 1,
+      "name": "Two Weapon Fighting",
+      "category": "fighting-style",
+      "description": "Add your ability modifier to the damage of off-hand attacks."
+    }
+  ],
+  "spellcasting": null
+}
