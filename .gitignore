@@ -1,0 +1,11 @@
+supabase-config.js
+serviceAccountKey.json
+migrate-to-supabase.js
+node_modules/
+package-lock.json
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+HANDOFF/
+My Personal Notes/
