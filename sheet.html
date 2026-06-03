@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>D&D Tracker — Character Sheet</title>
+  <title>D&amp;D Tracker — Character Sheet</title>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;900&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/variables.css">
   <link rel="stylesheet" href="css/base.css">
@@ -17,6 +17,12 @@
   <script src="js/auth.js"></script>
   <script src="js/utils.js"></script>
   <style>
+    /* ── Sheet-specific variables ── */
+    :root {
+      --shown-color: #5a9a3a;
+      --shown-bg:    rgba(90,154,58,0.1);
+    }
+
     /* ── Body offset for fixed top bar ── */
     body {
       padding-top: 48px;
@@ -712,6 +718,211 @@
       border-radius: 20px;
       padding: 2px 7px;
     }
+
+    /* ══════════════════════════════════════
+       CUSTOMISE SYSTEM
+    ══════════════════════════════════════ */
+
+    /* ── Customise Modal max-width override ── */
+    #customise-modal .modal-box {
+      max-width: 500px;
+    }
+
+    /* ── Customise Tabs ── */
+    .cust-tab-bar {
+      display: flex;
+      border-bottom: 1px solid rgba(var(--border-rgb), 0.3);
+      margin-bottom: 16px;
+    }
+    .cust-tab {
+      font-family: var(--font-heading);
+      font-size: 0.6rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      padding: 8px 0;
+      flex: 1;
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--border-light);
+      cursor: pointer;
+      transition: all 0.15s;
+      margin-bottom: -1px;
+    }
+    .cust-tab.active {
+      color: var(--gold-light);
+      border-bottom-color: var(--gold);
+    }
+    .cust-panel {
+      display: none;
+    }
+    .cust-panel.active {
+      display: block;
+    }
+
+    /* ── Appearance Swatches ── */
+    .swatch-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+      align-items: center;
+    }
+    .swatch {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+    .swatch.selected {
+      border-color: white;
+      transform: scale(1.15);
+    }
+
+    /* ── Color Picker Input ── */
+    .color-picker-input {
+      width: 28px;
+      height: 28px;
+      border: 2px solid rgba(var(--border-rgb), 0.4);
+      border-radius: 50%;
+      cursor: pointer;
+      padding: 1px;
+      background: none;
+      flex-shrink: 0;
+      outline: none;
+    }
+
+    /* ── Appearance / Layout Section Labels ── */
+    .cust-section-label {
+      font-family: var(--font-heading);
+      font-size: 0.54rem;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--gold-light);
+      border-bottom: 1px solid var(--gold);
+      padding-bottom: 3px;
+      margin-bottom: 10px;
+      margin-top: 16px;
+    }
+    .cust-section-label:first-child {
+      margin-top: 0;
+    }
+
+    /* ── Visibility Toggle ── */
+    .visibility-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 7px 0;
+      border-bottom: 1px solid rgba(var(--border-rgb), 0.15);
+    }
+    .visibility-name {
+      font-family: var(--font-heading);
+      font-size: 0.6rem;
+      color: var(--border-light);
+    }
+    .visibility-pill {
+      font-family: var(--font-heading);
+      font-size: 0.48rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 3px 10px;
+      border-radius: 20px;
+      border: 1px solid;
+      cursor: pointer;
+      background: none;
+      transition: all 0.15s;
+    }
+    .visibility-pill.shown {
+      color: var(--shown-color);
+      border-color: var(--shown-color);
+      background: var(--shown-bg);
+    }
+    .visibility-pill.hidden {
+      color: rgba(var(--border-rgb), 0.6);
+      border-color: rgba(var(--border-rgb), 0.3);
+      background: transparent;
+    }
+
+    /* ── Layout Editing Controls ── */
+    .layout-edit-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 4px;
+    }
+    .reset-btn {
+      font-family: var(--font-heading);
+      font-size: 0.52rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--border-light);
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 5px 12px;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: all 0.15s;
+      display: inline-block;
+    }
+    .reset-btn:hover {
+      color: var(--gold-light);
+      border-color: var(--gold);
+    }
+
+    /* ── Sheet Section Wrappers ── */
+    .sheet-section-wrap {
+      position: relative;
+    }
+
+    /* ── Drag Handle ── */
+    .section-handle {
+      display: none;
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 32px;
+      align-items: center;
+      justify-content: center;
+      cursor: grab;
+      font-size: 1.1rem;
+      color: rgba(var(--accent-rgb), 0.45);
+      border-right: 1px solid rgba(var(--accent-rgb), 0.15);
+      user-select: none;
+    }
+    .section-handle:active {
+      cursor: grabbing;
+    }
+
+    /* ── Layout Editing Mode ── */
+    body.layout-editing .sheet-section-wrap {
+      position: relative;
+      border: 1.5px dashed rgba(var(--accent-rgb), 0.3);
+      border-radius: 5px;
+      padding-left: 36px;
+      margin-bottom: 8px;
+      transition: border-color 0.15s;
+    }
+    body.layout-editing .sheet-section-wrap:hover {
+      border-color: rgba(var(--accent-rgb), 0.65);
+    }
+    body.layout-editing .sheet-section-wrap.dragging {
+      opacity: 0.4;
+    }
+    body.layout-editing .section-handle {
+      display: flex;
+    }
+    body.layout-editing .sheet-section-wrap.drag-over-top {
+      border-top: 3px solid var(--gold);
+    }
+    body.layout-editing .sheet-section-wrap.drag-over-bottom {
+      border-bottom: 3px solid var(--gold);
+    }
   </style>
 </head>
 <body>
@@ -732,7 +943,7 @@
 
     <div class="top-bar-right">
       <button class="btn btn-ghost" onclick="">⚔ Quests</button>
-      <button class="btn btn-ghost" onclick="">✦ Customise</button>
+      <button class="btn btn-ghost" onclick="openCustomiseModal()">✦ Customise</button>
     </div>
   </header>
 
@@ -773,452 +984,500 @@
   <div class="sheet-outer">
     <div class="sheet-body">
 
-      <!-- Ability Scores -->
-      <div class="sec">Ability Scores</div>
-      <div class="ability-grid">
-        <div class="ability-box">
-          <span class="ability-name">STR</span>
-          <span class="ability-mod">+0</span>
-          <span class="ability-score">(10)</span>
-        </div>
-        <div class="ability-box">
-          <span class="ability-name">DEX</span>
-          <span class="ability-mod">+0</span>
-          <span class="ability-score">(10)</span>
-        </div>
-        <div class="ability-box">
-          <span class="ability-name">CON</span>
-          <span class="ability-mod">+0</span>
-          <span class="ability-score">(10)</span>
-        </div>
-        <div class="ability-box">
-          <span class="ability-name">INT</span>
-          <span class="ability-mod">+0</span>
-          <span class="ability-score">(10)</span>
-        </div>
-        <div class="ability-box">
-          <span class="ability-name">WIS</span>
-          <span class="ability-mod">+0</span>
-          <span class="ability-score">(10)</span>
-        </div>
-        <div class="ability-box">
-          <span class="ability-name">CHA</span>
-          <span class="ability-mod">+0</span>
-          <span class="ability-score">(10)</span>
-        </div>
-      </div>
-
-      <!-- Combat Stats -->
-      <div class="sec">Combat</div>
-      <div class="combat-grid">
-        <div class="combat-box">
-          <span class="combat-label">Armor Class</span>
-          <span class="combat-value">10</span>
-        </div>
-        <div class="combat-box">
-          <span class="combat-label">Initiative</span>
-          <span class="combat-value">+0</span>
-        </div>
-        <div class="combat-box">
-          <span class="combat-label">Speed</span>
-          <span class="combat-value">30 ft</span>
-        </div>
-        <div class="combat-box">
-          <span class="combat-label">Prof Bonus</span>
-          <span class="combat-value">+2</span>
-        </div>
-      </div>
-
-      <!-- Hit Points -->
-      <div class="sec">Hit Points</div>
-      <div class="hp-stat-row">
-        <div class="hp-stat-box">
-          <span class="hp-stat-label">Max HP</span>
-          <span class="hp-stat-value">10</span>
-        </div>
-        <div class="hp-stat-box">
-          <span class="hp-stat-label">Current HP</span>
-          <span class="hp-stat-value">10</span>
-        </div>
-      </div>
-      <div class="hp-bar-track">
-        <div class="hp-bar-fill hp-green" style="width:100%"></div>
-      </div>
-      <div class="hp-bar-label">10 / 10 HP</div>
-      <div class="hp-stat-row" style="margin-top:10px">
-        <div class="hp-stat-box">
-          <span class="hp-stat-label">Temp HP</span>
-          <span class="hp-stat-value-sm">0</span>
-        </div>
-        <div class="hp-stat-box">
-          <span class="hp-stat-label">Hit Dice</span>
-          <span class="hp-stat-value-sm">1 / 1 d8</span>
-        </div>
-      </div>
-
-      <!-- Death Saves -->
-      <div class="sec">Death Saves</div>
-      <div class="death-saves-row">
-        <div class="death-saves-group">
-          <span class="death-saves-label">Successes</span>
-          <div class="death-saves-boxes">
-            <div class="ds-box success"></div>
-            <div class="ds-box success"></div>
-            <div class="ds-box success"></div>
+      <!-- ── Ability Scores ── -->
+      <div class="sheet-section-wrap" id="section-ability-scores">
+        <div class="section-handle">⠿</div>
+        <div class="sec">Ability Scores</div>
+        <div class="ability-grid">
+          <div class="ability-box">
+            <span class="ability-name">STR</span>
+            <span class="ability-mod">+0</span>
+            <span class="ability-score">(10)</span>
           </div>
-        </div>
-        <div class="death-saves-group">
-          <span class="death-saves-label">Failures</span>
-          <div class="death-saves-boxes">
-            <div class="ds-box failure"></div>
-            <div class="ds-box failure"></div>
-            <div class="ds-box failure"></div>
+          <div class="ability-box">
+            <span class="ability-name">DEX</span>
+            <span class="ability-mod">+0</span>
+            <span class="ability-score">(10)</span>
+          </div>
+          <div class="ability-box">
+            <span class="ability-name">CON</span>
+            <span class="ability-mod">+0</span>
+            <span class="ability-score">(10)</span>
+          </div>
+          <div class="ability-box">
+            <span class="ability-name">INT</span>
+            <span class="ability-mod">+0</span>
+            <span class="ability-score">(10)</span>
+          </div>
+          <div class="ability-box">
+            <span class="ability-name">WIS</span>
+            <span class="ability-mod">+0</span>
+            <span class="ability-score">(10)</span>
+          </div>
+          <div class="ability-box">
+            <span class="ability-name">CHA</span>
+            <span class="ability-mod">+0</span>
+            <span class="ability-score">(10)</span>
           </div>
         </div>
       </div>
 
-      <!-- Saving Throws -->
-      <div class="sec">Saving Throws</div>
-      <div class="saves-list">
-        <div class="prof-row">
-          <div class="prof-circle"></div>
-          <span class="prof-bonus">+0</span>
-          <span class="prof-name">Strength</span>
-        </div>
-        <div class="prof-row">
-          <div class="prof-circle"></div>
-          <span class="prof-bonus">+0</span>
-          <span class="prof-name">Dexterity</span>
-        </div>
-        <div class="prof-row">
-          <div class="prof-circle"></div>
-          <span class="prof-bonus">+0</span>
-          <span class="prof-name">Constitution</span>
-        </div>
-        <div class="prof-row">
-          <div class="prof-circle"></div>
-          <span class="prof-bonus">+0</span>
-          <span class="prof-name">Intelligence</span>
-        </div>
-        <div class="prof-row">
-          <div class="prof-circle"></div>
-          <span class="prof-bonus">+0</span>
-          <span class="prof-name">Wisdom</span>
-        </div>
-        <div class="prof-row">
-          <div class="prof-circle"></div>
-          <span class="prof-bonus">+0</span>
-          <span class="prof-name">Charisma</span>
-        </div>
-      </div>
-
-      <!-- Skills -->
-      <div class="sec">Skills</div>
-      <div class="skills-list">
-        <div class="prof-row">
-          <div class="prof-circle"></div>
-          <span class="prof-bonus">+0</span>
-          <span class="prof-name">Acrobatics</span>
-          <span class="prof-ability">(DEX)</span>
-        </div>
-        <div class="prof-row">
-          <div class="prof-circle"></div>
-          <span class="prof-bonus">+0</span>
-          <span class="prof-name">Animal Handling</span>
-          <span class="prof-ability">(WIS)</span>
-        </div>
-        <div class="prof-row">
-          <div class="prof-circle"></div>
-          <span class="prof-bonus">+0</span>
-          <span class="prof-name">Arcana</span>
-          <span class="prof-ability">(INT)</span>
-        </div>
-        <div class="prof-row">
-          <div class="prof-circle"></div>
-          <span class="prof-bonus">+0</span>
-          <span class="prof-name">Athletics</span>
-          <span class="prof-ability">(STR)</span>
-        </div>
-        <div class="prof-row">
-          <div class="prof-circle"></div>
-          <span class="prof-bonus">+0</span>
-          <span class="prof-name">Deception</span>
-          <span class="prof-ability">(CHA)</span>
-        </div>
-        <div class="prof-row">
-          <div class="prof-circle"></div>
-          <span class="prof-bonus">+0</span>
-          <span class="prof-name">History</span>
-          <span class="prof-ability">(INT)</span>
-        </div>
-        <div class="prof-row">
-          <div class="prof-circle"></div>
-          <span class="prof-bonus">+0</span>
-          <span class="prof-name">Insight</span>
-          <span class="prof-ability">(WIS)</span>
-        </div>
-        <div class="prof-row">
-          <div class="prof-circle"></div>
-          <span class="prof-bonus">+0</span>
-          <span class="prof-name">Intimidation</span>
-          <span class="prof-ability">(CHA)</span>
-        </div>
-        <div class="prof-row">
-          <div class="prof-circle"></div>
-          <span class="prof-bonus">+0</span>
-          <span class="prof-name">Investigation</span>
-          <span class="prof-ability">(INT)</span>
-        </div>
-        <div class="prof-row">
-          <div class="prof-circle"></div>
-          <span class="prof-bonus">+0</span>
-          <span class="prof-name">Medicine</span>
-          <span class="prof-ability">(WIS)</span>
-        </div>
-        <div class="prof-row">
-          <div class="prof-circle"></div>
-          <span class="prof-bonus">+0</span>
-          <span class="prof-name">Nature</span>
-          <span class="prof-ability">(INT)</span>
-        </div>
-        <div class="prof-row">
-          <div class="prof-circle"></div>
-          <span class="prof-bonus">+0</span>
-          <span class="prof-name">Perception</span>
-          <span class="prof-ability">(WIS)</span>
-        </div>
-        <div class="prof-row">
-          <div class="prof-circle"></div>
-          <span class="prof-bonus">+0</span>
-          <span class="prof-name">Performance</span>
-          <span class="prof-ability">(CHA)</span>
-        </div>
-        <div class="prof-row">
-          <div class="prof-circle"></div>
-          <span class="prof-bonus">+0</span>
-          <span class="prof-name">Persuasion</span>
-          <span class="prof-ability">(CHA)</span>
-        </div>
-        <div class="prof-row">
-          <div class="prof-circle"></div>
-          <span class="prof-bonus">+0</span>
-          <span class="prof-name">Religion</span>
-          <span class="prof-ability">(INT)</span>
-        </div>
-        <div class="prof-row">
-          <div class="prof-circle"></div>
-          <span class="prof-bonus">+0</span>
-          <span class="prof-name">Sleight of Hand</span>
-          <span class="prof-ability">(DEX)</span>
-        </div>
-        <div class="prof-row">
-          <div class="prof-circle"></div>
-          <span class="prof-bonus">+0</span>
-          <span class="prof-name">Stealth</span>
-          <span class="prof-ability">(DEX)</span>
-        </div>
-        <div class="prof-row">
-          <div class="prof-circle"></div>
-          <span class="prof-bonus">+0</span>
-          <span class="prof-name">Survival</span>
-          <span class="prof-ability">(WIS)</span>
-        </div>
-      </div>
-      <div class="passive-perception-row">
-        <span class="passive-perception-label">Passive Perception</span>
-        <span class="passive-perception-value">10</span>
-      </div>
-
-      <!-- Weapons -->
-      <div class="sec">Weapons</div>
-      <table class="weapons-table">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Atk Bonus</th>
-            <th>Damage</th>
-            <th>Type</th>
-            <th>Range</th>
-            <th>Notes</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Shortsword</td>
-            <td>+2</td>
-            <td>1d6+0</td>
-            <td>Piercing</td>
-            <td>5 ft</td>
-            <td></td>
-          </tr>
-        </tbody>
-      </table>
-      <button class="btn btn-gold" onclick="openModal('weapon-modal')">＋ Add Weapon</button>
-
-      <!-- Features & Traits -->
-      <div class="sec">Features &amp; Traits</div>
-      <div class="features-list">
-        <div class="feature-card">
-          <div class="feature-card-header">
-            <span class="feature-name">Second Wind</span>
-            <span class="feature-pill" style="background: var(--cat-action)">action</span>
+      <!-- ── Combat Stats ── -->
+      <div class="sheet-section-wrap" id="section-combat">
+        <div class="section-handle">⠿</div>
+        <div class="sec">Combat</div>
+        <div class="combat-grid">
+          <div class="combat-box">
+            <span class="combat-label">Armor Class</span>
+            <span class="combat-value">10</span>
           </div>
-          <div class="feature-recharge">Short rest</div>
-          <div class="feature-desc">Bonus action: regain 1d10 + level HP.</div>
-        </div>
-        <div class="feature-card">
-          <div class="feature-card-header">
-            <span class="feature-name">Darkvision</span>
-            <span class="feature-pill" style="background: var(--cat-passive)">passive</span>
+          <div class="combat-box">
+            <span class="combat-label">Initiative</span>
+            <span class="combat-value">+0</span>
           </div>
-          <div class="feature-desc">See in darkness up to 60 ft.</div>
-        </div>
-      </div>
-      <button class="btn btn-gold" onclick="openModal('feature-modal')">＋ Add Feature</button>
-
-      <!-- Proficiencies & Languages -->
-      <div class="sec">Proficiencies &amp; Languages</div>
-      <div class="form-field">
-        <label class="form-label">Proficiencies</label>
-        <textarea class="form-input" rows="3" style="resize:vertical">Light armor, medium armor, shields, simple weapons, martial weapons</textarea>
-      </div>
-      <div class="form-field">
-        <label class="form-label">Languages</label>
-        <textarea class="form-input" rows="2" style="resize:vertical">Common, Elvish</textarea>
-      </div>
-
-      <!-- Equipment -->
-      <div class="sec">Equipment</div>
-      <div class="form-field">
-        <label class="form-label">Carried Equipment</label>
-        <textarea class="form-input" rows="4" style="resize:vertical">Backpack, bedroll, rope (50 ft), torch x5, rations x5</textarea>
-      </div>
-
-      <!-- Currency -->
-      <div class="sec">Currency</div>
-      <div class="currency-row">
-        <div class="currency-box">
-          <span class="currency-label">CP</span>
-          <span class="currency-value">0</span>
-        </div>
-        <div class="currency-box">
-          <span class="currency-label">SP</span>
-          <span class="currency-value">0</span>
-        </div>
-        <div class="currency-box">
-          <span class="currency-label">EP</span>
-          <span class="currency-value">0</span>
-        </div>
-        <div class="currency-box">
-          <span class="currency-label">GP</span>
-          <span class="currency-value">10</span>
-        </div>
-        <div class="currency-box">
-          <span class="currency-label">PP</span>
-          <span class="currency-value">0</span>
+          <div class="combat-box">
+            <span class="combat-label">Speed</span>
+            <span class="combat-value">30 ft</span>
+          </div>
+          <div class="combat-box">
+            <span class="combat-label">Prof Bonus</span>
+            <span class="combat-value">+2</span>
+          </div>
         </div>
       </div>
 
-      <!-- Personality -->
-      <div class="sec">Personality</div>
-      <div class="personality-grid">
+      <!-- ── Hit Points ── -->
+      <div class="sheet-section-wrap" id="section-hp">
+        <div class="section-handle">⠿</div>
+        <div class="sec">Hit Points</div>
+        <div class="hp-stat-row">
+          <div class="hp-stat-box">
+            <span class="hp-stat-label">Max HP</span>
+            <span class="hp-stat-value">10</span>
+          </div>
+          <div class="hp-stat-box">
+            <span class="hp-stat-label">Current HP</span>
+            <span class="hp-stat-value">10</span>
+          </div>
+        </div>
+        <div class="hp-bar-track">
+          <div class="hp-bar-fill hp-green" style="width:100%"></div>
+        </div>
+        <div class="hp-bar-label">10 / 10 HP</div>
+        <div class="hp-stat-row" style="margin-top:10px">
+          <div class="hp-stat-box">
+            <span class="hp-stat-label">Temp HP</span>
+            <span class="hp-stat-value-sm">0</span>
+          </div>
+          <div class="hp-stat-box">
+            <span class="hp-stat-label">Hit Dice</span>
+            <span class="hp-stat-value-sm">1 / 1 d8</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Death Saves ── -->
+      <div class="sheet-section-wrap" id="section-death-saves">
+        <div class="section-handle">⠿</div>
+        <div class="sec">Death Saves</div>
+        <div class="death-saves-row">
+          <div class="death-saves-group">
+            <span class="death-saves-label">Successes</span>
+            <div class="death-saves-boxes">
+              <div class="ds-box success"></div>
+              <div class="ds-box success"></div>
+              <div class="ds-box success"></div>
+            </div>
+          </div>
+          <div class="death-saves-group">
+            <span class="death-saves-label">Failures</span>
+            <div class="death-saves-boxes">
+              <div class="ds-box failure"></div>
+              <div class="ds-box failure"></div>
+              <div class="ds-box failure"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Saving Throws ── -->
+      <div class="sheet-section-wrap" id="section-saving-throws">
+        <div class="section-handle">⠿</div>
+        <div class="sec">Saving Throws</div>
+        <div class="saves-list">
+          <div class="prof-row">
+            <div class="prof-circle"></div>
+            <span class="prof-bonus">+0</span>
+            <span class="prof-name">Strength</span>
+          </div>
+          <div class="prof-row">
+            <div class="prof-circle"></div>
+            <span class="prof-bonus">+0</span>
+            <span class="prof-name">Dexterity</span>
+          </div>
+          <div class="prof-row">
+            <div class="prof-circle"></div>
+            <span class="prof-bonus">+0</span>
+            <span class="prof-name">Constitution</span>
+          </div>
+          <div class="prof-row">
+            <div class="prof-circle"></div>
+            <span class="prof-bonus">+0</span>
+            <span class="prof-name">Intelligence</span>
+          </div>
+          <div class="prof-row">
+            <div class="prof-circle"></div>
+            <span class="prof-bonus">+0</span>
+            <span class="prof-name">Wisdom</span>
+          </div>
+          <div class="prof-row">
+            <div class="prof-circle"></div>
+            <span class="prof-bonus">+0</span>
+            <span class="prof-name">Charisma</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Skills ── -->
+      <div class="sheet-section-wrap" id="section-skills">
+        <div class="section-handle">⠿</div>
+        <div class="sec">Skills</div>
+        <div class="skills-list">
+          <div class="prof-row">
+            <div class="prof-circle"></div>
+            <span class="prof-bonus">+0</span>
+            <span class="prof-name">Acrobatics</span>
+            <span class="prof-ability">(DEX)</span>
+          </div>
+          <div class="prof-row">
+            <div class="prof-circle"></div>
+            <span class="prof-bonus">+0</span>
+            <span class="prof-name">Animal Handling</span>
+            <span class="prof-ability">(WIS)</span>
+          </div>
+          <div class="prof-row">
+            <div class="prof-circle"></div>
+            <span class="prof-bonus">+0</span>
+            <span class="prof-name">Arcana</span>
+            <span class="prof-ability">(INT)</span>
+          </div>
+          <div class="prof-row">
+            <div class="prof-circle"></div>
+            <span class="prof-bonus">+0</span>
+            <span class="prof-name">Athletics</span>
+            <span class="prof-ability">(STR)</span>
+          </div>
+          <div class="prof-row">
+            <div class="prof-circle"></div>
+            <span class="prof-bonus">+0</span>
+            <span class="prof-name">Deception</span>
+            <span class="prof-ability">(CHA)</span>
+          </div>
+          <div class="prof-row">
+            <div class="prof-circle"></div>
+            <span class="prof-bonus">+0</span>
+            <span class="prof-name">History</span>
+            <span class="prof-ability">(INT)</span>
+          </div>
+          <div class="prof-row">
+            <div class="prof-circle"></div>
+            <span class="prof-bonus">+0</span>
+            <span class="prof-name">Insight</span>
+            <span class="prof-ability">(WIS)</span>
+          </div>
+          <div class="prof-row">
+            <div class="prof-circle"></div>
+            <span class="prof-bonus">+0</span>
+            <span class="prof-name">Intimidation</span>
+            <span class="prof-ability">(CHA)</span>
+          </div>
+          <div class="prof-row">
+            <div class="prof-circle"></div>
+            <span class="prof-bonus">+0</span>
+            <span class="prof-name">Investigation</span>
+            <span class="prof-ability">(INT)</span>
+          </div>
+          <div class="prof-row">
+            <div class="prof-circle"></div>
+            <span class="prof-bonus">+0</span>
+            <span class="prof-name">Medicine</span>
+            <span class="prof-ability">(WIS)</span>
+          </div>
+          <div class="prof-row">
+            <div class="prof-circle"></div>
+            <span class="prof-bonus">+0</span>
+            <span class="prof-name">Nature</span>
+            <span class="prof-ability">(INT)</span>
+          </div>
+          <div class="prof-row">
+            <div class="prof-circle"></div>
+            <span class="prof-bonus">+0</span>
+            <span class="prof-name">Perception</span>
+            <span class="prof-ability">(WIS)</span>
+          </div>
+          <div class="prof-row">
+            <div class="prof-circle"></div>
+            <span class="prof-bonus">+0</span>
+            <span class="prof-name">Performance</span>
+            <span class="prof-ability">(CHA)</span>
+          </div>
+          <div class="prof-row">
+            <div class="prof-circle"></div>
+            <span class="prof-bonus">+0</span>
+            <span class="prof-name">Persuasion</span>
+            <span class="prof-ability">(CHA)</span>
+          </div>
+          <div class="prof-row">
+            <div class="prof-circle"></div>
+            <span class="prof-bonus">+0</span>
+            <span class="prof-name">Religion</span>
+            <span class="prof-ability">(INT)</span>
+          </div>
+          <div class="prof-row">
+            <div class="prof-circle"></div>
+            <span class="prof-bonus">+0</span>
+            <span class="prof-name">Sleight of Hand</span>
+            <span class="prof-ability">(DEX)</span>
+          </div>
+          <div class="prof-row">
+            <div class="prof-circle"></div>
+            <span class="prof-bonus">+0</span>
+            <span class="prof-name">Stealth</span>
+            <span class="prof-ability">(DEX)</span>
+          </div>
+          <div class="prof-row">
+            <div class="prof-circle"></div>
+            <span class="prof-bonus">+0</span>
+            <span class="prof-name">Survival</span>
+            <span class="prof-ability">(WIS)</span>
+          </div>
+        </div>
+        <div class="passive-perception-row">
+          <span class="passive-perception-label">Passive Perception</span>
+          <span class="passive-perception-value">10</span>
+        </div>
+      </div>
+
+      <!-- ── Weapons ── -->
+      <div class="sheet-section-wrap" id="section-weapons">
+        <div class="section-handle">⠿</div>
+        <div class="sec">Weapons</div>
+        <table class="weapons-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Atk Bonus</th>
+              <th>Damage</th>
+              <th>Type</th>
+              <th>Range</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Shortsword</td>
+              <td>+2</td>
+              <td>1d6+0</td>
+              <td>Piercing</td>
+              <td>5 ft</td>
+              <td></td>
+            </tr>
+          </tbody>
+        </table>
+        <button class="btn btn-gold" onclick="openModal('weapon-modal')">＋ Add Weapon</button>
+      </div>
+
+      <!-- ── Features & Traits ── -->
+      <div class="sheet-section-wrap" id="section-features">
+        <div class="section-handle">⠿</div>
+        <div class="sec">Features &amp; Traits</div>
+        <div class="features-list">
+          <div class="feature-card">
+            <div class="feature-card-header">
+              <span class="feature-name">Second Wind</span>
+              <span class="feature-pill" style="background: var(--cat-action)">action</span>
+            </div>
+            <div class="feature-recharge">Short rest</div>
+            <div class="feature-desc">Bonus action: regain 1d10 + level HP.</div>
+          </div>
+          <div class="feature-card">
+            <div class="feature-card-header">
+              <span class="feature-name">Darkvision</span>
+              <span class="feature-pill" style="background: var(--cat-passive)">passive</span>
+            </div>
+            <div class="feature-desc">See in darkness up to 60 ft.</div>
+          </div>
+        </div>
+        <button class="btn btn-gold" onclick="openModal('feature-modal')">＋ Add Feature</button>
+      </div>
+
+      <!-- ── Proficiencies & Languages ── -->
+      <div class="sheet-section-wrap" id="section-proficiencies">
+        <div class="section-handle">⠿</div>
+        <div class="sec">Proficiencies &amp; Languages</div>
         <div class="form-field">
-          <label class="form-label">Personality Traits</label>
-          <textarea class="form-input" rows="3" style="resize:vertical">I am always calm, no matter what the situation.</textarea>
+          <label class="form-label">Proficiencies</label>
+          <textarea class="form-input" rows="3" style="resize:vertical">Light armor, medium armor, shields, simple weapons, martial weapons</textarea>
         </div>
         <div class="form-field">
-          <label class="form-label">Ideals</label>
-          <textarea class="form-input" rows="3" style="resize:vertical">Greater Good. My gifts are meant to be shared with all.</textarea>
+          <label class="form-label">Languages</label>
+          <textarea class="form-input" rows="2" style="resize:vertical">Common, Elvish</textarea>
         </div>
+      </div>
+
+      <!-- ── Equipment ── -->
+      <div class="sheet-section-wrap" id="section-equipment">
+        <div class="section-handle">⠿</div>
+        <div class="sec">Equipment</div>
         <div class="form-field">
-          <label class="form-label">Bonds</label>
-          <textarea class="form-input" rows="3" style="resize:vertical">I protect those who cannot protect themselves.</textarea>
-        </div>
-        <div class="form-field">
-          <label class="form-label">Flaws</label>
-          <textarea class="form-input" rows="3" style="resize:vertical">I have a weakness for the vices of the city.</textarea>
+          <label class="form-label">Carried Equipment</label>
+          <textarea class="form-input" rows="4" style="resize:vertical">Backpack, bedroll, rope (50 ft), torch x5, rations x5</textarea>
         </div>
       </div>
 
-      <!-- Backstory -->
-      <div class="sec">Backstory</div>
-      <div class="form-field">
-        <label class="form-label">Character Backstory</label>
-        <textarea class="form-input" rows="6" style="resize:vertical">A wanderer from the northern lands...</textarea>
-      </div>
-
-      <!-- Conditions -->
-      <div class="sec">Conditions</div>
-      <div class="conditions-wrap">
-        <button class="condition-pill">Blinded</button>
-        <button class="condition-pill">Charmed</button>
-        <button class="condition-pill">Deafened</button>
-        <button class="condition-pill">Frightened</button>
-        <button class="condition-pill">Grappled</button>
-        <button class="condition-pill">Incapacitated</button>
-        <button class="condition-pill">Invisible</button>
-        <button class="condition-pill">Paralyzed</button>
-        <button class="condition-pill">Petrified</button>
-        <button class="condition-pill">Poisoned</button>
-        <button class="condition-pill">Prone</button>
-        <button class="condition-pill">Restrained</button>
-        <button class="condition-pill">Stunned</button>
-        <button class="condition-pill">Unconscious</button>
-      </div>
-      <div class="exhaustion-row">
-        <button class="exhaustion-btn" onclick="changeExhaustion(-1)">−</button>
-        <span class="exhaustion-label">Exhaustion: <span id="exhaustion-value">0</span></span>
-        <button class="exhaustion-btn" onclick="changeExhaustion(1)">＋</button>
-      </div>
-
-      <!-- Spell Slots -->
-      <div class="sec">Spell Slots</div>
-      <div class="slots-grid">
-        <div class="slot-box">
-          <span class="slot-level">1</span>
-          <span class="slot-count">2 / 2</span>
-          <div class="slot-pips">
-            <span class="slot-pip filled"></span>
-            <span class="slot-pip filled"></span>
+      <!-- ── Currency ── -->
+      <div class="sheet-section-wrap" id="section-currency">
+        <div class="section-handle">⠿</div>
+        <div class="sec">Currency</div>
+        <div class="currency-row">
+          <div class="currency-box">
+            <span class="currency-label">CP</span>
+            <span class="currency-value">0</span>
+          </div>
+          <div class="currency-box">
+            <span class="currency-label">SP</span>
+            <span class="currency-value">0</span>
+          </div>
+          <div class="currency-box">
+            <span class="currency-label">EP</span>
+            <span class="currency-value">0</span>
+          </div>
+          <div class="currency-box">
+            <span class="currency-label">GP</span>
+            <span class="currency-value">10</span>
+          </div>
+          <div class="currency-box">
+            <span class="currency-label">PP</span>
+            <span class="currency-value">0</span>
           </div>
         </div>
-        <div class="slot-box">
-          <span class="slot-level">2</span>
-          <span class="slot-count">0 / 0</span>
-          <div class="slot-pips"></div>
-        </div>
-        <div class="slot-box">
-          <span class="slot-level">3</span>
-          <span class="slot-count">0 / 0</span>
-          <div class="slot-pips"></div>
+      </div>
+
+      <!-- ── Personality ── -->
+      <div class="sheet-section-wrap" id="section-personality">
+        <div class="section-handle">⠿</div>
+        <div class="sec">Personality</div>
+        <div class="personality-grid">
+          <div class="form-field">
+            <label class="form-label">Personality Traits</label>
+            <textarea class="form-input" rows="3" style="resize:vertical">I am always calm, no matter what the situation.</textarea>
+          </div>
+          <div class="form-field">
+            <label class="form-label">Ideals</label>
+            <textarea class="form-input" rows="3" style="resize:vertical">Greater Good. My gifts are meant to be shared with all.</textarea>
+          </div>
+          <div class="form-field">
+            <label class="form-label">Bonds</label>
+            <textarea class="form-input" rows="3" style="resize:vertical">I protect those who cannot protect themselves.</textarea>
+          </div>
+          <div class="form-field">
+            <label class="form-label">Flaws</label>
+            <textarea class="form-input" rows="3" style="resize:vertical">I have a weakness for the vices of the city.</textarea>
+          </div>
         </div>
       </div>
 
-      <!-- Spells -->
-      <div class="sec">Spells</div>
-      <span class="spell-subsection-label">Cantrips</span>
-      <div class="cantrip-chips">
-        <span class="cantrip-chip">Eldritch Blast</span>
-        <span class="cantrip-chip">Minor Illusion</span>
-      </div>
-      <button class="btn btn-ghost" style="margin-bottom:14px">＋ Add Cantrip</button>
-      <span class="spell-subsection-label">Spells</span>
-      <div class="spells-list">
-        <div class="spell-card">
-          <span class="spell-name">Hex</span>
-          <span class="spell-level-badge">Lvl 1</span>
-        </div>
-        <div class="spell-card">
-          <span class="spell-name">Armor of Agathys</span>
-          <span class="spell-level-badge">Lvl 1</span>
+      <!-- ── Backstory ── -->
+      <div class="sheet-section-wrap" id="section-backstory">
+        <div class="section-handle">⠿</div>
+        <div class="sec">Backstory</div>
+        <div class="form-field">
+          <label class="form-label">Character Backstory</label>
+          <textarea class="form-input" rows="6" style="resize:vertical">A wanderer from the northern lands...</textarea>
         </div>
       </div>
-      <button class="btn btn-ghost">＋ Add Spell</button>
+
+      <!-- ── Conditions ── -->
+      <div class="sheet-section-wrap" id="section-conditions">
+        <div class="section-handle">⠿</div>
+        <div class="sec">Conditions</div>
+        <div class="conditions-wrap">
+          <button class="condition-pill">Blinded</button>
+          <button class="condition-pill">Charmed</button>
+          <button class="condition-pill">Deafened</button>
+          <button class="condition-pill">Frightened</button>
+          <button class="condition-pill">Grappled</button>
+          <button class="condition-pill">Incapacitated</button>
+          <button class="condition-pill">Invisible</button>
+          <button class="condition-pill">Paralyzed</button>
+          <button class="condition-pill">Petrified</button>
+          <button class="condition-pill">Poisoned</button>
+          <button class="condition-pill">Prone</button>
+          <button class="condition-pill">Restrained</button>
+          <button class="condition-pill">Stunned</button>
+          <button class="condition-pill">Unconscious</button>
+        </div>
+        <div class="exhaustion-row">
+          <button class="exhaustion-btn" onclick="changeExhaustion(-1)">−</button>
+          <span class="exhaustion-label">Exhaustion: <span id="exhaustion-value">0</span></span>
+          <button class="exhaustion-btn" onclick="changeExhaustion(1)">＋</button>
+        </div>
+      </div>
+
+      <!-- ── Spell Slots ── -->
+      <div class="sheet-section-wrap" id="section-spell-slots">
+        <div class="section-handle">⠿</div>
+        <div class="sec">Spell Slots</div>
+        <div class="slots-grid">
+          <div class="slot-box">
+            <span class="slot-level">1</span>
+            <span class="slot-count">2 / 2</span>
+            <div class="slot-pips">
+              <span class="slot-pip filled"></span>
+              <span class="slot-pip filled"></span>
+            </div>
+          </div>
+          <div class="slot-box">
+            <span class="slot-level">2</span>
+            <span class="slot-count">0 / 0</span>
+            <div class="slot-pips"></div>
+          </div>
+          <div class="slot-box">
+            <span class="slot-level">3</span>
+            <span class="slot-count">0 / 0</span>
+            <div class="slot-pips"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Spells ── -->
+      <div class="sheet-section-wrap" id="section-spells">
+        <div class="section-handle">⠿</div>
+        <div class="sec">Spells</div>
+        <span class="spell-subsection-label">Cantrips</span>
+        <div class="cantrip-chips">
+          <span class="cantrip-chip">Eldritch Blast</span>
+          <span class="cantrip-chip">Minor Illusion</span>
+        </div>
+        <button class="btn btn-ghost" style="margin-bottom:14px">＋ Add Cantrip</button>
+        <span class="spell-subsection-label">Spells</span>
+        <div class="spells-list">
+          <div class="spell-card">
+            <span class="spell-name">Hex</span>
+            <span class="spell-level-badge">Lvl 1</span>
+          </div>
+          <div class="spell-card">
+            <span class="spell-name">Armor of Agathys</span>
+            <span class="spell-level-badge">Lvl 1</span>
+          </div>
+        </div>
+        <button class="btn btn-ghost">＋ Add Spell</button>
+      </div>
 
     </div>
   </div>
 
-  <!-- Weapon Modal -->
+  <!-- ── Weapon Modal ── -->
   <div class="modal-overlay" id="weapon-modal">
     <div class="modal-box">
       <button class="modal-close" onclick="closeModal('weapon-modal')">✕</button>
@@ -1252,7 +1511,7 @@
     </div>
   </div>
 
-  <!-- Feature Modal -->
+  <!-- ── Feature Modal ── -->
   <div class="modal-overlay" id="feature-modal">
     <div class="modal-box">
       <button class="modal-close" onclick="closeModal('feature-modal')">✕</button>
@@ -1286,7 +1545,53 @@
     </div>
   </div>
 
+  <!-- ── Customise Modal ── -->
+  <div class="modal-overlay" id="customise-modal">
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeModal('customise-modal')">✕</button>
+      <div class="modal-title">✦ Customise</div>
+      <div class="modal-sub">Appearance &amp; Layout</div>
+
+      <!-- Tab bar -->
+      <div class="cust-tab-bar">
+        <button class="cust-tab active" data-tab="appearance" onclick="switchCustTab('appearance')">Appearance</button>
+        <button class="cust-tab" data-tab="layout" onclick="switchCustTab('layout')">Layout</button>
+      </div>
+
+      <!-- Appearance Panel -->
+      <div class="cust-panel active" id="cust-panel-appearance">
+
+        <div class="cust-section-label">Accent Color</div>
+        <div class="swatch-row" id="accent-swatches"></div>
+        <input type="color" id="accent-picker" class="color-picker-input" value="#c4920a" title="Custom color">
+
+        <div class="cust-section-label">Outer Background</div>
+        <div class="swatch-row" id="outer-bg-swatches"></div>
+
+        <div class="cust-section-label">Sheet Background</div>
+        <div class="swatch-row" id="sheet-bg-swatches"></div>
+
+      </div>
+
+      <!-- Layout Panel -->
+      <div class="cust-panel" id="cust-panel-layout">
+
+        <div class="cust-section-label">Section Visibility</div>
+        <div id="visibility-list"></div>
+
+        <div class="cust-section-label">Section Order</div>
+        <div class="layout-edit-controls">
+          <button class="btn btn-ghost" id="layout-edit-btn" onclick="toggleLayoutEditing()">⠿ Enable Layout Editing</button>
+          <button class="reset-btn" onclick="resetSectionOrder()">↺ Reset to Default Order</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
   <script>
+    // ─── Existing functionality (unchanged) ─────────────────────────────────
+
     // Death save checkbox toggle
     document.querySelectorAll('.ds-box').forEach(box => {
       box.addEventListener('click', () => {
@@ -1336,6 +1641,331 @@
         pip.classList.toggle('used');
       });
     });
+
+    // ─── Customise System ────────────────────────────────────────────────────
+
+    const LS_APPEARANCE = 'sheet-appearance';
+    const LS_HIDDEN     = 'sheet-hidden-sections';
+    const LS_ORDER      = 'sheet-section-order';
+
+    const ACCENT_SWATCHES   = ['#c4920a','#c04040','#4a8aaa','#5a4a8a','#285a18','#c05a20','#e05a8a','#4a4a4a'];
+    const OUTER_BG_SWATCHES = ['#111008','#0a0a0f','#0f0a0a','#080f08','#0f0f0a','#000000'];
+    const SHEET_BG_SWATCHES = ['#f5ead2','#e8e8e8','#d4e8d4','#d4d4e8','#e8d4d4','#1a1208'];
+
+    const SECTIONS = [
+      { id: 'section-ability-scores', name: 'Ability Scores' },
+      { id: 'section-combat',         name: 'Combat' },
+      { id: 'section-hp',             name: 'Hit Points' },
+      { id: 'section-death-saves',    name: 'Death Saves' },
+      { id: 'section-saving-throws',  name: 'Saving Throws' },
+      { id: 'section-skills',         name: 'Skills' },
+      { id: 'section-weapons',        name: 'Weapons' },
+      { id: 'section-features',       name: 'Features & Traits' },
+      { id: 'section-proficiencies',  name: 'Proficiencies & Languages' },
+      { id: 'section-equipment',      name: 'Equipment' },
+      { id: 'section-currency',       name: 'Currency' },
+      { id: 'section-personality',    name: 'Personality' },
+      { id: 'section-backstory',      name: 'Backstory' },
+      { id: 'section-conditions',     name: 'Conditions' },
+      { id: 'section-spell-slots',    name: 'Spell Slots' },
+      { id: 'section-spells',         name: 'Spells' }
+    ];
+
+    const DEFAULT_ORDER = SECTIONS.map(s => s.id);
+
+    let appearanceState = { accent: null, outerBg: null, sheetBg: null };
+
+    // ── Modal open ──────────────────────────────────────────────────────────
+    function openCustomiseModal() {
+      openModal('customise-modal');
+    }
+
+    // ── Tab switching ────────────────────────────────────────────────────────
+    function switchCustTab(tab) {
+      document.querySelectorAll('.cust-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.cust-panel').forEach(p => p.classList.remove('active'));
+      document.querySelector('.cust-tab[data-tab="' + tab + '"]').classList.add('active');
+      document.getElementById('cust-panel-' + tab).classList.add('active');
+    }
+
+    // ── Utility: hex → "r,g,b" ──────────────────────────────────────────────
+    function hexToRgb(hex) {
+      const h = hex.replace('#', '');
+      return parseInt(h.substring(0,2),16) + ',' +
+             parseInt(h.substring(2,4),16) + ',' +
+             parseInt(h.substring(4,6),16);
+    }
+
+    // ── Appearance: apply functions ──────────────────────────────────────────
+    function applyAccent(hex, save) {
+      document.documentElement.style.setProperty('--accent',     hex);
+      document.documentElement.style.setProperty('--gold',       hex);
+      document.documentElement.style.setProperty('--gold-light', hex);
+      document.documentElement.style.setProperty('--accent-rgb', hexToRgb(hex));
+      if (save !== false) { appearanceState.accent = hex; saveAppearance(); }
+    }
+
+    function applyOuterBg(hex, save) {
+      document.documentElement.style.setProperty('--bg',          hex);
+      document.documentElement.style.setProperty('--bg-gradient', 'none');
+      document.body.style.background = hex;
+      if (save !== false) { appearanceState.outerBg = hex; saveAppearance(); }
+    }
+
+    function applySheetBg(hex, save) {
+      document.documentElement.style.setProperty('--sheet-bg', hex);
+      if (hex === '#1a1208') {
+        document.documentElement.style.setProperty('--ink',       'rgba(245,230,200,0.9)');
+        document.documentElement.style.setProperty('--ink-light', 'rgba(245,230,200,0.6)');
+      } else {
+        document.documentElement.style.setProperty('--ink',       '#1a1208');
+        document.documentElement.style.setProperty('--ink-light', '#4a3520');
+      }
+      if (save !== false) { appearanceState.sheetBg = hex; saveAppearance(); }
+    }
+
+    function saveAppearance() {
+      localStorage.setItem(LS_APPEARANCE, JSON.stringify(appearanceState));
+    }
+
+    function restoreAppearance() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(LS_APPEARANCE) || '{}');
+        if (saved.accent)  applyAccent(saved.accent, false);
+        if (saved.outerBg) applyOuterBg(saved.outerBg, false);
+        if (saved.sheetBg) applySheetBg(saved.sheetBg, false);
+        appearanceState = {
+          accent:  saved.accent  || null,
+          outerBg: saved.outerBg || null,
+          sheetBg: saved.sheetBg || null
+        };
+      } catch(e) {}
+    }
+
+    // ── Build swatch rows ────────────────────────────────────────────────────
+    function buildSwatches(containerId, colors, applyFn, defaultHex) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = '';
+      colors.forEach(function(hex) {
+        const div = document.createElement('div');
+        div.className = 'swatch' + (hex === defaultHex ? ' selected' : '');
+        div.style.backgroundColor = hex;
+        div.title = hex;
+        div.addEventListener('click', function() {
+          container.querySelectorAll('.swatch').forEach(function(s) {
+            s.classList.remove('selected');
+          });
+          div.classList.add('selected');
+          applyFn(hex);
+        });
+        container.appendChild(div);
+      });
+    }
+
+    function initSwatches() {
+      const saved = JSON.parse(localStorage.getItem(LS_APPEARANCE) || '{}');
+
+      buildSwatches('accent-swatches',   ACCENT_SWATCHES,   applyAccent,   saved.accent  || '#c4920a');
+      buildSwatches('outer-bg-swatches', OUTER_BG_SWATCHES, applyOuterBg,  saved.outerBg || '#111008');
+      buildSwatches('sheet-bg-swatches', SHEET_BG_SWATCHES, applySheetBg,  saved.sheetBg || '#f5ead2');
+
+      // Custom accent color picker
+      const picker = document.getElementById('accent-picker');
+      if (saved.accent) picker.value = saved.accent;
+      picker.addEventListener('input', function() {
+        document.getElementById('accent-swatches').querySelectorAll('.swatch').forEach(function(s) {
+          s.classList.remove('selected');
+        });
+        appearanceState.accent = picker.value;
+        applyAccent(picker.value);
+      });
+    }
+
+    // ── Section Visibility ───────────────────────────────────────────────────
+    function buildVisibilityList() {
+      const hiddenIds = JSON.parse(localStorage.getItem(LS_HIDDEN) || '[]');
+      const container = document.getElementById('visibility-list');
+      container.innerHTML = '';
+
+      SECTIONS.forEach(function(section) {
+        const isHidden = hiddenIds.indexOf(section.id) !== -1;
+        const row = document.createElement('div');
+        row.className = 'visibility-row';
+
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'visibility-name';
+        nameSpan.textContent = section.name;
+
+        const pill = document.createElement('button');
+        pill.className = 'visibility-pill ' + (isHidden ? 'hidden' : 'shown');
+        pill.setAttribute('data-id', section.id);
+        pill.textContent = isHidden ? 'Hidden' : 'Shown';
+        pill.addEventListener('click', function() {
+          toggleSectionVisibility(section.id, pill);
+        });
+
+        row.appendChild(nameSpan);
+        row.appendChild(pill);
+        container.appendChild(row);
+      });
+    }
+
+    function toggleSectionVisibility(sectionId, pillEl) {
+      const el = document.getElementById(sectionId);
+      if (!el) return;
+      const isNowHidden = pillEl.classList.contains('shown');
+      if (isNowHidden) {
+        el.style.display = 'none';
+        pillEl.classList.replace('shown', 'hidden');
+        pillEl.textContent = 'Hidden';
+      } else {
+        el.style.display = '';
+        pillEl.classList.replace('hidden', 'shown');
+        pillEl.textContent = 'Shown';
+      }
+      saveHiddenSections();
+    }
+
+    function saveHiddenSections() {
+      const hidden = [];
+      document.querySelectorAll('.visibility-pill.hidden').forEach(function(pill) {
+        hidden.push(pill.getAttribute('data-id'));
+      });
+      localStorage.setItem(LS_HIDDEN, JSON.stringify(hidden));
+    }
+
+    function restoreHiddenSections() {
+      try {
+        const hiddenIds = JSON.parse(localStorage.getItem(LS_HIDDEN) || '[]');
+        hiddenIds.forEach(function(id) {
+          const el = document.getElementById(id);
+          if (el) el.style.display = 'none';
+        });
+      } catch(e) {}
+    }
+
+    // ── Section Order ─────────────────────────────────────────────────────────
+    function saveSectionOrder() {
+      const order = [];
+      document.querySelectorAll('.sheet-body .sheet-section-wrap').forEach(function(el) {
+        order.push(el.id);
+      });
+      localStorage.setItem(LS_ORDER, JSON.stringify(order));
+    }
+
+    function restoreSectionOrder() {
+      try {
+        const savedOrder = JSON.parse(localStorage.getItem(LS_ORDER) || '[]');
+        if (!savedOrder.length) return;
+        const parent = document.querySelector('.sheet-body');
+        if (!parent) return;
+        savedOrder.forEach(function(id) {
+          const el = document.getElementById(id);
+          if (el) parent.appendChild(el);
+        });
+      } catch(e) {}
+    }
+
+    function resetSectionOrder() {
+      const parent = document.querySelector('.sheet-body');
+      if (!parent) return;
+      DEFAULT_ORDER.forEach(function(id) {
+        const el = document.getElementById(id);
+        if (el) parent.appendChild(el);
+      });
+      localStorage.removeItem(LS_ORDER);
+    }
+
+    // ── Layout Editing / Drag-and-Drop ────────────────────────────────────────
+    let layoutEditingActive = false;
+    let dragSrc = null;
+
+    function toggleLayoutEditing() {
+      layoutEditingActive = !layoutEditingActive;
+      const btn = document.getElementById('layout-edit-btn');
+      if (layoutEditingActive) {
+        document.body.classList.add('layout-editing');
+        document.querySelectorAll('.sheet-section-wrap').forEach(function(el) {
+          el.setAttribute('draggable', 'true');
+        });
+        btn.textContent = '✗ Disable Layout Editing';
+      } else {
+        document.body.classList.remove('layout-editing');
+        document.querySelectorAll('.sheet-section-wrap').forEach(function(el) {
+          el.removeAttribute('draggable');
+        });
+        btn.textContent = '⠿ Enable Layout Editing';
+      }
+    }
+
+    function clearDragClasses() {
+      document.querySelectorAll('.sheet-section-wrap').forEach(function(el) {
+        el.classList.remove('drag-over-top', 'drag-over-bottom');
+      });
+    }
+
+    document.addEventListener('dragstart', function(e) {
+      if (!layoutEditingActive) return;
+      const wrap = e.target.closest('.sheet-section-wrap');
+      if (!wrap) return;
+      dragSrc = wrap;
+      wrap.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', wrap.id);
+    });
+
+    document.addEventListener('dragend', function(e) {
+      if (dragSrc) dragSrc.classList.remove('dragging');
+      clearDragClasses();
+      dragSrc = null;
+    });
+
+    document.addEventListener('dragover', function(e) {
+      if (!dragSrc || !layoutEditingActive) return;
+      const wrap = e.target.closest('.sheet-section-wrap');
+      if (!wrap || wrap === dragSrc) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      clearDragClasses();
+      const rect = wrap.getBoundingClientRect();
+      if (e.clientY < rect.top + rect.height / 2) {
+        wrap.classList.add('drag-over-top');
+      } else {
+        wrap.classList.add('drag-over-bottom');
+      }
+    });
+
+    document.addEventListener('dragleave', function(e) {
+      if (!layoutEditingActive) return;
+      const wrap = e.target.closest('.sheet-section-wrap');
+      if (!wrap) return;
+      if (!wrap.contains(e.relatedTarget)) {
+        wrap.classList.remove('drag-over-top', 'drag-over-bottom');
+      }
+    });
+
+    document.addEventListener('drop', function(e) {
+      if (!dragSrc || !layoutEditingActive) return;
+      const wrap = e.target.closest('.sheet-section-wrap');
+      if (!wrap || wrap === dragSrc) return;
+      e.preventDefault();
+      const isTop = wrap.classList.contains('drag-over-top');
+      clearDragClasses();
+      const parent = wrap.parentNode;
+      if (isTop) {
+        parent.insertBefore(dragSrc, wrap);
+      } else {
+        parent.insertBefore(dragSrc, wrap.nextSibling);
+      }
+      saveSectionOrder();
+    });
+
+    // ── Initialize ────────────────────────────────────────────────────────────
+    restoreAppearance();
+    restoreHiddenSections();
+    restoreSectionOrder();
+    initSwatches();
+    buildVisibilityList();
   </script>
 
 </body>
