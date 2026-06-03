@@ -86,6 +86,38 @@
       margin-top: 4px;
     }
 
+    .forgot-link {
+      display: block;
+      text-align: right;
+      font-family: var(--font-heading);
+      font-size: 0.52rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--border-light);
+      margin-top: 6px;
+      cursor: pointer;
+      transition: color var(--transition-fast);
+      background: none;
+      border: none;
+      padding: 0;
+    }
+    .forgot-link:hover { color: var(--gold-light); }
+
+    .success-box {
+      text-align: center;
+      padding: 20px 0 8px;
+    }
+    .success-icon {
+      font-size: 2rem;
+      margin-bottom: 10px;
+    }
+    .success-msg {
+      font-family: var(--font-body);
+      font-size: 0.95rem;
+      color: var(--border-light);
+      line-height: 1.5;
+    }
+
     @media (max-width: 600px) {
       .login-wrap { padding: 16px; }
       .login-title { font-size: 1.3rem; }
@@ -105,12 +137,12 @@
 
       <div class="divider"></div>
 
-      <div class="tab-bar">
+      <div class="tab-bar" id="tab-bar">
         <button class="tab-btn active" data-tab="signin" onclick="switchTab('signin')">Sign In</button>
         <button class="tab-btn" data-tab="signup" onclick="switchTab('signup')">Sign Up</button>
       </div>
 
-      <!-- Sign In form -->
+      <!-- Sign In panel -->
       <div id="panel-signin" class="form-panel active">
         <div class="form-field">
           <label class="form-label" for="signin-email">Email</label>
@@ -119,11 +151,12 @@
         <div class="form-field">
           <label class="form-label" for="signin-password">Password</label>
           <input class="form-input" type="password" id="signin-password" placeholder="••••••••" autocomplete="current-password">
+          <button class="forgot-link" onclick="switchTab('forgot')">Forgot password?</button>
         </div>
         <button class="btn btn-primary submit-btn" data-label="Sign In" onclick="signIn()">Sign In</button>
       </div>
 
-      <!-- Sign Up form -->
+      <!-- Sign Up panel -->
       <div id="panel-signup" class="form-panel">
         <div class="form-field">
           <label class="form-label" for="signup-name">Display Name</label>
@@ -142,6 +175,23 @@
           <input class="form-input" type="password" id="signup-confirm" placeholder="••••••••" autocomplete="new-password">
         </div>
         <button class="btn btn-primary submit-btn" data-label="Sign Up" onclick="signUp()">Sign Up</button>
+      </div>
+
+      <!-- Forgot Password panel -->
+      <div id="panel-forgot" class="form-panel">
+        <div id="forgot-form">
+          <div class="form-field">
+            <label class="form-label" for="forgot-email">Your Email</label>
+            <input class="form-input" type="email" id="forgot-email" placeholder="you@example.com" autocomplete="email">
+          </div>
+          <button class="btn btn-primary submit-btn" data-label="Send Recovery Email" onclick="sendRecovery()">Send Recovery Email</button>
+          <button class="forgot-link" style="text-align:center;width:100%;margin-top:12px;" onclick="switchTab('signin')">← Back to Sign In</button>
+        </div>
+        <div id="forgot-success" class="success-box" style="display:none;">
+          <div class="success-icon">📬</div>
+          <div class="success-msg">Recovery email sent!<br>Check your inbox and follow the link to reset your password.</div>
+          <button class="forgot-link" style="text-align:center;width:100%;margin-top:16px;" onclick="switchTab('signin')">← Back to Sign In</button>
+        </div>
       </div>
 
       <!-- Error message -->
@@ -165,12 +215,24 @@
     });
 
     function switchTab(tab) {
+      const tabBar = document.getElementById('tab-bar');
+      // Hide tab bar on forgot panel, show on others
+      tabBar.style.display = tab === 'forgot' ? 'none' : 'flex';
+
       document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.tab === tab);
       });
       document.querySelectorAll('.form-panel').forEach(panel => {
         panel.classList.toggle('active', panel.id === 'panel-' + tab);
       });
+
+      // Reset forgot panel state
+      if (tab === 'forgot') {
+        document.getElementById('forgot-form').style.display = 'block';
+        document.getElementById('forgot-success').style.display = 'none';
+        document.getElementById('forgot-email').value = '';
+      }
+
       document.getElementById('error-msg').style.display = 'none';
     }
 
@@ -210,7 +272,6 @@
 
       setLoading(true);
 
-      // 1. Create auth user
       const { data: authData, error: authError } = await supabaseClient.auth.signUp({
         email,
         password,
@@ -219,7 +280,6 @@
 
       if (authError) { showError(authError.message); setLoading(false); return; }
 
-      // 2. Create profile row
       if (authData?.user) {
         await supabaseClient.from('profiles').insert({
           id: authData.user.id,
@@ -228,6 +288,24 @@
       }
 
       window.location.href = 'home.html';
+    }
+
+    async function sendRecovery() {
+      const email = document.getElementById('forgot-email').value.trim();
+      if (!email) { showError('Please enter your email address.'); return; }
+
+      setLoading(true);
+
+      const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+        redirectTo: 'https://christian0765.github.io/dnd-v2/login.html'
+      });
+
+      setLoading(false);
+
+      if (error) { showError(error.message); return; }
+
+      document.getElementById('forgot-form').style.display = 'none';
+      document.getElementById('forgot-success').style.display = 'block';
     }
 
     function showError(msg) {
@@ -246,9 +324,11 @@
 
     document.addEventListener('keydown', (e) => {
       if (e.key !== 'Enter') return;
-      const activeTab = document.querySelector('.tab-btn.active')?.dataset.tab;
-      if (activeTab === 'signin') signIn();
-      else if (activeTab === 'signup') signUp();
+      const activePanel = document.querySelector('.form-panel.active');
+      if (!activePanel) return;
+      if (activePanel.id === 'panel-signin') signIn();
+      else if (activePanel.id === 'panel-signup') signUp();
+      else if (activePanel.id === 'panel-forgot') sendRecovery();
     });
   </script>
 </body>
