@@ -5,6 +5,24 @@
 
 ## What's Been Built
 
+### PR 3 — `home.html` — campaign lobby (list, create, join campaigns)
+- `home.html` — campaign lobby landing page after login
+- Fixed top bar with site title and signed-in user's display name
+- "Create Campaign" modal — inserts into `campaigns` and `memberships` (role: dm), redirects to `campaign.html?c={id}`
+- "Join Campaign" modal — looks up campaign by UUID, inserts into `memberships` (role: player), redirects to `campaign.html?c={id}`
+- Campaign grid (3-col desktop, 1-col mobile) showing name, role badge, created date
+- Empty state when user has no campaigns
+- Soft-delete aware — filters out campaigns with `deleted_at` set
+- All Supabase calls have error handling; all user strings pass through `escHtml()`
+
+### PR 2 — `login.html` — sign in / sign up page
+- `login.html` — email/password sign in and sign up with Supabase Auth
+- Tab-switching UI (Sign In / Sign Up)
+- Client-side validation: empty fields, short password, mismatched passwords
+- Redirects to `home.html` on success; redirects away if already signed in
+- Session-expired banner in place
+- No Supabase data queries — auth only
+
 ### PR 1 — Project structure: /css/, /js/, /data/ folders and all shared files
 - `index.html` — redirect entry point (auth check → home.html or login.html)
 - `/css/variables.css` — all CSS custom properties for the entire project
@@ -21,10 +39,15 @@
 
 ## What's Working
 
-- Shared CSS variables, base styles, and components defined
-- Shared JS modules created (auth, theme, utils, supabase-client)
-- Fighter class JSON data file created
-- `index.html` redirects authenticated users to `home.html`, unauthenticated to `login.html`
+- Sign in and sign up with email/password via Supabase Auth. Redirects to `home.html` on success.
+- Campaign lobby loads after login. Reads memberships + campaigns from Supabase.
+- Create Campaign writes to `campaigns` and `memberships` tables, redirects to `campaign.html?c={id}`.
+- Join Campaign by UUID — creates player membership and redirects.
+- Sign out works (via `signOut()` in auth.js).
+- Shared CSS variables, base styles, and components defined.
+- Shared JS modules created (auth, theme, utils, supabase-client).
+- Fighter class JSON data file created.
+- `index.html` redirects authenticated users to `home.html`, unauthenticated to `login.html`.
 
 ---
 
@@ -33,6 +56,8 @@
 ```
 dnd-v2/
 ├── index.html
+├── login.html
+├── home.html
 ├── supabase-config.js.template
 ├── HANDOFF.md
 ├── DND-ARCHITECTURE-SPEC.md
@@ -64,18 +89,17 @@ dnd-v2/
 
 ## Known Issues
 
-- None at this stage. No features built yet — foundation only.
+- None at this stage.
 
 ---
 
 ## What The Next Agent Should Build
 
-**PR 2 — `login.html`** — sign in and sign up page
+**PR 4 — `campaign.html`** — main campaign page (party overview, DM tools)
 
-- Email/password sign in
-- Sign up with display name, email, password
-- Creates a row in `profiles` table on sign up
-- Redirects to `home.html` on success
-- Uses the design system (dark card, gold headings, form fields from components.css)
-- Includes session-banner for token expiry
-- No Supabase data queries beyond auth
+- Party overview showing all character cards (name, class, HP, AC)
+- Real-time sync of HP and character status via Supabase Realtime
+- DM panel: campaign settings, NPC list, quest list, session notes
+- Navigation links to `sheet.html?c={id}` and `combat.html?c={id}`
+- Reads/writes: `characters`, `campaigns`, `npcs`, `quests` tables
+- URL: `campaign.html?c={campaignId}`

@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>D&D Tracker — Your Campaigns</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;900&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/components.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="js/supabase-client.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/utils.js"></script>
+  <style>
+    .top-bar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 52px;
+      background: linear-gradient(160deg, var(--header-bg-1), var(--header-bg-2));
+      border-bottom: 1px solid rgba(var(--border-rgb), 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      z-index: 100;
+    }
+
+    .top-bar-title {
+      font-family: var(--font-heading);
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--gold-light);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .top-bar-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .user-name {
+      font-family: var(--font-heading);
+      font-size: 0.55rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--border-light);
+    }
+
+    .main-content {
+      padding: 76px 24px 40px;
+      max-width: 900px;
+      margin: 0 auto;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .page-heading {
+      font-family: var(--font-heading);
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: var(--gold-light);
+      margin-bottom: 6px;
+      letter-spacing: 0.04em;
+    }
+
+    .page-sub {
+      font-family: var(--font-body);
+      font-size: 1rem;
+      color: var(--border-light);
+    }
+
+    .action-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    #campaigns-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-top: 24px;
+    }
+
+    .campaign-card {
+      cursor: pointer;
+      transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .campaign-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 0 0 2px var(--shadow-deep), 0 12px 40px rgba(0,0,0,0.8);
+    }
+
+    .empty-state {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--border-light);
+    }
+
+    .modal-submit-btn {
+      width: 100%;
+      justify-content: center;
+      margin-top: 4px;
+    }
+
+    .modal-error {
+      display: none;
+      margin-top: 10px;
+      background: rgba(122,21,21,0.15);
+      border: 1px solid var(--red);
+      border-radius: 2px;
+      color: var(--red);
+      padding: 10px 12px;
+      font-family: var(--font-body);
+      font-size: 0.85rem;
+    }
+
+    @media (max-width: 700px) {
+      #campaigns-grid { grid-template-columns: 1fr; }
+      .action-row { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="session-banner" class="session-banner">
+    Session expired — <a href="login.html">sign in again</a>
+  </div>
+
+  <!-- Top Bar -->
+  <header class="top-bar">
+    <div class="top-bar-title">⚔ D&amp;D Tracker</div>
+    <div class="top-bar-right">
+      <span class="user-name" id="user-name"></span>
+      <button class="btn btn-ghost" onclick="signOut()">Sign Out</button>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <h1 class="page-heading">Your Campaigns</h1>
+    <p class="page-sub">Select a campaign to enter, or create a new one.</p>
+
+    <div class="action-row">
+      <button class="btn btn-gold" onclick="openModal('modal-create')">＋ Create Campaign</button>
+      <button class="btn btn-ghost" onclick="openModal('modal-join')">🔗 Join Campaign</button>
+    </div>
+
+    <div id="campaigns-grid">
+      <div style="color:var(--border-light);font-size:0.85rem;">Loading…</div>
+    </div>
+  </main>
+
+  <!-- Create Campaign Modal -->
+  <div id="modal-create" class="modal-overlay">
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeModal()">✕</button>
+      <div class="modal-title">Create Campaign</div>
+      <div class="modal-sub">Set up your new campaign</div>
+
+      <div class="form-field">
+        <label class="form-label" for="cc-name">Campaign Name</label>
+        <input class="form-input" type="text" id="cc-name" placeholder="The Mines of Moria" maxlength="80" autocomplete="off">
+      </div>
+
+      <div class="form-field">
+        <label class="form-label" for="cc-ruleset">Ruleset</label>
+        <select class="form-input" id="cc-ruleset">
+          <option value="5e-2014">D&amp;D 5e (2014)</option>
+        </select>
+      </div>
+
+      <div class="modal-error"></div>
+
+      <button class="btn btn-primary modal-submit-btn" data-label="Create Campaign" onclick="createCampaign()">Create Campaign</button>
+    </div>
+  </div>
+
+  <!-- Join Campaign Modal -->
+  <div id="modal-join" class="modal-overlay">
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeModal()">✕</button>
+      <div class="modal-title">Join Campaign</div>
+      <div class="modal-sub">Enter the campaign ID your DM shared with you</div>
+
+      <div class="form-field">
+        <label class="form-label" for="jc-id">Campaign ID</label>
+        <input class="form-input" type="text" id="jc-id" placeholder="Paste campaign ID here" autocomplete="off">
+        <div style="font-size:0.78rem;color:var(--border-light);margin-top:4px;">
+          Your DM can find the campaign ID in their campaign settings.
+        </div>
+      </div>
+
+      <div class="modal-error"></div>
+
+      <button class="btn btn-primary modal-submit-btn" data-label="Join Campaign" onclick="joinCampaign()">Join Campaign</button>
+    </div>
+  </div>
+
+  <script>
+    let currentUser = null;
+    let activeModal = null;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const session = await requireAuth();
+      if (!session) return;
+
+      currentUser = session.user;
+
+      const { data: profile } = await supabaseClient
+        .from('profiles')
+        .select('display_name')
+        .eq('id', currentUser.id)
+        .single();
+
+      const name = profile?.display_name
+        || currentUser.user_metadata?.display_name
+        || currentUser.email;
+
+      document.getElementById('user-name').textContent = name;
+
+      await loadCampaigns();
+    });
+
+    async function loadCampaigns() {
+      const grid = document.getElementById('campaigns-grid');
+      grid.innerHTML = '<div style="color:var(--border-light);font-size:0.85rem;">Loading…</div>';
+
+      const { data, error } = await supabaseClient
+        .from('memberships')
+        .select(`
+          id,
+          role,
+          joined_at,
+          campaigns (
+            id,
+            name,
+            created_at,
+            deleted_at
+          )
+        `)
+        .eq('user_id', currentUser.id)
+        .order('joined_at', { ascending: false });
+
+      if (error) {
+        grid.innerHTML = `<div style="color:var(--red);">Error loading campaigns: ${escHtml(error.message)}</div>`;
+        return;
+      }
+
+      const active = (data || []).filter(m => m.campaigns && !m.campaigns.deleted_at);
+
+      if (active.length === 0) {
+        grid.innerHTML = `
+          <div class="empty-state">
+            <div style="font-size:2.5rem;margin-bottom:12px;">🏰</div>
+            <div style="font-family:var(--font-heading);color:var(--gold-light);font-size:0.9rem;margin-bottom:8px;">No campaigns yet</div>
+            <div style="color:var(--border-light);font-size:0.85rem;">Create one above or join with a campaign ID.</div>
+          </div>`;
+        return;
+      }
+
+      grid.innerHTML = active.map(m => {
+        const c = m.campaigns;
+        const roleLabel = m.role === 'dm' ? '👑 DM' : '⚔ Player';
+        const date = formatDate(c.created_at);
+        return `
+          <div class="card-dark campaign-card" onclick="window.location.href='campaign.html?c=${escHtml(c.id)}'">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+              <div style="font-family:var(--font-heading);color:var(--gold-light);font-size:1rem;font-weight:600;flex:1;">${escHtml(c.name)}</div>
+              <span style="font-family:var(--font-heading);font-size:0.5rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--border-light);margin-left:8px;white-space:nowrap;">${roleLabel}</span>
+            </div>
+            <div style="font-size:0.75rem;color:var(--border-light);margin-bottom:16px;">Created ${date}</div>
+            <div style="font-family:var(--font-heading);font-size:0.58rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--gold);">
+              Enter Campaign →
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    function openModal(id) {
+      closeModal();
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.classList.add('open');
+      activeModal = el;
+      const err = activeModal.querySelector('.modal-error');
+      if (err) err.style.display = 'none';
+    }
+
+    function closeModal() {
+      if (activeModal) activeModal.classList.remove('open');
+      activeModal = null;
+    }
+
+    function showModalError(msg) {
+      const el = activeModal ? activeModal.querySelector('.modal-error') : null;
+      if (!el) return;
+      el.textContent = msg;
+      el.style.display = 'block';
+    }
+
+    function setModalLoading(loading) {
+      if (!activeModal) return;
+      const btn = activeModal.querySelector('.modal-submit-btn');
+      if (!btn) return;
+      btn.disabled = loading;
+      btn.textContent = loading ? 'Please wait…' : btn.dataset.label;
+    }
+
+    document.addEventListener('click', (e) => {
+      if (e.target.classList.contains('modal-overlay')) closeModal();
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeModal();
+    });
+
+    async function createCampaign() {
+      const name = document.getElementById('cc-name').value.trim();
+      if (!name) { showModalError('Campaign name is required.'); return; }
+
+      setModalLoading(true);
+
+      const { data: campaign, error: campErr } = await supabaseClient
+        .from('campaigns')
+        .insert({ name, ruleset: '5e-2014' })
+        .select('id')
+        .single();
+
+      if (campErr) { showModalError(campErr.message); setModalLoading(false); return; }
+
+      const user = await getUser();
+      const { error: memErr } = await supabaseClient
+        .from('memberships')
+        .insert({
+          user_id: user.id,
+          campaign_id: campaign.id,
+          role: 'dm',
+        });
+
+      if (memErr) { showModalError(memErr.message); setModalLoading(false); return; }
+
+      window.location.href = 'campaign.html?c=' + campaign.id;
+    }
+
+    async function joinCampaign() {
+      const campaignId = document.getElementById('jc-id').value.trim();
+      if (!campaignId) { showModalError('Please enter a campaign ID.'); return; }
+
+      setModalLoading(true);
+
+      const { data: campaign, error: checkErr } = await supabaseClient
+        .from('campaigns')
+        .select('id, name')
+        .eq('id', campaignId)
+        .is('deleted_at', null)
+        .single();
+
+      if (checkErr || !campaign) {
+        showModalError('Campaign not found. Check the ID and try again.');
+        setModalLoading(false);
+        return;
+      }
+
+      const user = await getUser();
+
+      const { data: existing } = await supabaseClient
+        .from('memberships')
+        .select('id')
+        .eq('campaign_id', campaignId)
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (existing) {
+        window.location.href = 'campaign.html?c=' + campaignId;
+        return;
+      }
+
+      const { error: memErr } = await supabaseClient
+        .from('memberships')
+        .insert({
+          user_id: user.id,
+          campaign_id: campaignId,
+          role: 'player',
+        });
+
+      if (memErr) { showModalError(memErr.message); setModalLoading(false); return; }
+
+      window.location.href = 'campaign.html?c=' + campaignId;
+    }
+  </script>
+</body>
+</html>
