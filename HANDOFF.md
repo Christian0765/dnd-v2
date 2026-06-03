@@ -140,3 +140,14 @@ Wire up all sections to Supabase:
 - Real-time subscription so DM edits appear live
 - Create Character flow if no character exists yet
 - Reads/writes: `characters`, `currency`, `weapons`, `features`, `resources`, `spell_slots`, `character_inventory`
+
+- ### Planned Cleanup (do after sheet.html is fully complete)
+- Reorganize HTML files into /pages/ subfolder
+- This requires updating ALL relative paths in every HTML file:
+  - All href="filename.html" → href="pages/filename.html" (from root)
+  - All href="../css/..." and href="../js/..." (from inside /pages/)
+  - All window.location.href redirects in every JS block and auth.js
+  - The redirectTo URL in login.html password recovery
+  - index.html stays in root — GitHub Pages requires it there
+- Do this as one dedicated PR with no other changes
+- Do NOT do this while sheet.html is still being built
