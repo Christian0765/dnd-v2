@@ -5,6 +5,15 @@
 
 ## What's Been Built
 
+### PR 5a-2 — `sheet.html` — HP, death saves, saving throws, skills (layout only)
+- Hit Points section: Max HP + Current HP boxes, HP bar (green/gold/red fill), Temp HP + Hit Dice boxes
+- Death Saves section: Successes (3 checkboxes, green when checked) + Failures (3 checkboxes, red when checked)
+- Saving Throws section: 6 rows (STR/DEX/CON/INT/WIS/CHA), each with proficiency circle + bonus + name
+- Skills section: 18 alphabetical rows with proficiency circle + bonus + name + ability tag, Passive Perception footer
+- JS toggle behavior: `.ds-box` and `.prof-circle` click to add/remove `.checked` class (no saves)
+- All placeholder values — no Supabase calls
+- Nothing from PR 5a-1 was modified
+
 ### PR 5a-1 — `sheet.html` — shell, header, ability scores, combat stats (layout only)
 - `sheet.html` — character sheet page at `sheet.html?c={campaignId}`
 - Fixed top bar (48px): back link (← Campaign), sync pill (✓ Saved), Quests + Customise buttons
@@ -92,7 +101,7 @@ dnd-v2/
 ├── login.html
 ├── home.html
 ├── campaign.html
-├── sheet.html                  ← PR 5a-1: shell + header + ability scores + combat stats
+├── sheet.html                  ← PR 5a-2: + HP, death saves, saving throws, skills
 ├── supabase-config.js.template
 ├── HANDOFF.md
 ├── DND-ARCHITECTURE-SPEC.md
@@ -122,9 +131,6 @@ dnd-v2/
 ---
 
 ## What The Next Agent Should Build
-
-**PR 5a-2 — `sheet.html` (HP, Hit Dice, Death Saves, Currency, Saving Throws, Skills, Proficiencies)**
-Add the next section slice to sheet.html — still layout-only, placeholder values only, no Supabase.
 
 **PR 5b — `sheet.html` Supabase wiring**
 Wire up all sections to Supabase:
