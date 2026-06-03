@@ -425,6 +425,123 @@
       .char-meta-item + .char-meta-item::before {
         display: none;
       }
+      .currency-row {
+        grid-template-columns: repeat(3, 1fr);
+      }
+      .currency-value {
+        font-size: 1rem;
+      }
+    }
+
+    /* ── Feature Category Colors ── */
+    :root {
+      --cat-action:    #d4aa00;
+      --cat-passive:   #4a8aaa;
+      --cat-reaction:  #5a4a8a;
+      --cat-maneuver:  #c04040;
+      --cat-racial:    #e05a8a;
+      --cat-fighting:  #c05a20;
+      --cat-homebrew:  #6a5aaa;
+    }
+
+    /* ── Weapons Table ── */
+    .weapons-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 10px;
+    }
+    .weapons-table th {
+      font-family: var(--font-heading);
+      font-size: 0.48rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--border-light);
+      padding: 6px 8px;
+      border-bottom: 1px solid rgba(var(--border-rgb), 0.3);
+      text-align: left;
+      font-weight: 400;
+    }
+    .weapons-table td {
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      color: var(--ink);
+      padding: 6px 8px;
+      border-bottom: 1px solid rgba(var(--border-rgb), 0.15);
+    }
+    .weapons-table tr:nth-child(even) td {
+      background: rgba(255,255,255,0.03);
+    }
+
+    /* ── Feature Cards ── */
+    .feature-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(var(--border-rgb), 0.2);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      margin-bottom: 8px;
+    }
+    .feature-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+    .feature-name {
+      font-family: var(--font-heading);
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--ink);
+    }
+    .feature-pill {
+      font-family: var(--font-heading);
+      font-size: 0.42rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 2px 7px;
+      border-radius: 20px;
+      color: white;
+      font-weight: 600;
+    }
+    .feature-recharge {
+      font-family: var(--font-heading);
+      font-size: 0.5rem;
+      color: var(--border-light);
+      margin-bottom: 4px;
+    }
+    .feature-desc {
+      font-family: var(--font-body);
+      font-size: 0.88rem;
+      color: var(--ink-light);
+      font-style: italic;
+      line-height: 1.45;
+    }
+
+    /* ── Currency ── */
+    .currency-row {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+    }
+    .currency-box {
+      background: var(--ability-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 8px 6px;
+      text-align: center;
+    }
+    .currency-label {
+      font-family: var(--font-heading);
+      font-size: 0.48rem;
+      text-transform: uppercase;
+      color: var(--border-light);
+      display: block;
+      margin-bottom: 3px;
+    }
+    .currency-value {
+      font-family: var(--font-heading);
+      font-size: 1.2rem;
+      color: var(--stat-color);
+      display: block;
     }
   </style>
 </head>
@@ -743,6 +860,164 @@
         <span class="passive-perception-value">10</span>
       </div>
 
+      <!-- Weapons -->
+      <div class="sec">Weapons</div>
+      <table class="weapons-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Atk Bonus</th>
+            <th>Damage</th>
+            <th>Type</th>
+            <th>Range</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Shortsword</td>
+            <td>+2</td>
+            <td>1d6+0</td>
+            <td>Piercing</td>
+            <td>5 ft</td>
+            <td></td>
+          </tr>
+        </tbody>
+      </table>
+      <button class="btn btn-gold" onclick="openModal('weapon-modal')">＋ Add Weapon</button>
+
+      <!-- Features & Traits -->
+      <div class="sec">Features &amp; Traits</div>
+      <div class="features-list">
+        <div class="feature-card">
+          <div class="feature-card-header">
+            <span class="feature-name">Second Wind</span>
+            <span class="feature-pill" style="background: var(--cat-action)">action</span>
+          </div>
+          <div class="feature-recharge">Short rest</div>
+          <div class="feature-desc">Bonus action: regain 1d10 + level HP.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-card-header">
+            <span class="feature-name">Darkvision</span>
+            <span class="feature-pill" style="background: var(--cat-passive)">passive</span>
+          </div>
+          <div class="feature-desc">See in darkness up to 60 ft.</div>
+        </div>
+      </div>
+      <button class="btn btn-gold" onclick="openModal('feature-modal')">＋ Add Feature</button>
+
+      <!-- Proficiencies & Languages -->
+      <div class="sec">Proficiencies &amp; Languages</div>
+      <div class="form-field">
+        <label class="form-label">Proficiencies</label>
+        <textarea class="form-input" rows="3" style="resize:vertical">Light armor, medium armor, shields, simple weapons, martial weapons</textarea>
+      </div>
+      <div class="form-field">
+        <label class="form-label">Languages</label>
+        <textarea class="form-input" rows="2" style="resize:vertical">Common, Elvish</textarea>
+      </div>
+
+      <!-- Equipment -->
+      <div class="sec">Equipment</div>
+      <div class="form-field">
+        <label class="form-label">Carried Equipment</label>
+        <textarea class="form-input" rows="4" style="resize:vertical">Backpack, bedroll, rope (50 ft), torch x5, rations x5</textarea>
+      </div>
+
+      <!-- Currency -->
+      <div class="sec">Currency</div>
+      <div class="currency-row">
+        <div class="currency-box">
+          <span class="currency-label">CP</span>
+          <span class="currency-value">0</span>
+        </div>
+        <div class="currency-box">
+          <span class="currency-label">SP</span>
+          <span class="currency-value">0</span>
+        </div>
+        <div class="currency-box">
+          <span class="currency-label">EP</span>
+          <span class="currency-value">0</span>
+        </div>
+        <div class="currency-box">
+          <span class="currency-label">GP</span>
+          <span class="currency-value">10</span>
+        </div>
+        <div class="currency-box">
+          <span class="currency-label">PP</span>
+          <span class="currency-value">0</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Weapon Modal -->
+  <div class="modal-overlay" id="weapon-modal">
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeModal('weapon-modal')">✕</button>
+      <div class="modal-title">Add Weapon</div>
+      <div class="modal-sub">New weapon entry</div>
+      <div class="form-field">
+        <label class="form-label">Name</label>
+        <input type="text" class="form-input" placeholder="e.g. Longsword">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Attack Bonus</label>
+        <input type="text" class="form-input" placeholder="e.g. +4">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Damage Dice</label>
+        <input type="text" class="form-input" placeholder="e.g. 1d6+2">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Damage Type</label>
+        <input type="text" class="form-input" placeholder="e.g. Slashing">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Range</label>
+        <input type="text" class="form-input" placeholder="e.g. 5 ft">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Notes</label>
+        <input type="text" class="form-input" placeholder="">
+      </div>
+      <button class="btn btn-gold">Add Weapon</button>
+    </div>
+  </div>
+
+  <!-- Feature Modal -->
+  <div class="modal-overlay" id="feature-modal">
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeModal('feature-modal')">✕</button>
+      <div class="modal-title">Add Feature</div>
+      <div class="modal-sub">New feature or trait</div>
+      <div class="form-field">
+        <label class="form-label">Name</label>
+        <input type="text" class="form-input" placeholder="e.g. Action Surge">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Category</label>
+        <select class="form-input">
+          <option value="action">Action</option>
+          <option value="passive">Passive</option>
+          <option value="reaction">Reaction</option>
+          <option value="maneuver">Maneuver</option>
+          <option value="racial">Racial</option>
+          <option value="fighting-style">Fighting Style</option>
+          <option value="homebrew">Homebrew</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label class="form-label">Recharge (optional)</label>
+        <input type="text" class="form-input" placeholder="e.g. Short rest">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Description</label>
+        <textarea class="form-input" rows="3" style="resize:vertical" placeholder="Describe the feature..."></textarea>
+      </div>
+      <button class="btn btn-gold">Add Feature</button>
     </div>
   </div>
 
@@ -758,6 +1033,21 @@
     document.querySelectorAll('.prof-circle').forEach(circle => {
       circle.addEventListener('click', () => {
         circle.classList.toggle('checked');
+      });
+    });
+
+    // Modal helpers
+    function openModal(id) {
+      document.getElementById(id).classList.add('open');
+    }
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('open');
+    }
+
+    // Close modal on overlay click
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+      overlay.addEventListener('click', function(e) {
+        if (e.target === this) closeModal(this.id);
       });
     });
   </script>
