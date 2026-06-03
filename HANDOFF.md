@@ -5,6 +5,17 @@
 
 ## What's Been Built
 
+### PR 5a-1 — `sheet.html` — shell, header, ability scores, combat stats (layout only)
+- `sheet.html` — character sheet page at `sheet.html?c={campaignId}`
+- Fixed top bar (48px): back link (← Campaign), sync pill (✓ Saved), Quests + Customise buttons
+- Character header dark band (page-flow): large character name, meta row (Class · Race · Background · Alignment · Level · XP) with vertical dividers
+- Parchment sheet body centered at max-width 700px with border and shadow
+- Ability Scores section: 6 boxes (STR/DEX/CON/INT/WIS/CHA), each showing name / modifier / score
+- Combat Stats section: 4 boxes (Armor Class · Initiative · Speed · Prof Bonus)
+- All placeholder default values — no Supabase calls
+- Mobile responsive: ability grid wraps 3×2 at ≤500px, combat grid wraps 2×2 at ≤500px
+- Includes auth.js and utils.js (will be wired in PR 5b)
+
 ### PR 4 — `campaign.html` — main campaign page (party overview, DM tools)
 - `campaign.html` — campaign landing page at `campaign.html?c={campaignId}`
 - Fixed top bar: campaign name (left), Sheet + Combat nav buttons (center), user name + Sign Out (right)
@@ -81,6 +92,7 @@ dnd-v2/
 ├── login.html
 ├── home.html
 ├── campaign.html
+├── sheet.html                  ← PR 5a-1: shell + header + ability scores + combat stats
 ├── supabase-config.js.template
 ├── HANDOFF.md
 ├── DND-ARCHITECTURE-SPEC.md
@@ -101,22 +113,24 @@ dnd-v2/
 │   └── utils.js
 │
 └── /data/
-└── /rulesets/
-└── /5e-2014/
-├── sheet_schema.json
-└── /classes/
-└── fighter.json
+    └── /rulesets/
+        └── /5e-2014/
+            ├── sheet_schema.json
+            └── /classes/
+                └── fighter.json
+
 ---
 
 ## What The Next Agent Should Build
 
-**PR 5 — `sheet.html`** — full character sheet for one player
+**PR 5a-2 — `sheet.html` (HP, Hit Dice, Death Saves, Currency, Saving Throws, Skills, Proficiencies)**
+Add the next section slice to sheet.html — still layout-only, placeholder values only, no Supabase.
 
-- Full character sheet reading `?c=campaignId` from URL
-- Looks up character via current user's membership row
+**PR 5b — `sheet.html` Supabase wiring**
+Wire up all sections to Supabase:
+- Read `?c=campaignId`, look up character via membership
 - Field-level saves on blur for every input
 - Atomic HP adjustments via RPC (`adjust_hp`)
-- Real-time sync so DM edits appear live
-- If no character exists yet, show a "Create Character" form
-- Reads/writes: `characters`, `currency`, `weapons`, `features`, `resources`, `spell_slots`, `character_inventory` tables
-- URL: `sheet.html?c={campaignId}`
+- Real-time subscription so DM edits appear live
+- Create Character flow if no character exists yet
+- Reads/writes: `characters`, `currency`, `weapons`, `features`, `resources`, `spell_slots`, `character_inventory`
