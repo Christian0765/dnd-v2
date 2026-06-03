@@ -230,6 +230,176 @@
       line-height: 1;
     }
 
+    /* ── HP Section ── */
+    .hp-stat-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    .hp-stat-box {
+      flex: 1;
+      background: var(--ability-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 10px 8px;
+      text-align: center;
+    }
+    .hp-stat-label {
+      font-family: var(--font-heading);
+      font-size: 0.48rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--border-light);
+      display: block;
+      margin-bottom: 3px;
+    }
+    .hp-stat-value {
+      font-family: var(--font-heading);
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--stat-color);
+      display: block;
+    }
+    .hp-stat-value-sm {
+      font-family: var(--font-heading);
+      font-size: 1.0rem;
+      font-weight: 700;
+      color: var(--stat-color);
+      display: block;
+    }
+    .hp-bar-track {
+      width: 100%;
+      height: 10px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 4px;
+      overflow: hidden;
+      margin: 8px 0 4px;
+    }
+    .hp-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.4s ease;
+    }
+    .hp-bar-fill.hp-green { background: var(--green); }
+    .hp-bar-fill.hp-gold  { background: var(--gold); }
+    .hp-bar-fill.hp-red   { background: var(--red); }
+    .hp-bar-label {
+      font-family: var(--font-heading);
+      font-size: 0.52rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--border-light);
+    }
+
+    /* ── Death Saves ── */
+    .death-saves-row {
+      display: flex;
+      gap: 24px;
+    }
+    .death-saves-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .death-saves-label {
+      font-family: var(--font-heading);
+      font-size: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--border-light);
+    }
+    .death-saves-boxes {
+      display: flex;
+      gap: 6px;
+    }
+    .ds-box {
+      width: 18px;
+      height: 18px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: rgba(255,255,255,0.05);
+      cursor: pointer;
+      transition: background 0.15s;
+      flex-shrink: 0;
+    }
+    .ds-box.checked.success {
+      background: var(--green);
+      border-color: var(--green);
+    }
+    .ds-box.checked.failure {
+      background: var(--red);
+      border-color: var(--red);
+    }
+
+    /* ── Saving Throws & Skills ── */
+    .prof-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .prof-circle {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: transparent;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background 0.15s;
+    }
+    .prof-circle.checked {
+      background: var(--gold-light);
+      border-color: var(--gold-light);
+    }
+    .prof-bonus {
+      font-family: var(--font-heading);
+      font-size: 0.75rem;
+      color: var(--stat-color);
+      min-width: 28px;
+      text-align: right;
+    }
+    .prof-name {
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      color: var(--ink);
+      flex: 1;
+    }
+    .prof-ability {
+      font-family: var(--font-heading);
+      font-size: 0.48rem;
+      color: var(--border-light);
+    }
+    .saves-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .skills-list {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .passive-perception-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 8px;
+      padding-top: 6px;
+      border-top: 1px solid rgba(122,90,40,0.3);
+    }
+    .passive-perception-label {
+      font-family: var(--font-heading);
+      font-size: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--border-light);
+    }
+    .passive-perception-value {
+      font-family: var(--font-heading);
+      font-size: 0.75rem;
+      color: var(--stat-color);
+    }
+
     /* ── Responsive ── */
     @media (max-width: 500px) {
       .ability-grid {
@@ -373,8 +543,224 @@
         </div>
       </div>
 
+      <!-- Hit Points -->
+      <div class="sec">Hit Points</div>
+      <div class="hp-stat-row">
+        <div class="hp-stat-box">
+          <span class="hp-stat-label">Max HP</span>
+          <span class="hp-stat-value">10</span>
+        </div>
+        <div class="hp-stat-box">
+          <span class="hp-stat-label">Current HP</span>
+          <span class="hp-stat-value">10</span>
+        </div>
+      </div>
+      <div class="hp-bar-track">
+        <div class="hp-bar-fill hp-green" style="width:100%"></div>
+      </div>
+      <div class="hp-bar-label">10 / 10 HP</div>
+      <div class="hp-stat-row" style="margin-top:10px">
+        <div class="hp-stat-box">
+          <span class="hp-stat-label">Temp HP</span>
+          <span class="hp-stat-value-sm">0</span>
+        </div>
+        <div class="hp-stat-box">
+          <span class="hp-stat-label">Hit Dice</span>
+          <span class="hp-stat-value-sm">1 / 1 d8</span>
+        </div>
+      </div>
+
+      <!-- Death Saves -->
+      <div class="sec">Death Saves</div>
+      <div class="death-saves-row">
+        <div class="death-saves-group">
+          <span class="death-saves-label">Successes</span>
+          <div class="death-saves-boxes">
+            <div class="ds-box success"></div>
+            <div class="ds-box success"></div>
+            <div class="ds-box success"></div>
+          </div>
+        </div>
+        <div class="death-saves-group">
+          <span class="death-saves-label">Failures</span>
+          <div class="death-saves-boxes">
+            <div class="ds-box failure"></div>
+            <div class="ds-box failure"></div>
+            <div class="ds-box failure"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Saving Throws -->
+      <div class="sec">Saving Throws</div>
+      <div class="saves-list">
+        <div class="prof-row">
+          <div class="prof-circle"></div>
+          <span class="prof-bonus">+0</span>
+          <span class="prof-name">Strength</span>
+        </div>
+        <div class="prof-row">
+          <div class="prof-circle"></div>
+          <span class="prof-bonus">+0</span>
+          <span class="prof-name">Dexterity</span>
+        </div>
+        <div class="prof-row">
+          <div class="prof-circle"></div>
+          <span class="prof-bonus">+0</span>
+          <span class="prof-name">Constitution</span>
+        </div>
+        <div class="prof-row">
+          <div class="prof-circle"></div>
+          <span class="prof-bonus">+0</span>
+          <span class="prof-name">Intelligence</span>
+        </div>
+        <div class="prof-row">
+          <div class="prof-circle"></div>
+          <span class="prof-bonus">+0</span>
+          <span class="prof-name">Wisdom</span>
+        </div>
+        <div class="prof-row">
+          <div class="prof-circle"></div>
+          <span class="prof-bonus">+0</span>
+          <span class="prof-name">Charisma</span>
+        </div>
+      </div>
+
+      <!-- Skills -->
+      <div class="sec">Skills</div>
+      <div class="skills-list">
+        <div class="prof-row">
+          <div class="prof-circle"></div>
+          <span class="prof-bonus">+0</span>
+          <span class="prof-name">Acrobatics</span>
+          <span class="prof-ability">(DEX)</span>
+        </div>
+        <div class="prof-row">
+          <div class="prof-circle"></div>
+          <span class="prof-bonus">+0</span>
+          <span class="prof-name">Animal Handling</span>
+          <span class="prof-ability">(WIS)</span>
+        </div>
+        <div class="prof-row">
+          <div class="prof-circle"></div>
+          <span class="prof-bonus">+0</span>
+          <span class="prof-name">Arcana</span>
+          <span class="prof-ability">(INT)</span>
+        </div>
+        <div class="prof-row">
+          <div class="prof-circle"></div>
+          <span class="prof-bonus">+0</span>
+          <span class="prof-name">Athletics</span>
+          <span class="prof-ability">(STR)</span>
+        </div>
+        <div class="prof-row">
+          <div class="prof-circle"></div>
+          <span class="prof-bonus">+0</span>
+          <span class="prof-name">Deception</span>
+          <span class="prof-ability">(CHA)</span>
+        </div>
+        <div class="prof-row">
+          <div class="prof-circle"></div>
+          <span class="prof-bonus">+0</span>
+          <span class="prof-name">History</span>
+          <span class="prof-ability">(INT)</span>
+        </div>
+        <div class="prof-row">
+          <div class="prof-circle"></div>
+          <span class="prof-bonus">+0</span>
+          <span class="prof-name">Insight</span>
+          <span class="prof-ability">(WIS)</span>
+        </div>
+        <div class="prof-row">
+          <div class="prof-circle"></div>
+          <span class="prof-bonus">+0</span>
+          <span class="prof-name">Intimidation</span>
+          <span class="prof-ability">(CHA)</span>
+        </div>
+        <div class="prof-row">
+          <div class="prof-circle"></div>
+          <span class="prof-bonus">+0</span>
+          <span class="prof-name">Investigation</span>
+          <span class="prof-ability">(INT)</span>
+        </div>
+        <div class="prof-row">
+          <div class="prof-circle"></div>
+          <span class="prof-bonus">+0</span>
+          <span class="prof-name">Medicine</span>
+          <span class="prof-ability">(WIS)</span>
+        </div>
+        <div class="prof-row">
+          <div class="prof-circle"></div>
+          <span class="prof-bonus">+0</span>
+          <span class="prof-name">Nature</span>
+          <span class="prof-ability">(INT)</span>
+        </div>
+        <div class="prof-row">
+          <div class="prof-circle"></div>
+          <span class="prof-bonus">+0</span>
+          <span class="prof-name">Perception</span>
+          <span class="prof-ability">(WIS)</span>
+        </div>
+        <div class="prof-row">
+          <div class="prof-circle"></div>
+          <span class="prof-bonus">+0</span>
+          <span class="prof-name">Performance</span>
+          <span class="prof-ability">(CHA)</span>
+        </div>
+        <div class="prof-row">
+          <div class="prof-circle"></div>
+          <span class="prof-bonus">+0</span>
+          <span class="prof-name">Persuasion</span>
+          <span class="prof-ability">(CHA)</span>
+        </div>
+        <div class="prof-row">
+          <div class="prof-circle"></div>
+          <span class="prof-bonus">+0</span>
+          <span class="prof-name">Religion</span>
+          <span class="prof-ability">(INT)</span>
+        </div>
+        <div class="prof-row">
+          <div class="prof-circle"></div>
+          <span class="prof-bonus">+0</span>
+          <span class="prof-name">Sleight of Hand</span>
+          <span class="prof-ability">(DEX)</span>
+        </div>
+        <div class="prof-row">
+          <div class="prof-circle"></div>
+          <span class="prof-bonus">+0</span>
+          <span class="prof-name">Stealth</span>
+          <span class="prof-ability">(DEX)</span>
+        </div>
+        <div class="prof-row">
+          <div class="prof-circle"></div>
+          <span class="prof-bonus">+0</span>
+          <span class="prof-name">Survival</span>
+          <span class="prof-ability">(WIS)</span>
+        </div>
+      </div>
+      <div class="passive-perception-row">
+        <span class="passive-perception-label">Passive Perception</span>
+        <span class="passive-perception-value">10</span>
+      </div>
+
     </div>
   </div>
+
+  <script>
+    // Death save checkbox toggle
+    document.querySelectorAll('.ds-box').forEach(box => {
+      box.addEventListener('click', () => {
+        box.classList.toggle('checked');
+      });
+    });
+
+    // Proficiency circle toggle
+    document.querySelectorAll('.prof-circle').forEach(circle => {
+      circle.addEventListener('click', () => {
+        circle.classList.toggle('checked');
+      });
+    });
+  </script>
 
 </body>
 </html>
