@@ -221,7 +221,7 @@
         .from('profiles')
         .select('display_name')
         .eq('id', currentUser.id)
-        .single();
+        .maybeSingle();
 
       const name = profile?.display_name
         || currentUser.user_metadata?.display_name
