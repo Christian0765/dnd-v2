@@ -5,6 +5,17 @@
 
 ## What's Been Built
 
+### PR 5a-4 — `sheet.html` — Personality, Backstory, Conditions, Spell Slots, Spells (layout only)
+- Personality section: 2×2 grid of textareas (Traits, Ideals, Bonds, Flaws), stacks to 1-col on mobile (≤500px)
+- Backstory section: single large textarea (6 rows), label "Character Backstory"
+- Conditions section: 14 clickable condition pills (Blinded → Unconscious), toggle `.active` on click (red highlight)
+- Exhaustion row: − / + buttons clamp 0–6, update `#exhaustion-value` span inline
+- Spell Slots section: 3-col grid showing levels 1–3; level 1 has 2 filled pips (`.filled`), clicking any pip toggles `.used`
+- Spells section: Cantrips subsection — gold chip pills (Eldritch Blast, Minor Illusion) + ＋ Add Cantrip btn;
+  Spells subsection — spell cards with name + level badge (Hex Lvl 1, Armor of Agathys Lvl 1) + ＋ Add Spell btn
+- All placeholder values — no Supabase calls
+- Nothing from PR 5a-1, 5a-2, or 5a-3 was modified
+
 ### PR 5a-2 — `sheet.html` — HP, death saves, saving throws, skills (layout only)
 - Hit Points section: Max HP + Current HP boxes, HP bar (green/gold/red fill), Temp HP + Hit Dice boxes
 - Death Saves section: Successes (3 checkboxes, green when checked) + Failures (3 checkboxes, red when checked)
@@ -175,6 +186,7 @@ dnd-v2/
 ## What The Next Agent Should Build
 
 **PR 5b — `sheet.html` Supabase wiring**
+
 Wire up all sections to Supabase:
 - Read `?c=campaignId`, look up character via membership
 - Field-level saves on blur for every input

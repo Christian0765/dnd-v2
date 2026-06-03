@@ -543,6 +543,175 @@
       color: var(--stat-color);
       display: block;
     }
+
+    /* ── Personality Grid ── */
+    .personality-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width: 500px) {
+      .personality-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* ── Conditions ── */
+    .conditions-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .condition-pill {
+      font-family: var(--font-heading);
+      font-size: 0.52rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 5px 10px;
+      border-radius: 20px;
+      border: 1px solid rgba(var(--border-rgb), 0.4);
+      background: rgba(255,255,255,0.04);
+      color: var(--border-light);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .condition-pill.active {
+      background: rgba(var(--danger-rgb), 0.2);
+      border-color: var(--red);
+      color: var(--red);
+    }
+    .exhaustion-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .exhaustion-label {
+      font-family: var(--font-heading);
+      font-size: 0.52rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--border-light);
+    }
+    .exhaustion-btn {
+      font-family: var(--font-heading);
+      font-size: 0.7rem;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--border-light);
+      width: 22px;
+      height: 22px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ── Spell Slots ── */
+    .slots-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    .slot-box {
+      background: var(--ability-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 10px 8px;
+      text-align: center;
+    }
+    .slot-level {
+      font-family: var(--font-heading);
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--stat-color);
+      display: block;
+    }
+    .slot-count {
+      font-family: var(--font-heading);
+      font-size: 0.5rem;
+      color: var(--border-light);
+      display: block;
+      margin-bottom: 4px;
+    }
+    .slot-pips {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 3px;
+      margin-top: 4px;
+    }
+    .slot-pip {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+      border: 1px solid rgba(var(--border-rgb), 0.4);
+      background: transparent;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .slot-pip.filled {
+      background: var(--gold-light);
+      border-color: var(--gold);
+    }
+    .slot-pip.used {
+      background: transparent;
+      border-color: rgba(var(--border-rgb), 0.2);
+    }
+
+    /* ── Cantrips & Spells ── */
+    .spell-subsection-label {
+      font-family: var(--font-heading);
+      font-size: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--border-light);
+      display: block;
+      margin-bottom: 6px;
+      margin-top: 10px;
+    }
+    .cantrip-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+    .cantrip-chip {
+      font-family: var(--font-heading);
+      font-size: 0.52rem;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border: 1px solid var(--gold);
+      border-radius: 20px;
+      color: var(--gold-light);
+      background: rgba(var(--accent-rgb), 0.08);
+    }
+    .spell-card {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 10px;
+      border: 1px solid rgba(var(--border-rgb), 0.2);
+      border-radius: var(--radius-sm);
+      margin-bottom: 6px;
+      background: rgba(255,255,255,0.03);
+    }
+    .spell-name {
+      font-family: var(--font-heading);
+      font-size: 0.78rem;
+      color: var(--ink);
+    }
+    .spell-level-badge {
+      font-family: var(--font-heading);
+      font-size: 0.48rem;
+      text-transform: uppercase;
+      color: var(--border-light);
+      border: 1px solid rgba(var(--border-rgb), 0.3);
+      border-radius: 20px;
+      padding: 2px 7px;
+    }
   </style>
 </head>
 <body>
@@ -950,6 +1119,102 @@
         </div>
       </div>
 
+      <!-- Personality -->
+      <div class="sec">Personality</div>
+      <div class="personality-grid">
+        <div class="form-field">
+          <label class="form-label">Personality Traits</label>
+          <textarea class="form-input" rows="3" style="resize:vertical">I am always calm, no matter what the situation.</textarea>
+        </div>
+        <div class="form-field">
+          <label class="form-label">Ideals</label>
+          <textarea class="form-input" rows="3" style="resize:vertical">Greater Good. My gifts are meant to be shared with all.</textarea>
+        </div>
+        <div class="form-field">
+          <label class="form-label">Bonds</label>
+          <textarea class="form-input" rows="3" style="resize:vertical">I protect those who cannot protect themselves.</textarea>
+        </div>
+        <div class="form-field">
+          <label class="form-label">Flaws</label>
+          <textarea class="form-input" rows="3" style="resize:vertical">I have a weakness for the vices of the city.</textarea>
+        </div>
+      </div>
+
+      <!-- Backstory -->
+      <div class="sec">Backstory</div>
+      <div class="form-field">
+        <label class="form-label">Character Backstory</label>
+        <textarea class="form-input" rows="6" style="resize:vertical">A wanderer from the northern lands...</textarea>
+      </div>
+
+      <!-- Conditions -->
+      <div class="sec">Conditions</div>
+      <div class="conditions-wrap">
+        <button class="condition-pill">Blinded</button>
+        <button class="condition-pill">Charmed</button>
+        <button class="condition-pill">Deafened</button>
+        <button class="condition-pill">Frightened</button>
+        <button class="condition-pill">Grappled</button>
+        <button class="condition-pill">Incapacitated</button>
+        <button class="condition-pill">Invisible</button>
+        <button class="condition-pill">Paralyzed</button>
+        <button class="condition-pill">Petrified</button>
+        <button class="condition-pill">Poisoned</button>
+        <button class="condition-pill">Prone</button>
+        <button class="condition-pill">Restrained</button>
+        <button class="condition-pill">Stunned</button>
+        <button class="condition-pill">Unconscious</button>
+      </div>
+      <div class="exhaustion-row">
+        <button class="exhaustion-btn" onclick="changeExhaustion(-1)">−</button>
+        <span class="exhaustion-label">Exhaustion: <span id="exhaustion-value">0</span></span>
+        <button class="exhaustion-btn" onclick="changeExhaustion(1)">＋</button>
+      </div>
+
+      <!-- Spell Slots -->
+      <div class="sec">Spell Slots</div>
+      <div class="slots-grid">
+        <div class="slot-box">
+          <span class="slot-level">1</span>
+          <span class="slot-count">2 / 2</span>
+          <div class="slot-pips">
+            <span class="slot-pip filled"></span>
+            <span class="slot-pip filled"></span>
+          </div>
+        </div>
+        <div class="slot-box">
+          <span class="slot-level">2</span>
+          <span class="slot-count">0 / 0</span>
+          <div class="slot-pips"></div>
+        </div>
+        <div class="slot-box">
+          <span class="slot-level">3</span>
+          <span class="slot-count">0 / 0</span>
+          <div class="slot-pips"></div>
+        </div>
+      </div>
+
+      <!-- Spells -->
+      <div class="sec">Spells</div>
+      <span class="spell-subsection-label">Cantrips</span>
+      <div class="cantrip-chips">
+        <span class="cantrip-chip">Eldritch Blast</span>
+        <span class="cantrip-chip">Minor Illusion</span>
+      </div>
+      <button class="btn btn-ghost" style="margin-bottom:14px">＋ Add Cantrip</button>
+      <span class="spell-subsection-label">Spells</span>
+      <div class="spells-list">
+        <div class="spell-card">
+          <span class="spell-name">Hex</span>
+          <span class="spell-level-badge">Lvl 1</span>
+        </div>
+        <div class="spell-card">
+          <span class="spell-name">Armor of Agathys</span>
+          <span class="spell-level-badge">Lvl 1</span>
+        </div>
+      </div>
+      <button class="btn btn-ghost">＋ Add Spell</button>
+
     </div>
   </div>
 
@@ -1048,6 +1313,27 @@
     document.querySelectorAll('.modal-overlay').forEach(overlay => {
       overlay.addEventListener('click', function(e) {
         if (e.target === this) closeModal(this.id);
+      });
+    });
+
+    // Condition pill toggle
+    document.querySelectorAll('.condition-pill').forEach(pill => {
+      pill.addEventListener('click', () => {
+        pill.classList.toggle('active');
+      });
+    });
+
+    // Exhaustion counter
+    let exhaustion = 0;
+    function changeExhaustion(delta) {
+      exhaustion = Math.max(0, Math.min(6, exhaustion + delta));
+      document.getElementById('exhaustion-value').textContent = exhaustion;
+    }
+
+    // Spell slot pip toggle
+    document.querySelectorAll('.slot-pip').forEach(pip => {
+      pip.addEventListener('click', () => {
+        pip.classList.toggle('used');
       });
     });
   </script>
