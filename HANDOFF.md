@@ -5,6 +5,16 @@
 
 ## What's Been Built
 
+### PR 4 — `campaign.html` — main campaign page (party overview, DM tools)
+- `campaign.html` — campaign landing page at `campaign.html?c={campaignId}`
+- Fixed top bar: campaign name (left), Sheet + Combat nav buttons (center), user name + Sign Out (right)
+- Two-column desktop layout: party overview (left), DM panel (right, DM only)
+- **Party Overview** (all roles): character cards showing name, class · race, HP bar (green/yellow/red), AC badge, player name; placeholder card for members with no character yet
+- **Real-time sync**: subscribes to `characters` table for this campaign via Supabase Realtime; HP and status update live without refresh
+- **DM Panel** (role === 'dm' only): campaign ID with Copy button, edit campaign name (field-level save), Add NPC modal (name + public_notes), NPC list
+- Redirects: no `?c=` → `home.html`; not authenticated → `login.html`; not a member → `home.html`; campaign deleted/not found → `home.html`
+- All Supabase calls have error handling; all user strings pass through `escHtml()`; soft deletes enforced; field-level saves only
+
 ### PR 3 — `home.html` — campaign lobby (list, create, join campaigns)
 - `home.html` — campaign lobby landing page after login
 - Fixed top bar with site title and signed-in user's display name
@@ -58,6 +68,7 @@ dnd-v2/
 ├── index.html
 ├── login.html
 ├── home.html
+├── campaign.html
 ├── supabase-config.js.template
 ├── HANDOFF.md
 ├── DND-ARCHITECTURE-SPEC.md
@@ -95,11 +106,12 @@ dnd-v2/
 
 ## What The Next Agent Should Build
 
-**PR 4 — `campaign.html`** — main campaign page (party overview, DM tools)
+**PR 5 — `sheet.html`** — full character sheet for one player
 
-- Party overview showing all character cards (name, class, HP, AC)
-- Real-time sync of HP and character status via Supabase Realtime
-- DM panel: campaign settings, NPC list, quest list, session notes
-- Navigation links to `sheet.html?c={id}` and `combat.html?c={id}`
-- Reads/writes: `characters`, `campaigns`, `npcs`, `quests` tables
-- URL: `campaign.html?c={campaignId}`
+- Full character sheet reading `?c=campaignId` from URL
+- Looks up the character via the current user's membership row
+- Field-level saves on blur for every text/number input
+- Atomic HP / gold adjustments via RPC (`adjust_hp`)
+- Real-time sync so DM edits appear live
+- Reads/writes: `characters`, `currency`, `weapons`, `features`, `resources`, `spell_slots`, `character_inventory` tables
+- URL: `sheet.html?c={campaignId}`

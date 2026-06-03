@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>D&D Tracker — Campaign</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;900&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/components.css">
+  <script>
+    const SUPABASE_URL      = 'https://izpubltxejnelahoxszp.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml6cHVibHR4ZWpuZWxhaG94c3pwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0MjU1MDQsImV4cCI6MjA5NjAwMTUwNH0.h57Wz1AH3of5ZlAj5L-G1Rq2g5p0XPG2bI_ECno_paY';
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-client.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/utils.js"></script>
+  <style>
+    /* ── Top Bar ── */
+    .top-bar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 52px;
+      background: linear-gradient(160deg, var(--header-bg-1), var(--header-bg-2));
+      border-bottom: 1px solid rgba(var(--border-rgb), 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      z-index: 100;
+      gap: 12px;
+    }
+
+    .top-bar-left {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .campaign-name-display {
+      font-family: var(--font-heading);
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--gold-light);
+      letter-spacing: 0.06em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .top-bar-nav {
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .top-bar-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .user-name {
+      font-family: var(--font-heading);
+      font-size: 0.52rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--border-light);
+    }
+
+    /* ── Page Layout ── */
+    .page-wrap {
+      padding: 68px 20px 40px;
+      max-width: 1100px;
+      margin: 0 auto;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .columns {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 24px;
+      align-items: start;
+    }
+
+    /* ── Party Grid ── */
+    .party-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 14px;
+      margin-top: 10px;
+    }
+
+    /* ── Character Card ── */
+    .char-card {
+      background: linear-gradient(160deg, var(--modal-bg-1) 0%, var(--modal-bg-2) 100%);
+      border: 1px solid rgba(var(--border-rgb), 0.6);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+      position: relative;
+    }
+
+    .char-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    }
+
+    .char-card-name {
+      font-family: var(--font-heading);
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--gold-light);
+      margin-bottom: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .char-card-sub {
+      font-family: var(--font-body);
+      font-size: 0.82rem;
+      color: var(--border-light);
+      margin-bottom: 10px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .char-card-stats {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .ac-badge {
+      font-family: var(--font-heading);
+      font-size: 0.55rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--gold-light);
+      border: 1px solid var(--gold);
+      border-radius: var(--radius-sm);
+      padding: 3px 7px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .hp-section { flex: 1; min-width: 0; }
+
+    .hp-text {
+      font-family: var(--font-heading);
+      font-size: 0.52rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--border-light);
+      margin-bottom: 3px;
+    }
+
+    .hp-bar-track {
+      height: 6px;
+      background: rgba(255,255,255,0.07);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .hp-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.4s ease, background-color 0.4s ease;
+    }
+
+    .hp-bar-fill.hp-green  { background: var(--green); }
+    .hp-bar-fill.hp-yellow { background: #9a7000; }
+    .hp-bar-fill.hp-red    { background: var(--red); }
+
+    .char-card-player {
+      font-family: var(--font-heading);
+      font-size: 0.48rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: rgba(var(--border-rgb), 0.7);
+      margin-top: 8px;
+    }
+
+    /* ── No-Character Placeholder ── */
+    .char-placeholder {
+      background: rgba(255,255,255,0.02);
+      border: 1px dashed rgba(var(--border-rgb), 0.35);
+      border-radius: var(--radius-md);
+      padding: 20px 16px;
+      text-align: center;
+    }
+
+    .char-placeholder-name {
+      font-family: var(--font-heading);
+      font-size: 0.72rem;
+      color: var(--border-light);
+      margin-bottom: 4px;
+    }
+
+    .char-placeholder-sub {
+      font-family: var(--font-body);
+      font-size: 0.78rem;
+      color: rgba(var(--border-rgb), 0.5);
+      font-style: italic;
+    }
+
+    /* ── DM Panel ── */
+    .dm-panel {
+      background: linear-gradient(160deg, var(--modal-bg-1) 0%, var(--modal-bg-2) 100%);
+      border: 1px solid rgba(var(--border-rgb), 0.6);
+      border-radius: var(--radius-md);
+      padding: 18px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+    }
+
+    .campaign-id-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 6px;
+    }
+
+    .campaign-id-val {
+      font-family: monospace;
+      font-size: 0.68rem;
+      color: var(--border-light);
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(var(--border-rgb), 0.3);
+      border-radius: var(--radius-sm);
+      padding: 5px 8px;
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      min-width: 0;
+    }
+
+    .edit-name-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 6px;
+    }
+
+    .edit-name-row .form-input {
+      flex: 1;
+      font-size: 0.82rem;
+      padding: 7px 9px;
+    }
+
+    /* ── NPC List ── */
+    .npc-list {
+      margin-top: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .npc-item {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(var(--border-rgb), 0.25);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+    }
+
+    .npc-name {
+      font-family: var(--font-heading);
+      font-size: 0.72rem;
+      color: var(--gold-light);
+      margin-bottom: 3px;
+    }
+
+    .npc-notes {
+      font-family: var(--font-body);
+      font-size: 0.82rem;
+      color: var(--border-light);
+      font-style: italic;
+      white-space: pre-wrap;
+    }
+
+    .npc-empty {
+      font-family: var(--font-body);
+      font-size: 0.82rem;
+      color: rgba(var(--border-rgb), 0.5);
+      font-style: italic;
+      padding: 8px 0;
+    }
+
+    /* ── Modal submit row ── */
+    .modal-submit-btn {
+      width: 100%;
+      justify-content: center;
+      margin-top: 4px;
+    }
+
+    .modal-error {
+      display: none;
+      margin-top: 10px;
+      background: rgba(122,21,21,0.15);
+      border: 1px solid var(--red);
+      border-radius: var(--radius-sm);
+      color: var(--red);
+      padding: 10px 12px;
+      font-family: var(--font-body);
+      font-size: 0.85rem;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 760px) {
+      .columns {
+        grid-template-columns: 1fr;
+      }
+      .top-bar-nav .btn {
+        padding: 6px 10px;
+        font-size: 0.55rem;
+      }
+      .user-name { display: none; }
+    }
+
+    @media (max-width: 480px) {
+      .party-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="session-banner" class="session-banner">
+    Session expired — <a href="login.html">sign in again</a>
+  </div>
+
+  <!-- Top Bar -->
+  <header class="top-bar">
+    <div class="top-bar-left">
+      <div class="campaign-name-display" id="campaign-name-display">Loading…</div>
+    </div>
+
+    <nav class="top-bar-nav">
+      <button class="btn btn-gold" id="btn-sheet" onclick="goToSheet()">⚔ My Sheet</button>
+      <button class="btn btn-ghost" id="btn-combat" onclick="goToCombat()">⚡ Combat</button>
+    </nav>
+
+    <div class="top-bar-right">
+      <span class="user-name" id="user-name"></span>
+      <button class="btn btn-ghost" onclick="signOut()">Sign Out</button>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <div class="page-wrap">
+    <div class="columns" id="page-columns">
+
+      <!-- Left: Party Overview -->
+      <div id="party-col">
+        <div class="sec">The Party</div>
+        <div class="party-grid" id="party-grid">
+          <div style="color:var(--border-light);font-size:0.85rem;">Loading…</div>
+        </div>
+      </div>
+
+      <!-- Right: DM Panel (injected when user is DM) -->
+      <div id="dm-col" style="display:none;">
+        <div class="dm-panel">
+          <div class="sec" style="margin-top:0;">DM Tools</div>
+
+          <!-- Campaign ID -->
+          <div class="sec">Campaign ID</div>
+          <div style="font-family:var(--font-body);font-size:0.8rem;color:var(--border-light);margin-bottom:4px;">
+            Share this with players so they can join.
+          </div>
+          <div class="campaign-id-row">
+            <div class="campaign-id-val" id="campaign-id-val"></div>
+            <button class="btn btn-ghost" onclick="copyId()" style="flex-shrink:0;">Copy</button>
+          </div>
+
+          <!-- Edit Campaign Name -->
+          <div class="sec">Campaign Name</div>
+          <div class="edit-name-row">
+            <input class="form-input" type="text" id="edit-campaign-name" maxlength="80" placeholder="Campaign name" autocomplete="off">
+            <button class="btn btn-gold" onclick="saveCampaignName()">Save</button>
+          </div>
+
+          <!-- NPCs -->
+          <div class="sec">NPCs</div>
+          <button class="btn btn-gold" style="margin-bottom:10px;" onclick="openModal('modal-add-npc')">＋ Add NPC</button>
+          <div class="npc-list" id="npc-list">
+            <div class="npc-empty">No NPCs yet.</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Add NPC Modal -->
+  <div id="modal-add-npc" class="modal-overlay">
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeModal()">✕</button>
+      <div class="modal-title">Add NPC</div>
+      <div class="modal-sub">Add a non-player character to this campaign</div>
+
+      <div class="form-field">
+        <label class="form-label" for="npc-name">Name</label>
+        <input class="form-input" type="text" id="npc-name" placeholder="Elara Moonwhisper" maxlength="80" autocomplete="off">
+      </div>
+
+      <div class="form-field">
+        <label class="form-label" for="npc-notes">Notes</label>
+        <textarea class="form-input" id="npc-notes" rows="3" placeholder="Local innkeeper, friendly to the party…" maxlength="500" style="resize:vertical;"></textarea>
+      </div>
+
+      <div class="modal-error" id="npc-modal-error"></div>
+
+      <button class="btn btn-primary modal-submit-btn" id="npc-submit-btn" data-label="Add NPC" onclick="addNpc()">Add NPC</button>
+    </div>
+  </div>
+
+  <script>
+    let campaignId = null;
+    let currentUser = null;
+    let userMembership = null;
+    let allMemberships = [];
+    let realtimeChannel = null;
+
+    // ── Init ──────────────────────────────────────────────────────────────────
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const params = new URLSearchParams(window.location.search);
+      campaignId = params.get('c');
+      if (!campaignId) { window.location.href = 'home.html'; return; }
+
+      const session = await requireAuth();
+      if (!session) return;
+
+      currentUser = session.user;
+
+      // Load membership for this user in this campaign
+      const { data: mem, error: memErr } = await supabaseClient
+        .from('memberships')
+        .select('*')
+        .eq('campaign_id', campaignId)
+        .eq('user_id', currentUser.id)
+        .maybeSingle();
+
+      if (memErr || !mem) { window.location.href = 'home.html'; return; }
+      userMembership = mem;
+
+      // Load campaign
+      const { data: campaign, error: campErr } = await supabaseClient
+        .from('campaigns')
+        .select('*')
+        .eq('id', campaignId)
+        .is('deleted_at', null)
+        .maybeSingle();
+
+      if (campErr || !campaign) { window.location.href = 'home.html'; return; }
+
+      // Load display name
+      const { data: profile } = await supabaseClient
+        .from('profiles')
+        .select('display_name')
+        .eq('id', currentUser.id)
+        .maybeSingle();
+
+      const displayName = profile?.display_name
+        || currentUser.user_metadata?.display_name
+        || currentUser.email;
+
+      document.getElementById('user-name').textContent = escHtml(displayName);
+      document.getElementById('campaign-name-display').textContent = escHtml(campaign.name);
+      document.title = 'D&D Tracker — ' + campaign.name;
+
+      // Show DM panel if DM
+      if (userMembership.role === 'dm') {
+        document.getElementById('dm-col').style.display = 'block';
+        document.getElementById('campaign-id-val').textContent = campaignId;
+        document.getElementById('edit-campaign-name').value = campaign.name;
+        await loadNpcs();
+      }
+
+      await loadParty();
+      subscribeToCharacters();
+    });
+
+    // ── Navigation ────────────────────────────────────────────────────────────
+
+    function goToSheet() {
+      window.location.href = 'sheet.html?c=' + campaignId;
+    }
+
+    function goToCombat() {
+      window.location.href = 'combat.html?c=' + campaignId;
+    }
+
+    // ── Party Overview ────────────────────────────────────────────────────────
+
+    async function loadParty() {
+      const grid = document.getElementById('party-grid');
+
+      // Load all memberships with profile names
+      const { data: memberships, error: memErr } = await supabaseClient
+        .from('memberships')
+        .select('id, role, user_id, profiles(display_name)')
+        .eq('campaign_id', campaignId);
+
+      if (memErr) {
+        grid.innerHTML = `<div style="color:var(--red);font-size:0.85rem;">Error loading party: ${escHtml(memErr.message)}</div>`;
+        return;
+      }
+
+      allMemberships = memberships || [];
+
+      // Load all characters for this campaign
+      const { data: characters, error: charErr } = await supabaseClient
+        .from('characters')
+        .select('*')
+        .eq('campaign_id', campaignId)
+        .is('deleted_at', null);
+
+      if (charErr) {
+        grid.innerHTML = `<div style="color:var(--red);font-size:0.85rem;">Error loading characters: ${escHtml(charErr.message)}</div>`;
+        return;
+      }
+
+      renderParty(allMemberships, characters || []);
+    }
+
+    function renderParty(memberships, characters) {
+      const grid = document.getElementById('party-grid');
+
+      // Build a map: membership_id → character
+      const charByMembership = {};
+      for (const c of characters) {
+        if (c.membership_id) charByMembership[c.membership_id] = c;
+      }
+
+      const cards = memberships.map(mem => {
+        const playerName = mem.profiles?.display_name || 'Unknown Player';
+        const char = charByMembership[mem.id];
+
+        if (!char) {
+          return `
+            <div class="char-placeholder">
+              <div class="char-placeholder-name">${escHtml(playerName)}</div>
+              <div class="char-placeholder-sub">No character yet</div>
+            </div>`;
+        }
+
+        const hpPct = char.max_hp > 0
+          ? Math.round((char.cur_hp / char.max_hp) * 100)
+          : 0;
+        const clampedPct = Math.max(0, Math.min(100, hpPct));
+        const hpClass = clampedPct > 50 ? 'hp-green' : clampedPct > 25 ? 'hp-yellow' : 'hp-red';
+
+        const className = escHtml(char.class || '—');
+        const raceName  = escHtml(char.race  || '—');
+        const sub = (char.class || char.race) ? `${className} · ${raceName}` : '—';
+
+        return `
+          <div class="char-card">
+            <div class="char-card-name">${escHtml(char.name || 'Unnamed Character')}</div>
+            <div class="char-card-sub">${sub}</div>
+            <div class="char-card-stats">
+              <div class="hp-section">
+                <div class="hp-text">${char.cur_hp} / ${char.max_hp} HP</div>
+                <div class="hp-bar-track">
+                  <div class="hp-bar-fill ${hpClass}" style="width:${clampedPct}%"></div>
+                </div>
+              </div>
+              <div class="ac-badge">AC ${char.ac ?? '—'}</div>
+            </div>
+            <div class="char-card-player">⚔ ${escHtml(playerName)}</div>
+          </div>`;
+      });
+
+      grid.innerHTML = cards.length ? cards.join('') : '<div style="color:var(--border-light);font-size:0.85rem;">No members yet.</div>';
+    }
+
+    // ── Real-Time Subscription ────────────────────────────────────────────────
+
+    function subscribeToCharacters() {
+      realtimeChannel = supabaseClient
+        .channel('campaign-characters-' + campaignId)
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'characters',
+          filter: `campaign_id=eq.${campaignId}`
+        }, () => loadParty())
+        .subscribe();
+    }
+
+    window.addEventListener('beforeunload', () => {
+      if (realtimeChannel) supabaseClient.removeChannel(realtimeChannel);
+    });
+
+    // ── DM: Campaign Name ─────────────────────────────────────────────────────
+
+    async function saveCampaignName() {
+      const input = document.getElementById('edit-campaign-name');
+      const newName = input.value.trim();
+      if (!newName) { showToast('Campaign name cannot be empty.', 'error'); return; }
+
+      const { error } = await supabaseClient
+        .from('campaigns')
+        .update({ name: newName })
+        .eq('id', campaignId);
+
+      if (error) {
+        console.error('[saveCampaignName] Failed:', error.message);
+        showToast('Failed to save campaign name.', 'error');
+        return;
+      }
+
+      document.getElementById('campaign-name-display').textContent = escHtml(newName);
+      document.title = 'D&D Tracker — ' + newName;
+      showToast('Campaign name saved.', 'success');
+    }
+
+    // ── DM: Copy Campaign ID ──────────────────────────────────────────────────
+
+    async function copyId() {
+      try {
+        await navigator.clipboard.writeText(campaignId);
+        showToast('Campaign ID copied!', 'success');
+      } catch {
+        showToast('Could not copy — select it manually.', 'error');
+      }
+    }
+
+    // ── DM: NPCs ──────────────────────────────────────────────────────────────
+
+    async function loadNpcs() {
+      const { data, error } = await supabaseClient
+        .from('npcs')
+        .select('id, name, public_notes')
+        .eq('campaign_id', campaignId)
+        .is('deleted_at', null)
+        .order('sort_order', { ascending: true });
+
+      if (error) {
+        console.error('[loadNpcs] Failed:', error.message);
+        return;
+      }
+
+      renderNpcList(data || []);
+    }
+
+    function renderNpcList(npcs) {
+      const list = document.getElementById('npc-list');
+
+      if (npcs.length === 0) {
+        list.innerHTML = '<div class="npc-empty">No NPCs yet.</div>';
+        return;
+      }
+
+      list.innerHTML = npcs.map(npc => `
+        <div class="npc-item">
+          <div class="npc-name">${escHtml(npc.name)}</div>
+          ${npc.public_notes ? `<div class="npc-notes">${escHtml(npc.public_notes)}</div>` : ''}
+        </div>`).join('');
+    }
+
+    async function addNpc() {
+      const nameVal  = document.getElementById('npc-name').value.trim();
+      const notesVal = document.getElementById('npc-notes').value.trim();
+      const errEl    = document.getElementById('npc-modal-error');
+      const btn      = document.getElementById('npc-submit-btn');
+
+      errEl.style.display = 'none';
+
+      if (!nameVal) {
+        errEl.textContent = 'NPC name is required.';
+        errEl.style.display = 'block';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Adding…';
+
+      const { error } = await supabaseClient
+        .from('npcs')
+        .insert({
+          campaign_id:  campaignId,
+          name:         nameVal,
+          public_notes: notesVal,
+        });
+
+      btn.disabled = false;
+      btn.textContent = btn.dataset.label;
+
+      if (error) {
+        console.error('[addNpc] Failed:', error.message);
+        errEl.textContent = 'Failed to add NPC: ' + error.message;
+        errEl.style.display = 'block';
+        return;
+      }
+
+      document.getElementById('npc-name').value  = '';
+      document.getElementById('npc-notes').value = '';
+      closeModal();
+      showToast('NPC added.', 'success');
+      await loadNpcs();
+    }
+
+    // ── Modal Helpers ─────────────────────────────────────────────────────────
+
+    let activeModal = null;
+
+    function openModal(id) {
+      closeModal();
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.classList.add('open');
+      activeModal = el;
+      const errEl = activeModal.querySelector('.modal-error');
+      if (errEl) errEl.style.display = 'none';
+    }
+
+    function closeModal() {
+      if (activeModal) activeModal.classList.remove('open');
+      activeModal = null;
+    }
+
+    document.addEventListener('click', (e) => {
+      if (e.target.classList.contains('modal-overlay')) closeModal();
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeModal();
+    });
+  </script>
+</body>
+</html>
