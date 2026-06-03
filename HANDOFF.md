@@ -76,3 +76,47 @@
 ---
 
 ## Current File Structure
+dnd-v2/
+├── index.html
+├── login.html
+├── home.html
+├── campaign.html
+├── supabase-config.js.template
+├── HANDOFF.md
+├── DND-ARCHITECTURE-SPEC.md
+├── AGENT-RULES.md
+├── FILE-ORGANIZATION.md
+├── .gitignore
+├── README.md
+│
+├── /css/
+│   ├── variables.css
+│   ├── base.css
+│   └── components.css
+│
+├── /js/
+│   ├── supabase-client.js
+│   ├── auth.js
+│   ├── theme.js
+│   └── utils.js
+│
+└── /data/
+└── /rulesets/
+└── /5e-2014/
+├── sheet_schema.json
+└── /classes/
+└── fighter.json
+---
+
+## What The Next Agent Should Build
+
+**PR 5 — `sheet.html`** — full character sheet for one player
+
+- Full character sheet reading `?c=campaignId` from URL
+- Looks up character via current user's membership row
+- Field-level saves on blur for every input
+- Atomic HP adjustments via RPC (`adjust_hp`)
+- Real-time sync so DM edits appear live
+- If no character exists yet, show a "Create Character" form
+- Reads/writes: `characters`, `currency`, `weapons`, `features`, `resources`, `spell_slots`, `character_inventory` tables
+- URL: `sheet.html?c={campaignId}`
