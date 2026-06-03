@@ -325,46 +325,35 @@
       if (e.key === 'Escape') closeModal();
     });
 
-    async function createCampaign() {
-      const name = document.getElementById('cc-name').value.trim();
-      if (!name) { showModalError('Campaign name is required.'); return; }
+async function createCampaign() {
+  const name = document.getElementById('cc-name').value.trim();
+  if (!name) { showModalError('Campaign name is required.'); return; }
 
-      setModalLoading(true);
+  setModalLoading(true);
 
-      // Insert the campaign without chaining .select() — avoids RLS timing issue
-      const { error: campErr } = await supabaseClient
-        .from('campaigns')
-        .insert({ name, ruleset: '5e-2014' });
+  const user = await getUser();
 
-      if (campErr) { showModalError(campErr.message); setModalLoading(false); return; }
+  // Generate ID client-side so we don't need to fetch it back
+  const campaignId = crypto.randomUUID();
 
-      // Fetch the campaign we just created
-      const { data: campaign, error: fetchErr } = await supabaseClient
-        .from('campaigns')
-        .select('id')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+  const { error: campErr } = await supabaseClient
+    .from('campaigns')
+    .insert({ id: campaignId, name, ruleset: '5e-2014' });
 
-      if (fetchErr || !campaign) {
-        showModalError('Campaign created but could not retrieve it. Please refresh.');
-        setModalLoading(false);
-        return;
-      }
+  if (campErr) { showModalError(campErr.message); setModalLoading(false); return; }
 
-      const user = await getUser();
-      const { error: memErr } = await supabaseClient
-        .from('memberships')
-        .insert({
-          user_id: user.id,
-          campaign_id: campaign.id,
-          role: 'dm',
-        });
+  const { error: memErr } = await supabaseClient
+    .from('memberships')
+    .insert({
+      user_id: user.id,
+      campaign_id: campaignId,
+      role: 'dm',
+    });
 
-      if (memErr) { showModalError(memErr.message); setModalLoading(false); return; }
+  if (memErr) { showModalError(memErr.message); setModalLoading(false); return; }
 
-      window.location.href = 'campaign.html?c=' + campaign.id;
-    }
+  window.location.href = 'campaign.html?c=' + campaignId;
+}
 
     async function joinCampaign() {
       const campaignId = document.getElementById('jc-id').value.trim();
