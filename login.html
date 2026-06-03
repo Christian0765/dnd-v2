@@ -8,11 +8,11 @@
   <link rel="stylesheet" href="css/variables.css">
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/components.css">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const SUPABASE_URL      = 'https://izpubltxejnelahoxszp.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml6cHVibHR4ZWpuZWxhaG94c3pwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0MjU1MDQsImV4cCI6MjA5NjAwMTUwNH0.h57Wz1AH3of5ZlAj5L-G1Rq2g5p0XPG2bI_ECno_paY';
   </script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase-client.js"></script>
   <script src="js/utils.js"></script>
   <style>
@@ -51,7 +51,6 @@
       margin-bottom: 0;
     }
 
-    /* ── Tab bar ── */
     .tab-bar {
       display: flex;
       width: 100%;
@@ -75,20 +74,12 @@
       margin-bottom: -1px;
     }
 
-    .tab-btn:hover {
-      color: var(--gold-light);
-    }
+    .tab-btn:hover { color: var(--gold-light); }
+    .tab-btn.active { color: var(--gold-light); border-bottom-color: var(--gold); }
 
-    .tab-btn.active {
-      color: var(--gold-light);
-      border-bottom-color: var(--gold);
-    }
-
-    /* ── Form panels ── */
     .form-panel { display: none; }
     .form-panel.active { display: block; }
 
-    /* ── Submit button full-width override ── */
     .submit-btn {
       width: 100%;
       justify-content: center;
@@ -114,7 +105,6 @@
 
       <div class="divider"></div>
 
-      <!-- Tab buttons -->
       <div class="tab-bar">
         <button class="tab-btn active" data-tab="signin" onclick="switchTab('signin')">Sign In</button>
         <button class="tab-btn" data-tab="signup" onclick="switchTab('signup')">Sign Up</button>
@@ -170,7 +160,6 @@
       if (session) window.location.href = 'home.html';
     })();
 
-    // Redirect on sign-in events (handles email confirmation redirect)
     supabaseClient.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN') window.location.href = 'home.html';
     });
@@ -189,20 +178,13 @@
       const email    = document.getElementById('signin-email').value.trim();
       const password = document.getElementById('signin-password').value;
 
-      if (!email || !password) {
-        showError('Please fill in all fields.');
-        return;
-      }
+      if (!email || !password) { showError('Please fill in all fields.'); return; }
 
       setLoading(true);
 
       const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
 
-      if (error) {
-        showError(error.message);
-        setLoading(false);
-        return;
-      }
+      if (error) { showError(error.message); setLoading(false); return; }
 
       window.location.href = 'home.html';
     }
@@ -214,36 +196,35 @@
       const confirm     = document.getElementById('signup-confirm').value;
 
       if (!displayName || !email || !password || !confirm) {
-        showError('Please fill in all fields.');
-        return;
+        showError('Please fill in all fields.'); return;
       }
       if (displayName.length < 2) {
-        showError('Display name must be at least 2 characters.');
-        return;
+        showError('Display name must be at least 2 characters.'); return;
       }
       if (password.length < 6) {
-        showError('Password must be at least 6 characters.');
-        return;
+        showError('Password must be at least 6 characters.'); return;
       }
       if (password !== confirm) {
-        showError('Passwords do not match.');
-        return;
+        showError('Passwords do not match.'); return;
       }
 
       setLoading(true);
 
-      const { error } = await supabaseClient.auth.signUp({
+      // 1. Create auth user
+      const { data: authData, error: authError } = await supabaseClient.auth.signUp({
         email,
         password,
-        options: {
-          data: { display_name: displayName }
-        }
+        options: { data: { display_name: displayName } }
       });
 
-      if (error) {
-        showError(error.message);
-        setLoading(false);
-        return;
+      if (authError) { showError(authError.message); setLoading(false); return; }
+
+      // 2. Create profile row
+      if (authData?.user) {
+        await supabaseClient.from('profiles').insert({
+          id: authData.user.id,
+          display_name: displayName
+        });
       }
 
       window.location.href = 'home.html';
