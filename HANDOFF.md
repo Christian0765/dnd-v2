@@ -74,6 +74,48 @@
 
 ## Known Issues & Fixes Applied
 
+### BUG — profiles row not always created on signup
+
+**Symptom:** When a new user signs up, they sometimes land in `auth.users` 
+but NOT in `profiles`. This causes a foreign key error when they try to join 
+or create a campaign:
+`insert or update on table "memberships" violates foreign key constraint "memberships_user_id_fkey"`
+
+**Affected accounts found so far:**
+- `8b2caacd-647f-4340-add7-6e99848c3339` (crm070506@gmail.com) — profile row 
+  was missing, manually inserted with display_name 'Poop'
+
+**Workaround (manual fix):**
+```sql
+INSERT INTO profiles (id, display_name)
+VALUES ('{user_id_from_auth.users}', '{display_name}');
+```
+
+**Root cause (unknown — needs investigation):**
+The signup flow in `login.html` runs this after `supabase.auth.signUp()`:
+```js
+if (authData?.user) {
+  await supabaseClient.from('profiles').insert({
+    id: authData.user.id,
+    display_name: displayName
+  });
+}
+```
+Possible causes:
+1. `authData.user` is null or undefined on some signups — the insert is 
+   silently skipped
+2. The profiles INSERT is failing silently (no error handling on it)
+3. Supabase email confirmation is interfering — if confirmation is required,
+   `authData.user` may not be fully formed at signup time
+
+**What the next agent should do:**
+1. Add proper error handling and console logging to the profiles insert in 
+   `login.html` so failures are visible
+2. Check if `authData.user` is ever null after a successful `signUp()` call
+3. Consider adding a fallback: on every page load, check if the current user 
+   has a profiles row and create one if missing
+4. Fix must not break existing working signups
+
 ### RLS on campaigns table
 - `campaigns_insert` policy: `WITH CHECK (true)` — allows any authenticated user to insert
 - `campaigns_select` policy: only returns campaigns the user is a member of
