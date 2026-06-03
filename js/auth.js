@@ -33,7 +33,7 @@ async function getMembership(campaignId) {
     .select('*, campaigns(*)')
     .eq('campaign_id', campaignId)
     .eq('user_id', user.id)
-    .single();
+    .maybeSingle();
   if (error) return null;
   return data;
 }
@@ -47,7 +47,7 @@ async function isDM(campaignId) {
 // Sign out and redirect to login
 async function signOut() {
   await supabaseClient.auth.signOut();
-  window.location.href = '/login.html';
+  window.location.href = 'login.html';
 }
 
 // Handle token expiry — show banner instead of silent failure
@@ -55,6 +55,6 @@ supabaseClient.auth.onAuthStateChange((event) => {
   if (event === 'SIGNED_OUT') {
     const banner = document.getElementById('session-banner');
     if (banner) banner.classList.add('show');
-    else window.location.href = '/login.html';
+    else window.location.href = 'login.html';
   }
 });
