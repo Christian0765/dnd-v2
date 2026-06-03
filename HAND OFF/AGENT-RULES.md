@@ -213,6 +213,14 @@ The agent does NOT have write access to GitHub. Follow this delivery process exa
     Don't silently pick one or the other. Point out the conflict and ask
     which takes priority.
 
+    ## File Delivery Format
+
+27. **Always paste HANDOFF.md directly in chat as a code block.**
+    Never deliver HANDOFF.md as a file attachment.
+    Always paste the full contents as a markdown code block so the owner
+    can copy and paste it directly into GitHub's web editor.
+    Example format:
+
 ---
 
 ## The Stack At A Glance
