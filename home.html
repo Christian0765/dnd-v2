@@ -324,7 +324,6 @@
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') closeModal();
     });
-
 async function createCampaign() {
   const name = document.getElementById('cc-name').value.trim();
   if (!name) { showModalError('Campaign name is required.'); return; }
@@ -332,6 +331,35 @@ async function createCampaign() {
   setModalLoading(true);
 
   const user = await getUser();
+  console.log('[createCampaign] user:', user);
+
+  if (!user) {
+    showModalError('Not signed in. Please refresh and try again.');
+    setModalLoading(false);
+    return;
+  }
+
+  // Generate ID client-side so we don't need to fetch it back
+  const campaignId = crypto.randomUUID();
+
+  const { error: campErr } = await supabaseClient
+    .from('campaigns')
+    .insert({ id: campaignId, name, ruleset: '5e-2014' });
+
+  if (campErr) { showModalError(campErr.message); setModalLoading(false); return; }
+
+  const { error: memErr } = await supabaseClient
+    .from('memberships')
+    .insert({
+      user_id: user.id,
+      campaign_id: campaignId,
+      role: 'dm',
+    });
+
+  if (memErr) { showModalError(memErr.message); setModalLoading(false); return; }
+
+  window.location.href = 'campaign.html?c=' + campaignId;
+}
 
   // Generate ID client-side so we don't need to fetch it back
   const campaignId = crypto.randomUUID();
