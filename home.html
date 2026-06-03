@@ -29,7 +29,6 @@
       padding: 0 24px;
       z-index: 100;
     }
-
     .top-bar-title {
       font-family: var(--font-heading);
       font-size: 0.75rem;
@@ -38,13 +37,11 @@
       letter-spacing: 0.1em;
       text-transform: uppercase;
     }
-
     .top-bar-right {
       display: flex;
       align-items: center;
       gap: 12px;
     }
-
     .user-name {
       font-family: var(--font-heading);
       font-size: 0.55rem;
@@ -52,14 +49,12 @@
       letter-spacing: 0.12em;
       color: var(--border-light);
     }
-
     .main-content {
       padding: 76px 24px 40px;
       max-width: 900px;
       margin: 0 auto;
       animation: fadeIn 0.3s ease;
     }
-
     .page-heading {
       font-family: var(--font-heading);
       font-size: 1.4rem;
@@ -68,51 +63,43 @@
       margin-bottom: 6px;
       letter-spacing: 0.04em;
     }
-
     .page-sub {
       font-family: var(--font-body);
       font-size: 1rem;
       color: var(--border-light);
     }
-
     .action-row {
       display: flex;
       gap: 10px;
       margin-top: 20px;
     }
-
     #campaigns-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 16px;
       margin-top: 24px;
     }
-
     .campaign-card {
       cursor: pointer;
       transition: transform var(--transition-fast), box-shadow var(--transition-fast);
       display: flex;
       flex-direction: column;
     }
-
     .campaign-card:hover {
       transform: translateY(-3px);
       box-shadow: 0 0 0 2px var(--shadow-deep), 0 12px 40px rgba(0,0,0,0.8);
     }
-
     .empty-state {
       grid-column: 1 / -1;
       text-align: center;
       padding: 60px 20px;
       color: var(--border-light);
     }
-
     .modal-submit-btn {
       width: 100%;
       justify-content: center;
       margin-top: 4px;
     }
-
     .modal-error {
       display: none;
       margin-top: 10px;
@@ -124,7 +111,6 @@
       font-family: var(--font-body);
       font-size: 0.85rem;
     }
-
     @media (max-width: 700px) {
       #campaigns-grid { grid-template-columns: 1fr; }
       .action-row { flex-direction: column; }
@@ -137,7 +123,6 @@
     Session expired — <a href="login.html">sign in again</a>
   </div>
 
-  <!-- Top Bar -->
   <header class="top-bar">
     <div class="top-bar-title">⚔ D&amp;D Tracker</div>
     <div class="top-bar-right">
@@ -146,16 +131,13 @@
     </div>
   </header>
 
-  <!-- Main Content -->
   <main class="main-content">
     <h1 class="page-heading">Your Campaigns</h1>
     <p class="page-sub">Select a campaign to enter, or create a new one.</p>
-
     <div class="action-row">
       <button class="btn btn-gold" onclick="openModal('modal-create')">＋ Create Campaign</button>
       <button class="btn btn-ghost" onclick="openModal('modal-join')">🔗 Join Campaign</button>
     </div>
-
     <div id="campaigns-grid">
       <div style="color:var(--border-light);font-size:0.85rem;">Loading…</div>
     </div>
@@ -167,21 +149,17 @@
       <button class="modal-close" onclick="closeModal()">✕</button>
       <div class="modal-title">Create Campaign</div>
       <div class="modal-sub">Set up your new campaign</div>
-
       <div class="form-field">
         <label class="form-label" for="cc-name">Campaign Name</label>
         <input class="form-input" type="text" id="cc-name" placeholder="The Mines of Moria" maxlength="80" autocomplete="off">
       </div>
-
       <div class="form-field">
         <label class="form-label" for="cc-ruleset">Ruleset</label>
         <select class="form-input" id="cc-ruleset">
           <option value="5e-2014">D&amp;D 5e (2014)</option>
         </select>
       </div>
-
       <div class="modal-error"></div>
-
       <button class="btn btn-primary modal-submit-btn" data-label="Create Campaign" onclick="createCampaign()">Create Campaign</button>
     </div>
   </div>
@@ -192,7 +170,6 @@
       <button class="modal-close" onclick="closeModal()">✕</button>
       <div class="modal-title">Join Campaign</div>
       <div class="modal-sub">Enter the campaign ID your DM shared with you</div>
-
       <div class="form-field">
         <label class="form-label" for="jc-id">Campaign ID</label>
         <input class="form-input" type="text" id="jc-id" placeholder="Paste campaign ID here" autocomplete="off">
@@ -200,9 +177,7 @@
           Your DM can find the campaign ID in their campaign settings.
         </div>
       </div>
-
       <div class="modal-error"></div>
-
       <button class="btn btn-primary modal-submit-btn" data-label="Join Campaign" onclick="joinCampaign()">Join Campaign</button>
     </div>
   </div>
@@ -324,64 +299,41 @@
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') closeModal();
     });
-async function createCampaign() {
-  const name = document.getElementById('cc-name').value.trim();
-  if (!name) { showModalError('Campaign name is required.'); return; }
 
-  setModalLoading(true);
+    async function createCampaign() {
+      const name = document.getElementById('cc-name').value.trim();
+      if (!name) { showModalError('Campaign name is required.'); return; }
 
-  const user = await getUser();
-  console.log('[createCampaign] user:', user);
+      setModalLoading(true);
 
-  if (!user) {
-    showModalError('Not signed in. Please refresh and try again.');
-    setModalLoading(false);
-    return;
-  }
+      const user = await getUser();
 
-  // Generate ID client-side so we don't need to fetch it back
-  const campaignId = crypto.randomUUID();
+      if (!user) {
+        showModalError('Not signed in. Please refresh and try again.');
+        setModalLoading(false);
+        return;
+      }
 
-  const { error: campErr } = await supabaseClient
-    .from('campaigns')
-    .insert({ id: campaignId, name, ruleset: '5e-2014' });
+      const campaignId = crypto.randomUUID();
 
-  if (campErr) { showModalError(campErr.message); setModalLoading(false); return; }
+      const { error: campErr } = await supabaseClient
+        .from('campaigns')
+        .insert({ id: campaignId, name, ruleset: '5e-2014' });
 
-  const { error: memErr } = await supabaseClient
-    .from('memberships')
-    .insert({
-      user_id: user.id,
-      campaign_id: campaignId,
-      role: 'dm',
-    });
+      if (campErr) { showModalError(campErr.message); setModalLoading(false); return; }
 
-  if (memErr) { showModalError(memErr.message); setModalLoading(false); return; }
+      const { error: memErr } = await supabaseClient
+        .from('memberships')
+        .insert({
+          user_id: user.id,
+          campaign_id: campaignId,
+          role: 'dm',
+        });
 
-  window.location.href = 'campaign.html?c=' + campaignId;
-}
+      if (memErr) { showModalError(memErr.message); setModalLoading(false); return; }
 
-  // Generate ID client-side so we don't need to fetch it back
-  const campaignId = crypto.randomUUID();
-
-  const { error: campErr } = await supabaseClient
-    .from('campaigns')
-    .insert({ id: campaignId, name, ruleset: '5e-2014' });
-
-  if (campErr) { showModalError(campErr.message); setModalLoading(false); return; }
-
-  const { error: memErr } = await supabaseClient
-    .from('memberships')
-    .insert({
-      user_id: user.id,
-      campaign_id: campaignId,
-      role: 'dm',
-    });
-
-  if (memErr) { showModalError(memErr.message); setModalLoading(false); return; }
-
-  window.location.href = 'campaign.html?c=' + campaignId;
-}
+      window.location.href = 'campaign.html?c=' + campaignId;
+    }
 
     async function joinCampaign() {
       const campaignId = document.getElementById('jc-id').value.trim();
