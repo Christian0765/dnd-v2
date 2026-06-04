@@ -357,6 +357,9 @@
 
       const user = await getUser();
 
+      // Ensure profile row exists before inserting membership
+      await repairProfile();
+
       const { data: existing } = await supabaseClient
         .from('memberships')
         .select('id')
