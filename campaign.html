@@ -424,7 +424,6 @@
     let campaignId = null;
     let currentUser = null;
     let userMembership = null;
-    let allMemberships = [];
     let realtimeChannel = null;
 
     // ── Init ──────────────────────────────────────────────────────────────────
@@ -440,7 +439,6 @@
       currentUser = session.user;
       await repairProfile();
 
-      // Load membership for this user in this campaign
       const { data: mem, error: memErr } = await supabaseClient
         .from('memberships')
         .select('*')
@@ -455,7 +453,6 @@
         document.getElementById('btn-sheet').style.display = '';
       }
 
-      // Load campaign
       const { data: campaign, error: campErr } = await supabaseClient
         .from('campaigns')
         .select('*')
@@ -465,7 +462,6 @@
 
       if (campErr || !campaign) { window.location.href = 'home.html'; return; }
 
-      // Load display name
       const { data: profile } = await supabaseClient
         .from('profiles')
         .select('display_name')
@@ -480,7 +476,6 @@
       document.getElementById('campaign-name-display').textContent = escHtml(campaign.name);
       document.title = 'D&D Tracker — ' + campaign.name;
 
-      // Show DM panel if DM
       if (userMembership.role === 'dm') {
         document.getElementById('dm-col').style.display = 'block';
         document.getElementById('campaign-id-val').textContent = campaignId;
@@ -503,32 +498,13 @@
     }
 
     // ── Party Overview ────────────────────────────────────────────────────────
+    // Queries characters directly by campaign_id — avoids RLS recursion on
+    // memberships table. Player names are omitted since profiles can't be
+    // joined without hitting the memberships RLS issue.
 
     async function loadParty() {
       const grid = document.getElementById('party-grid');
 
-      // Load player memberships only
-      const { data: memberships, error: memErr } = await supabaseClient
-        .from('memberships')
-        .select('id, role, user_id, profiles(display_name)')
-        .eq('campaign_id', campaignId)
-        .eq('role', 'player');
-
-      if (memErr) {
-        grid.innerHTML = `<div style="color:var(--red);font-size:0.85rem;">
-          Error loading party: ${escHtml(memErr.message)}</div>`;
-        return;
-      }
-
-      allMemberships = memberships || [];
-      console.log('[loadParty] player memberships fetched:', allMemberships.length, allMemberships);
-
-      if (allMemberships.length === 0) {
-        grid.innerHTML = '<div style="color:var(--border-light);font-size:0.85rem;">No player memberships found — RLS may be blocking the query. Check console.</div>';
-        return;
-      }
-
-      // Load all non-deleted characters for this campaign
       const { data: characters, error: charErr } = await supabaseClient
         .from('characters')
         .select('*')
@@ -537,58 +513,25 @@
 
       if (charErr) {
         grid.innerHTML = `<div style="color:var(--red);font-size:0.85rem;">
-          Error loading characters: ${escHtml(charErr.message)}</div>`;
+          Error loading party: ${escHtml(charErr.message)}</div>`;
         return;
       }
 
-      const allChars = characters || [];
-      console.log('[loadParty] characters fetched:', allChars.length, allChars);
-
-      // Repair orphaned characters that have a null membership_id.
-      // Match them to unmatched player memberships and patch the DB.
-      const matchedIds = new Set(allChars.map(c => c.membership_id).filter(Boolean));
-      const orphans = allChars.filter(c => !c.membership_id);
-      const unmatched = allMemberships.filter(m => !matchedIds.has(m.id));
-
-      for (let i = 0; i < orphans.length && i < unmatched.length; i++) {
-        const char = orphans[i];
-        const mem  = unmatched[i];
-        const { error: patchErr } = await supabaseClient
-          .from('characters')
-          .update({ membership_id: mem.id })
-          .eq('id', char.id);
-        if (patchErr) {
-          console.error('[loadParty] Failed to patch membership_id:', patchErr.message);
-        } else {
-          char.membership_id = mem.id;
-        }
-      }
-
-      renderParty(allMemberships, allChars);
+      renderParty(characters || []);
     }
 
-    function renderParty(memberships, characters) {
+    function renderParty(characters) {
       const grid = document.getElementById('party-grid');
       const viewerIsDM     = userMembership && userMembership.role === 'dm';
       const viewerIsPlayer = userMembership && userMembership.role === 'player';
 
-      const charByMembership = {};
-      for (const c of characters) {
-        if (c.membership_id) charByMembership[c.membership_id] = c;
+      if (characters.length === 0) {
+        grid.innerHTML = '<div style="color:var(--border-light);font-size:0.85rem;">No characters yet.</div>';
+        return;
       }
 
-      const cards = memberships.map(mem => {
-        const playerName = mem.profiles?.display_name || 'Unknown Player';
-        const char = charByMembership[mem.id];
-        const isOwnCard = viewerIsPlayer && mem.id === userMembership.id;
-
-        if (!char) {
-          return `
-            <div class="char-placeholder">
-              <div class="char-placeholder-name">${escHtml(playerName)}</div>
-              <div class="char-placeholder-sub">No character yet</div>
-            </div>`;
-        }
+      const cards = characters.map(char => {
+        const isOwnCard = viewerIsPlayer && char.membership_id === userMembership.id;
 
         const hpPct = char.max_hp > 0
           ? Math.round((char.cur_hp / char.max_hp) * 100)
@@ -622,14 +565,11 @@
               </div>
               <div class="ac-badge">AC ${char.ac ?? '—'}</div>
             </div>
-            <div class="char-card-player">⚔ ${escHtml(playerName)}</div>
             ${actionBtn}
           </div>`;
       });
 
-      grid.innerHTML = cards.length
-        ? cards.join('')
-        : '<div style="color:var(--border-light);font-size:0.85rem;">No players yet.</div>';
+      grid.innerHTML = cards.join('');
     }
 
     function openPlayerSheet(charId) {
