@@ -950,31 +950,31 @@
   <!-- ── Character Header (dark band, page-flow) ── -->
   <div class="char-header">
     <div class="char-header-inner">
-      <div class="char-name-display">Character Name</div>
+      <div class="char-name-display" contenteditable="true" data-field="name" onblur="saveField('name', this.textContent.trim())">Character Name</div>
       <div class="char-meta-row">
         <div class="char-meta-item">
           <span class="char-meta-label">Class</span>
-          <span class="char-meta-value">Class</span>
+          <span class="char-meta-value" contenteditable="true" data-field="class" onblur="saveField('class', this.textContent.trim())">Class</span>
         </div>
         <div class="char-meta-item">
           <span class="char-meta-label">Race</span>
-          <span class="char-meta-value">Race</span>
+          <span class="char-meta-value" contenteditable="true" data-field="race" onblur="saveField('race', this.textContent.trim())">Race</span>
         </div>
         <div class="char-meta-item">
           <span class="char-meta-label">Background</span>
-          <span class="char-meta-value">Background</span>
+          <span class="char-meta-value" contenteditable="true" data-field="background" onblur="saveField('background', this.textContent.trim())">Background</span>
         </div>
         <div class="char-meta-item">
           <span class="char-meta-label">Alignment</span>
-          <span class="char-meta-value">Alignment</span>
+          <span class="char-meta-value" contenteditable="true" data-field="alignment" onblur="saveField('alignment', this.textContent.trim())">Alignment</span>
         </div>
         <div class="char-meta-item">
           <span class="char-meta-label">Level</span>
-          <span class="char-meta-value">1</span>
+          <span class="char-meta-value" contenteditable="true" data-field="level" onblur="saveField('level', parseInt(this.textContent.trim()) || 1)">1</span>
         </div>
         <div class="char-meta-item">
           <span class="char-meta-label">XP</span>
-          <span class="char-meta-value">0</span>
+          <span class="char-meta-value" contenteditable="true" data-field="xp" onblur="saveField('xp', parseInt(this.textContent.trim()) || 0)">0</span>
         </div>
       </div>
     </div>
@@ -1590,6 +1590,236 @@
   </div>
 
   <script>
+    // ─── State ───────────────────────────────────────────────────────────────
+    let campaignId    = null;
+    let characterId   = null;
+    let currentUser   = null;
+    let userMembership = null;
+    let currentCharacter = null;
+
+    // ─── On Load Sequence ────────────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', async function () {
+      // 1. Parse URL params
+      const params = new URLSearchParams(window.location.search);
+      campaignId = params.get('c');
+      if (!campaignId) {
+        window.location.href = 'home.html';
+        return;
+      }
+
+      // 2. Auth check
+      const session = await requireAuth();
+      if (!session) return;
+
+      // 3. Current user
+      currentUser = await getUser();
+
+      // 4. Verify membership
+      const { data: membership, error: memberErr } = await supabaseClient
+        .from('memberships')
+        .select('id, role')
+        .eq('campaign_id', campaignId)
+        .eq('user_id', currentUser.id)
+        .maybeSingle();
+      if (memberErr || !membership) {
+        window.location.href = 'home.html';
+        return;
+      }
+      userMembership = membership;
+
+      // 5. Load character by membership_id — no URL param needed
+      const { data: character, error: charErr } = await supabaseClient
+        .from('characters')
+        .select('*')
+        .eq('membership_id', userMembership.id)
+        .is('deleted_at', null)
+        .maybeSingle();
+      if (charErr) {
+        console.error('[load] Character query error:', charErr.message);
+      }
+
+      // Set characterId from the DB row, or generate a UUID for the create flow
+      characterId = character ? character.id : crypto.randomUUID();
+
+      if (!character) {
+        showCreateCharacterForm();
+      } else {
+        currentCharacter = character;
+        populateHeader(character);
+      }
+
+      // 6. Campaign name + back link
+      const { data: campaign } = await supabaseClient
+        .from('campaigns')
+        .select('name')
+        .eq('id', campaignId)
+        .maybeSingle();
+      const backLink = document.querySelector('.back-link');
+      if (backLink) {
+        backLink.href = 'campaign.html?c=' + campaignId;
+        if (campaign && campaign.name) {
+          backLink.textContent = '← ' + campaign.name;
+        }
+      }
+
+      // 7. Real-time subscription
+      subscribeToCharacter();
+    });
+
+    // ─── Populate Header ─────────────────────────────────────────────────────
+    function populateHeader(char) {
+      document.querySelector('.char-name-display').textContent =
+        escHtml(char.name || 'Unnamed Character');
+      document.querySelector('[data-field="class"]').textContent =
+        escHtml(char.class || '—');
+      document.querySelector('[data-field="race"]').textContent =
+        escHtml(char.race || '—');
+      document.querySelector('[data-field="background"]').textContent =
+        escHtml(char.background || '—');
+      document.querySelector('[data-field="alignment"]').textContent =
+        escHtml(char.alignment || '—');
+      document.querySelector('[data-field="level"]').textContent =
+        char.level || 1;
+      document.querySelector('[data-field="xp"]').textContent =
+        char.xp || 0;
+      document.title = 'D&D Tracker — ' + escHtml(char.name || 'Character Sheet');
+    }
+
+    // ─── Field-Level Save ────────────────────────────────────────────────────
+    async function saveField(field, value) {
+      setSyncStatus('saving');
+      const { error } = await supabaseClient
+        .from('characters')
+        .update({ [field]: value })
+        .eq('id', characterId);
+      if (error) {
+        console.error('[saveField] Failed:', error.message);
+        setSyncStatus('error');
+        return;
+      }
+      setSyncStatus('saved');
+    }
+
+    // ─── Sync Pill ───────────────────────────────────────────────────────────
+    function setSyncStatus(state) {
+      const pill = document.querySelector('.sync-status');
+      if (!pill) return;
+      pill.className = 'sync-status';
+      if (state === 'saving') {
+        pill.classList.add('saving');
+        pill.textContent = 'Saving…';
+      } else if (state === 'saved') {
+        pill.classList.add('ok');
+        pill.textContent = '✓ Saved';
+      } else if (state === 'error') {
+        pill.classList.add('error');
+        pill.textContent = 'Error';
+      }
+    }
+
+    // ─── Real-Time Subscription ──────────────────────────────────────────────
+    function subscribeToCharacter() {
+      supabaseClient
+        .channel('sheet-character-' + characterId)
+        .on('postgres_changes', {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'characters',
+          filter: 'id=eq.' + characterId
+        }, function (payload) {
+          populateHeader(payload.new);
+        })
+        .subscribe();
+    }
+
+    window.addEventListener('beforeunload', function () {
+      supabaseClient.removeAllChannels();
+    });
+
+    // ─── Create Character Form ───────────────────────────────────────────────
+    function showCreateCharacterForm() {
+      document.querySelector('.sheet-body').innerHTML =
+        '<div style="max-width:420px;margin:40px auto;text-align:center;">' +
+          '<div style="font-family:var(--font-heading);font-size:1.1rem;' +
+            'color:var(--gold-light);margin-bottom:6px;">Create Your Character</div>' +
+          '<div style="font-family:var(--font-body);font-size:0.9rem;' +
+            'color:var(--border-light);margin-bottom:24px;font-style:italic;">' +
+            'Fill in the basics — you can edit everything later on the sheet.' +
+          '</div>' +
+          '<div class="form-field">' +
+            '<label class="form-label">Character Name</label>' +
+            '<input id="cc-name" type="text" class="form-input" maxlength="80" required placeholder="e.g. Arannis">' +
+          '</div>' +
+          '<div class="form-field">' +
+            '<label class="form-label">Class</label>' +
+            '<input id="cc-class" type="text" class="form-input" maxlength="50" required placeholder="Fighter">' +
+          '</div>' +
+          '<div class="form-field">' +
+            '<label class="form-label">Race</label>' +
+            '<input id="cc-race" type="text" class="form-input" maxlength="50" required placeholder="Human">' +
+          '</div>' +
+          '<div class="form-field">' +
+            '<label class="form-label">Background</label>' +
+            '<input id="cc-background" type="text" class="form-input" maxlength="50" placeholder="Soldier">' +
+          '</div>' +
+          '<div class="form-field">' +
+            '<label class="form-label">Level</label>' +
+            '<input id="cc-level" type="number" class="form-input" min="1" max="20" value="1">' +
+          '</div>' +
+          '<button class="btn btn-primary" style="width:100%;justify-content:center;' +
+            'margin-top:8px;" onclick="createCharacter()">Create Character</button>' +
+          '<div id="create-error" style="display:none;margin-top:10px;' +
+            'color:var(--red);font-family:var(--font-body);font-size:0.85rem;"></div>' +
+        '</div>';
+    }
+
+    async function createCharacter() {
+      const nameVal       = document.getElementById('cc-name').value.trim();
+      const classVal      = document.getElementById('cc-class').value.trim();
+      const raceVal       = document.getElementById('cc-race').value.trim();
+      const backgroundVal = document.getElementById('cc-background').value.trim();
+      const levelVal      = parseInt(document.getElementById('cc-level').value) || 1;
+      const errEl         = document.getElementById('create-error');
+
+      if (!nameVal || !classVal || !raceVal) {
+        errEl.textContent = 'Name, class, and race are required.';
+        errEl.style.display = 'block';
+        return;
+      }
+      errEl.style.display = 'none';
+
+      const { error: charInsertErr } = await supabaseClient
+        .from('characters')
+        .insert({
+          id:            characterId,
+          campaign_id:   campaignId,
+          membership_id: userMembership.id,
+          name:          nameVal,
+          class:         classVal,
+          race:          raceVal,
+          background:    backgroundVal,
+          level:         levelVal,
+          max_hp:        10,
+          cur_hp:        10,
+          ac:            10,
+          initiative:    0,
+          speed:         30
+        });
+
+      if (charInsertErr) {
+        console.error('[createCharacter] Insert failed:', charInsertErr.message);
+        errEl.textContent = 'Error creating character: ' + charInsertErr.message;
+        errEl.style.display = 'block';
+        return;
+      }
+
+      await supabaseClient
+        .from('currency')
+        .insert({ character_id: characterId });
+
+      window.location.reload();
+    }
+
     // ─── Existing functionality (unchanged) ─────────────────────────────────
 
     // Death save checkbox toggle
