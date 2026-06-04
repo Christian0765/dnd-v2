@@ -1739,37 +1739,76 @@
     // ─── Create Character Form ───────────────────────────────────────────────
     function showCreateCharacterForm() {
       document.querySelector('.sheet-body').innerHTML =
-        '<div style="max-width:420px;margin:40px auto;text-align:center;">' +
-          '<div style="font-family:var(--font-heading);font-size:1.1rem;' +
-            'color:var(--gold-light);margin-bottom:6px;">Create Your Character</div>' +
-          '<div style="font-family:var(--font-body);font-size:0.9rem;' +
-            'color:var(--border-light);margin-bottom:24px;font-style:italic;">' +
+        '<div style="max-width:420px;margin:40px auto;">' +
+          '<div style="font-family:var(--font-heading);font-size:1.2rem;' +
+            'color:var(--ink);font-weight:700;margin-bottom:6px;text-align:center;">' +
+            'Create Your Character' +
+          '</div>' +
+          '<div style="font-family:var(--font-body);font-size:0.95rem;' +
+            'color:var(--ink-light);margin-bottom:24px;font-style:italic;text-align:center;">' +
             'Fill in the basics — you can edit everything later on the sheet.' +
           '</div>' +
-          '<div class="form-field">' +
-            '<label class="form-label">Character Name</label>' +
-            '<input id="cc-name" type="text" class="form-input" maxlength="80" required placeholder="e.g. Arannis">' +
+
+          '<div style="margin-bottom:14px;">' +
+            '<label style="font-family:var(--font-heading);font-size:0.55rem;' +
+              'text-transform:uppercase;letter-spacing:0.12em;color:var(--ink-light);' +
+              'display:block;margin-bottom:4px;">Character Name *</label>' +
+            '<input id="cc-name" type="text" maxlength="80" placeholder="e.g. Arannis"' +
+              ' style="width:100%;font-family:var(--font-body);font-size:0.95rem;' +
+              'background:rgba(255,255,255,0.6);border:1px solid var(--border);' +
+              'border-radius:var(--radius-sm);color:var(--ink);padding:8px 10px;' +
+              'outline:none;box-sizing:border-box;">' +
           '</div>' +
-          '<div class="form-field">' +
-            '<label class="form-label">Class</label>' +
-            '<input id="cc-class" type="text" class="form-input" maxlength="50" required placeholder="Fighter">' +
+
+          '<div style="margin-bottom:14px;">' +
+            '<label style="font-family:var(--font-heading);font-size:0.55rem;' +
+              'text-transform:uppercase;letter-spacing:0.12em;color:var(--ink-light);' +
+              'display:block;margin-bottom:4px;">Class *</label>' +
+            '<input id="cc-class" type="text" maxlength="50" placeholder="e.g. Fighter"' +
+              ' style="width:100%;font-family:var(--font-body);font-size:0.95rem;' +
+              'background:rgba(255,255,255,0.6);border:1px solid var(--border);' +
+              'border-radius:var(--radius-sm);color:var(--ink);padding:8px 10px;' +
+              'outline:none;box-sizing:border-box;">' +
           '</div>' +
-          '<div class="form-field">' +
-            '<label class="form-label">Race</label>' +
-            '<input id="cc-race" type="text" class="form-input" maxlength="50" required placeholder="Human">' +
+
+          '<div style="margin-bottom:14px;">' +
+            '<label style="font-family:var(--font-heading);font-size:0.55rem;' +
+              'text-transform:uppercase;letter-spacing:0.12em;color:var(--ink-light);' +
+              'display:block;margin-bottom:4px;">Race *</label>' +
+            '<input id="cc-race" type="text" maxlength="50" placeholder="e.g. Human"' +
+              ' style="width:100%;font-family:var(--font-body);font-size:0.95rem;' +
+              'background:rgba(255,255,255,0.6);border:1px solid var(--border);' +
+              'border-radius:var(--radius-sm);color:var(--ink);padding:8px 10px;' +
+              'outline:none;box-sizing:border-box;">' +
           '</div>' +
-          '<div class="form-field">' +
-            '<label class="form-label">Background</label>' +
-            '<input id="cc-background" type="text" class="form-input" maxlength="50" placeholder="Soldier">' +
+
+          '<div style="margin-bottom:14px;">' +
+            '<label style="font-family:var(--font-heading);font-size:0.55rem;' +
+              'text-transform:uppercase;letter-spacing:0.12em;color:var(--ink-light);' +
+              'display:block;margin-bottom:4px;">Background</label>' +
+            '<input id="cc-background" type="text" maxlength="50" placeholder="e.g. Soldier"' +
+              ' style="width:100%;font-family:var(--font-body);font-size:0.95rem;' +
+              'background:rgba(255,255,255,0.6);border:1px solid var(--border);' +
+              'border-radius:var(--radius-sm);color:var(--ink);padding:8px 10px;' +
+              'outline:none;box-sizing:border-box;">' +
           '</div>' +
-          '<div class="form-field">' +
-            '<label class="form-label">Level</label>' +
-            '<input id="cc-level" type="number" class="form-input" min="1" max="20" value="1">' +
+
+          '<div style="margin-bottom:14px;">' +
+            '<label style="font-family:var(--font-heading);font-size:0.55rem;' +
+              'text-transform:uppercase;letter-spacing:0.12em;color:var(--ink-light);' +
+              'display:block;margin-bottom:4px;">Level</label>' +
+            '<input id="cc-level" type="number" min="1" max="20" value="1"' +
+              ' style="width:100%;font-family:var(--font-body);font-size:0.95rem;' +
+              'background:rgba(255,255,255,0.6);border:1px solid var(--border);' +
+              'border-radius:var(--radius-sm);color:var(--ink);padding:8px 10px;' +
+              'outline:none;box-sizing:border-box;">' +
           '</div>' +
+
           '<button class="btn btn-primary" style="width:100%;justify-content:center;' +
             'margin-top:8px;" onclick="createCharacter()">Create Character</button>' +
           '<div id="create-error" style="display:none;margin-top:10px;' +
-            'color:var(--red);font-family:var(--font-body);font-size:0.85rem;"></div>' +
+            'color:var(--red);font-family:var(--font-body);font-size:0.85rem;' +
+            'text-align:center;"></div>' +
         '</div>';
     }
 
