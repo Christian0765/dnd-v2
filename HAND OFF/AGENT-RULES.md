@@ -12,29 +12,32 @@
 2. **Read HANDOFF.md first, every time.**
    The handoff document tells you what exists, what works, and what the file structure looks like. Never assume — always check.
 
-3. **Read DND-ARCHITECTURE-SPEC.md before writing any database code.**
+3. **Read DND-MASTER-PLAN.md before writing any code.**
+   The master plan is the single source of truth for the full vision, all database tables, RLS policies, RPC functions, and build order. It overrides everything else when there is a conflict.
+
+4. **Read DND-ARCHITECTURE-SPEC.md before writing any database code.**
    Every table, every RLS policy, every pattern is documented there. Do not invent your own approach.
 
-4. **Never break existing working features.**
+5. **Never break existing working features.**
    If a file is listed as working in HANDOFF.md, do not touch it unless the prompt explicitly says to. When in doubt, leave it alone.
 
-5. **Test before opening a PR.**
-   Go through the testing checklist in the prompt. If you cannot verify something works, say so explicitly in the PR description — do not pretend it works.
+6. **Test before opening a PR.**
+   Go through the testing checklist in the prompt. If you cannot verify something works, say so explicitly — do not pretend it works.
 
 ---
 
 ## Code Rules
 
-6. **No frameworks, no build systems.**
+7. **No frameworks, no build systems.**
    Vanilla HTML5, CSS3, JavaScript only. No React, Vue, webpack, TypeScript, npm packages in the frontend. No exceptions.
 
-7. **Supabase client initialization.**
+8. **Supabase client initialization.**
    Always use `supabaseClient` as the variable name. Never use `supabase` (that's the library itself).
    ```js
    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
    ```
 
-8. **Field-level saves only.**
+9. **Field-level saves only.**
    Never save an entire object to the database at once. Only save the specific field that changed.
    ```js
    // WRONG
@@ -44,17 +47,17 @@
    await supabaseClient.from('characters').update({ name: newName }).eq('id', id);
    ```
 
-9. **Atomic increments for numeric values.**
-   HP, gold, resource counts must use the RPC functions defined in the schema. Never set absolute values from the client.
-   ```js
-   // WRONG
-   await supabaseClient.from('characters').update({ cur_hp: 45 }).eq('id', id);
+10. **Atomic increments for numeric values.**
+    HP, gold, resource counts must use the RPC functions defined in the schema. Never set absolute values from the client.
+    ```js
+    // WRONG
+    await supabaseClient.from('characters').update({ cur_hp: 45 }).eq('id', id);
 
-   // CORRECT
-   await supabaseClient.rpc('adjust_hp', { character_id: id, delta: -5 });
-   ```
+    // CORRECT
+    await supabaseClient.rpc('adjust_hp', { character_id: id, delta: -5 });
+    ```
 
-10. **Soft deletes only.**
+11. **Soft deletes only.**
     Never use `.delete()` on any table. Always set `deleted_at = NOW()` instead.
     ```js
     // WRONG
@@ -64,7 +67,7 @@
     await supabaseClient.from('npcs').update({ deleted_at: new Date().toISOString() }).eq('id', id);
     ```
 
-11. **Always handle errors explicitly.**
+12. **Always handle errors explicitly.**
     Every Supabase call must check for errors. Never let failures be silent.
     ```js
     const { data, error } = await supabaseClient.from('table').select('*');
@@ -75,11 +78,10 @@
     }
     ```
 
-12. **Inline Supabase credentials directly in every HTML file.**
+13. **Inline Supabase credentials directly in every HTML file.**
     The site is hosted on GitHub Pages which cannot serve `supabase-config.js`
     because that file is in `.gitignore` and never pushed to the repo.
-    Instead, put the credentials directly in a `<script>` block at the top
-    of every HTML file's `<head>`, BEFORE the Supabase CDN script:
+    Put credentials directly in a `<script>` block BEFORE the Supabase CDN script:
 
     ```html
     <script>
@@ -91,26 +93,37 @@
     ```
 
     Do NOT use `<script src="supabase-config.js"></script>` — that file
-    does not exist on the live site. The anon/publishable key is safe to
-    commit — it is designed for public frontend use. Supabase RLS policies
-    protect the data, not the key itself.
+    does not exist on the live site.
+
+14. **Never use .single() — always use .maybeSingle().**
+    `.single()` throws a 406 error if no row is found.
+    `.maybeSingle()` returns null safely. Use it everywhere.
+
+15. **Always generate UUIDs client-side.**
+    Never chain `.insert().select().single()` — the RLS SELECT policy
+    blocks the read before the membership row exists.
+    Always use `crypto.randomUUID()` before inserting:
+    ```js
+    const id = crypto.randomUUID();
+    await supabaseClient.from('table').insert({ id, ...fields });
+    ```
 
 ---
 
 ## Design Rules
 
-13. **Match the design system exactly.**
-    Every page uses the CSS variables defined in HANDOFF.md. No new color values.
-    No new fonts. The visual theme is dark parchment — near-black backgrounds,
-    gold and warm cream accents, Cinzel for headings, Crimson Text for body text.
+16. **Match the design system exactly.**
+    Every page uses the CSS variables defined in css/variables.css.
+    No new color values. No new fonts.
+    Dark parchment theme: near-black backgrounds, gold and warm cream accents,
+    Cinzel for headings, Crimson Text for body text.
 
-14. **Mobile-aware but desktop-first.**
+17. **Mobile-aware but desktop-first.**
     Add `@media (max-width: 600px)` breakpoints for major layout changes.
     The app is primarily used on laptops and tablets during sessions.
 
-15. **Animations are subtle.**
-    Use the standard `fadeIn` keyframe for new elements appearing.
-    No bouncing, no spinning, no distracting effects.
+18. **Animations are subtle.**
+    Use the standard `fadeIn` keyframe. No bouncing, no spinning.
     ```css
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(8px); }
@@ -122,22 +135,15 @@
 
 ## PR Rules
 
-16. **PR description must include:**
+19. **PR description must include:**
     - What was built
     - What files were changed
     - What was NOT touched
     - The testing checklist results
 
-17. **One commit per logical change.**
-    Don't squash everything into one commit. Separate commits for:
-    - HTML structure
-    - CSS styles
-    - JavaScript logic
-    - Any fixes made during development
-
-18. **Update HANDOFF.md in every PR.**
-    The last commit in every PR must update HANDOFF.md to reflect:
-    - What was just built (add to "What's Been Built")
+20. **Update HANDOFF.md in every PR.**
+    The last step of every PR must update HANDOFF.md to reflect:
+    - What was just built
     - Current file structure
     - Any known issues discovered
     - What the next task is
@@ -146,80 +152,97 @@
 
 ## How To Deliver Files
 
-The project owner manually copies files into the repo and pushes them with Git.
-The agent does NOT have write access to GitHub. Follow this delivery process exactly.
+The project owner copies files manually — the agent does NOT push to GitHub.
+The owner is not a developer. Follow this delivery process exactly, every time.
 
-19. **Deliver files one at a time.**
-    After building, present each file separately. Do not dump everything at once.
-    Wait for the owner to confirm "got it" before showing the next file.
+21. **Deliver files one at a time.**
+    Present each file separately. Do not dump everything at once.
+    Wait for the owner to confirm "got it" or "next" before showing the next file.
 
-20. **Every file delivery must include two things:**
-
-    **The file path** — exactly where it goes in the repo:
-    ```
-    📁 File: css/variables.css
-    ```
-
-    **The complete file contents** — the full code, nothing truncated:
-    ```css
-    /* full file contents here */
-    ```
-
-21. **Use this exact delivery format for every file:**
+22. **Every file delivery must follow this exact format:**
     ```
     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    📁 FILE 1 of 6: css/variables.css
+    📁 FILE 1 of 3
+    Path: home.html
+    Action: Replace the existing file at dnd-v2/home.html
     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    Save this file to: dnd-v2/css/variables.css
 
-    [complete file contents]
+    [complete file contents here]
 
     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    Ready for file 2? Reply "next" to continue.
+    Got it? Reply "next" for file 2.
     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     ```
 
-22. **End every PR with a push summary.**
-    After all files are delivered, show this exact block:
+    The "Path" line must say exactly where the file goes in the repo.
+    The "Action" line must say whether to REPLACE an existing file or CREATE a new one.
+    Never say "put it somewhere" or leave the location ambiguous.
+
+23. **Always specify the exact file action:**
+    - `Action: Replace the existing file at dnd-v2/home.html`
+    - `Action: Create a new file at dnd-v2/js/friends.js`
+    - `Action: Create a new file at dnd-v2/friends.html`
+    Never leave this ambiguous.
+
+24. **Never tell the owner to push to main directly.**
+    The owner uploads files via the GitHub web interface or copies them locally.
+    End every PR with this exact push command:
     ```
     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     ✓ ALL FILES DELIVERED
-    Run this single command to push to GitHub:
 
-    cd C:\Users\cm070\Documents\dnd-v2 && git add . && git commit -m "PR X — [what was built]" && git push
+    To publish: go to github.com/Christian0765/dnd-v2,
+    upload each file to its correct location, then commit.
+
+    OR if using terminal:
+    cd C:\Users\cm070\Documents\dnd-v2 && git add . && git commit -m "PR X — description" && git push
     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     ```
 
-    Always chain all three git commands into one line with &&.
-    Always write a clear commit message describing what was built.
-    Examples:
-    - `git add . && git commit -m "PR 1 — project structure and shared files" && git push`
-    - `git add . && git commit -m "PR 2 — login and signup page" && git push`
-    - `git add . && git commit -m "PR 3 — campaign creation and home page" && git push`
+25. **HANDOFF.md is always pasted in chat — never delivered as a file.**
+    At the end of every PR, paste the full updated HANDOFF.md contents
+    directly in chat as a markdown code block. Do not attach it as a file.
+    The owner will copy and paste it into the GitHub web editor manually.
+    Format:
+    ```
+    Here is the updated HANDOFF.md — paste this into GitHub:
+
+    [full HANDOFF.md contents here]
+    ```
 
 ---
 
 ## What To Do When Something Is Unclear
 
-23. **Ask before building.**
+26. **Ask before building.**
     If the prompt is ambiguous about a design decision, ask one clear question
     before writing code. Don't guess and build the wrong thing.
 
-24. **If it's not in the prompt, don't build it.**
+27. **If it's not in the prompt, don't build it.**
     Scope creep causes bugs. If you think of a related feature while building,
-    note it in the PR description as a suggestion — don't add it unasked.
+    note it as a suggestion — don't add it unasked.
 
-25. **If something in the architecture spec conflicts with the prompt, flag it.**
-    Don't silently pick one or the other. Point out the conflict and ask
-    which takes priority.
+28. **If something in the master plan or architecture spec conflicts with the prompt, flag it.**
+    Don't silently pick one. Point out the conflict and ask which takes priority.
 
-    ## File Delivery Format
+---
 
-27. **Always paste HANDOFF.md directly in chat as a code block.**
-    Never deliver HANDOFF.md as a file attachment.
-    Always paste the full contents as a markdown code block so the owner
-    can copy and paste it directly into GitHub's web editor.
-    Example format:
+## GitHub Pages Path Rule
+
+29. **Never use absolute paths starting with `/`.**
+    The site lives at `christian0765.github.io/dnd-v2/` — not the root.
+    Absolute paths cause 404 errors.
+
+    ```js
+    // WRONG
+    window.location.href = '/login.html';
+
+    // CORRECT
+    window.location.href = 'login.html';
+    ```
+
+    This applies everywhere — JS redirects, HTML href attributes,
+    CSS url() references, fetch() calls. No leading slash. Ever.
 
 ---
 
@@ -233,7 +256,7 @@ The agent does NOT have write access to GitHub. Follow this delivery process exa
 | Realtime | Supabase Realtime |
 | Hosting | GitHub Pages |
 | Fonts | Google Fonts (Cinzel, Crimson Text) |
-| Images | base64 in database (no storage bucket yet) |
+| Images | base64 in database |
 | Build | None — direct file editing |
 
 ---
@@ -242,49 +265,26 @@ The agent does NOT have write access to GitHub. Follow this delivery process exa
 
 | File | Purpose |
 |------|---------|
-| `login.html` | Sign in / sign up |
+| `login.html` | Sign in / sign up / password recovery |
 | `home.html` | Campaign lobby |
-| `index.html` | Main campaign page (party overview) |
+| `index.html` | Entry point redirect |
+| `campaign.html` | Campaign page (party overview, DM tools) |
 | `sheet.html` | Character sheet |
 | `combat.html` | Combat tracker |
-| `supabase-config.js` | Credentials (local only, never committed) |
-| `HANDOFF.md` | Project state (update every PR) |
+| `friends.html` | Friends list and requests |
+| `HANDOFF.md` | Project state — update every PR |
+| `DND-MASTER-PLAN.md` | Full vision, schema, build order |
 | `DND-ARCHITECTURE-SPEC.md` | Database schema and patterns |
 | `AGENT-RULES.md` | This file |
-| `/data/rulesets/` | JSON system data files |
+| `GAME-DATA-RULES.md` | JSON data file format rules |
+| `FILE-ORGANIZATION.md` | Folder structure rules |
 
 ---
 
 ## Remember
 
 You are one agent in a long chain of agents building this project.
-The next agent will read HANDOFF.md and trust that it accurately reflects
-what you built. Write code you'd be proud to hand off. Leave things
-cleaner than you found them.
-
----
-
-## GitHub Pages Path Rule
-
-26. **Never use absolute paths starting with `/`.**
-    The site is hosted in a subfolder on GitHub Pages:
-    `https://christian0765.github.io/dnd-v2/`
-    
-    Absolute paths like `/login.html` resolve to `christian0765.github.io/login.html`
-    which does not exist and causes 404 errors.
-    
-    Always use relative paths:
-    ```js
-    // WRONG
-    window.location.href = '/login.html';
-    window.location.href = '/home.html';
-    window.location.href = '/campaign.html';
-
-    // CORRECT
-    window.location.href = 'login.html';
-    window.location.href = 'home.html';
-    window.location.href = 'campaign.html';
-    ```
-    
-    This applies everywhere — JavaScript redirects, HTML href attributes,
-    CSS url() references, fetch() calls to local files. No leading slash. Ever.
+The next agent will read HANDOFF.md and DND-MASTER-PLAN.md and trust
+that they accurately reflect what you built.
+Write code you would be proud to hand off.
+Leave things cleaner than you found them.
