@@ -506,20 +506,22 @@
     async function loadParty() {
       const grid = document.getElementById('party-grid');
 
-      // Load all memberships with profile names
+      // Load player memberships only
       const { data: memberships, error: memErr } = await supabaseClient
         .from('memberships')
         .select('id, role, user_id, profiles(display_name)')
-        .eq('campaign_id', campaignId);
+        .eq('campaign_id', campaignId)
+        .eq('role', 'player');
 
       if (memErr) {
-        grid.innerHTML = `<div style="color:var(--red);font-size:0.85rem;">Error loading party: ${escHtml(memErr.message)}</div>`;
+        grid.innerHTML = `<div style="color:var(--red);font-size:0.85rem;">
+          Error loading party: ${escHtml(memErr.message)}</div>`;
         return;
       }
 
       allMemberships = memberships || [];
 
-      // Load all characters for this campaign
+      // Load all non-deleted characters for this campaign
       const { data: characters, error: charErr } = await supabaseClient
         .from('characters')
         .select('*')
@@ -527,42 +529,47 @@
         .is('deleted_at', null);
 
       if (charErr) {
-        grid.innerHTML = `<div style="color:var(--red);font-size:0.85rem;">Error loading characters: ${escHtml(charErr.message)}</div>`;
+        grid.innerHTML = `<div style="color:var(--red);font-size:0.85rem;">
+          Error loading characters: ${escHtml(charErr.message)}</div>`;
         return;
       }
 
-      renderParty(allMemberships, characters || []);
+      const allChars = characters || [];
+
+      // Repair orphaned characters that have a null membership_id.
+      // Match them to unmatched player memberships and patch the DB.
+      const matchedIds = new Set(allChars.map(c => c.membership_id).filter(Boolean));
+      const orphans = allChars.filter(c => !c.membership_id);
+      const unmatched = allMemberships.filter(m => !matchedIds.has(m.id));
+
+      for (let i = 0; i < orphans.length && i < unmatched.length; i++) {
+        const char = orphans[i];
+        const mem  = unmatched[i];
+        const { error: patchErr } = await supabaseClient
+          .from('characters')
+          .update({ membership_id: mem.id })
+          .eq('id', char.id);
+        if (patchErr) {
+          console.error('[loadParty] Failed to patch membership_id:', patchErr.message);
+        } else {
+          char.membership_id = mem.id;
+        }
+      }
+
+      renderParty(allMemberships, allChars);
     }
 
     function renderParty(memberships, characters) {
       const grid = document.getElementById('party-grid');
 
-      // Primary map: membership_id → character
       const charByMembership = {};
       for (const c of characters) {
         if (c.membership_id) charByMembership[c.membership_id] = c;
       }
 
-      // Fallback map: user_id → character (for characters with null membership_id)
-      // Build a user_id → membership map first
-      const membershipByUser = {};
-      for (const mem of memberships) {
-        membershipByUser[mem.user_id] = mem;
-      }
-
-      const cards = memberships
-        .filter(mem => mem.role === 'player')
-        .map(mem => {
+      const cards = memberships.map(mem => {
         const playerName = mem.profiles?.display_name || 'Unknown Player';
-
-        // Try primary match first, then fall back to any character in the
-        // campaign that has no membership_id (orphaned characters)
-        let char = charByMembership[mem.id] || null;
-        if (!char) {
-          // Last resort: find a character with no membership_id that belongs
-          // to this campaign — assign it to the first unmatched membership
-          char = characters.find(c => !c.membership_id && !Object.values(charByMembership).includes(c)) || null;
-        }
+        const char = charByMembership[mem.id];
 
         if (!char) {
           return `
@@ -576,15 +583,17 @@
           ? Math.round((char.cur_hp / char.max_hp) * 100)
           : 0;
         const clampedPct = Math.max(0, Math.min(100, hpPct));
-        const hpClass = clampedPct > 50 ? 'hp-green' : clampedPct > 25 ? 'hp-yellow' : 'hp-red';
+        const hpClass = clampedPct > 50 ? 'hp-green'
+                      : clampedPct > 25 ? 'hp-yellow'
+                      : 'hp-red';
 
-        const className = escHtml(char.class || '—');
-        const raceName  = escHtml(char.race  || '—');
-        const sub = (char.class || char.race) ? `${className} · ${raceName}` : '—';
+        const sub = (char.class || char.race)
+          ? `${escHtml(char.class || '—')} · ${escHtml(char.race || '—')}`
+          : '—';
 
         return `
           <div class="char-card">
-            <div class="char-card-name">${escHtml(char.name || 'Unnamed Character')}</div>
+            <div class="char-card-name">${escHtml(char.name || 'Unnamed')}</div>
             <div class="char-card-sub">${sub}</div>
             <div class="char-card-stats">
               <div class="hp-section">
@@ -599,7 +608,9 @@
           </div>`;
       });
 
-      grid.innerHTML = cards.length ? cards.join('') : '<div style="color:var(--border-light);font-size:0.85rem;">No members yet.</div>';
+      grid.innerHTML = cards.length
+        ? cards.join('')
+        : '<div style="color:var(--border-light);font-size:0.85rem;">No players yet.</div>';
     }
 
     // ── Real-Time Subscription ────────────────────────────────────────────────
