@@ -1488,20 +1488,57 @@
         <input id="weapon-name" type="text" class="form-input" placeholder="e.g. Longsword">
       </div>
       <div class="form-field">
-        <label class="form-label">Attack Bonus</label>
-        <input id="weapon-atk-bonus" type="text" class="form-input" placeholder="e.g. +4">
-      </div>
-      <div class="form-field">
         <label class="form-label">Damage Dice</label>
-        <input id="weapon-dmg-dice" type="text" class="form-input" placeholder="e.g. 1d6+2">
+        <div style="display:flex;align-items:center;gap:6px;">
+          <input id="weapon-dice-count" type="number" min="1" value="1" class="form-input" style="width:58px;">
+          <span style="color:var(--text-muted);font-weight:600;">d</span>
+          <select id="weapon-dice-sides" class="form-input" style="width:68px;">
+            <option value="4">4</option>
+            <option value="6" selected>6</option>
+            <option value="8">8</option>
+            <option value="10">10</option>
+            <option value="12">12</option>
+            <option value="20">20</option>
+          </select>
+          <span style="color:var(--text-muted);font-weight:600;">+</span>
+          <input id="weapon-dmg-bonus-val" type="number" value="0" class="form-input" style="width:58px;">
+        </div>
       </div>
       <div class="form-field">
         <label class="form-label">Damage Type</label>
-        <input id="weapon-dmg-type" type="text" class="form-input" placeholder="e.g. Slashing">
+        <select id="weapon-dmg-type" class="form-input">
+          <option value="Slashing">Slashing</option>
+          <option value="Piercing">Piercing</option>
+          <option value="Bludgeoning">Bludgeoning</option>
+          <option value="Fire">Fire</option>
+          <option value="Cold">Cold</option>
+          <option value="Lightning">Lightning</option>
+          <option value="Thunder">Thunder</option>
+          <option value="Acid">Acid</option>
+          <option value="Poison">Poison</option>
+          <option value="Necrotic">Necrotic</option>
+          <option value="Radiant">Radiant</option>
+          <option value="Force">Force</option>
+          <option value="Psychic">Psychic</option>
+        </select>
       </div>
       <div class="form-field">
         <label class="form-label">Range</label>
-        <input id="weapon-range" type="text" class="form-input" placeholder="e.g. 5 ft">
+        <div style="display:flex;align-items:center;gap:6px;">
+          <input id="weapon-range-num" type="number" min="0" value="5" class="form-input" style="width:70px;">
+          <select id="weapon-range-unit" class="form-input" style="width:80px;" onchange="toggleLongRange(this.value)">
+            <option value="ft">ft</option>
+            <option value="reach">reach</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-field" id="weapon-long-range-wrap">
+        <label class="form-label">Long Range (ft, optional)</label>
+        <input id="weapon-long-range-num" type="number" min="0" class="form-input" placeholder="e.g. 320">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Attack Bonus</label>
+        <input id="weapon-atk-bonus" type="number" value="0" class="form-input">
       </div>
       <div class="form-field">
         <label class="form-label">Notes</label>
@@ -2233,14 +2270,23 @@
       });
     }
 
+    function toggleLongRange(unit) {
+      var wrap = document.getElementById('weapon-long-range-wrap');
+      if (wrap) wrap.style.display = (unit === 'ft') ? '' : 'none';
+    }
+
     async function saveWeapon() {
       if (isReadOnly) return;
-      var nameEl  = document.getElementById('weapon-name');
-      var atkEl   = document.getElementById('weapon-atk-bonus');
-      var dmgEl   = document.getElementById('weapon-dmg-dice');
-      var typeEl  = document.getElementById('weapon-dmg-type');
-      var rangeEl = document.getElementById('weapon-range');
-      var notesEl = document.getElementById('weapon-notes');
+      var nameEl       = document.getElementById('weapon-name');
+      var atkEl        = document.getElementById('weapon-atk-bonus');
+      var diceCountEl  = document.getElementById('weapon-dice-count');
+      var diceSidesEl  = document.getElementById('weapon-dice-sides');
+      var dmgBonusEl   = document.getElementById('weapon-dmg-bonus-val');
+      var typeEl       = document.getElementById('weapon-dmg-type');
+      var rangeNumEl   = document.getElementById('weapon-range-num');
+      var rangeUnitEl  = document.getElementById('weapon-range-unit');
+      var longRangeEl  = document.getElementById('weapon-long-range-num');
+      var notesEl      = document.getElementById('weapon-notes');
 
       var name = nameEl ? nameEl.value.trim() : '';
       if (!name) {
@@ -2248,14 +2294,20 @@
         return;
       }
 
-      var atkBonus = parseInt((atkEl ? atkEl.value : '').replace(/[^0-9\-]/g, '')) || 0;
-      var dmgRaw   = dmgEl ? dmgEl.value.trim() : '1d6';
-      var dmgDice  = dmgRaw;
-      var dmgBonus = 0;
-      var dmgMatch = dmgRaw.match(/^([0-9]+d[0-9]+)([+\-][0-9]+)?$/i);
-      if (dmgMatch) {
-        dmgDice  = dmgMatch[1];
-        dmgBonus = dmgMatch[2] ? parseInt(dmgMatch[2]) : 0;
+      var atkBonus  = parseInt(atkEl ? atkEl.value : '0') || 0;
+      var diceCount = Math.max(1, parseInt(diceCountEl ? diceCountEl.value : '1') || 1);
+      var diceSides = diceSidesEl ? diceSidesEl.value : '6';
+      var dmgBonus  = parseInt(dmgBonusEl ? dmgBonusEl.value : '0') || 0;
+      var dmgDice   = diceCount + 'd' + diceSides;
+
+      var rangeNum     = parseInt(rangeNumEl ? rangeNumEl.value : '5') || 5;
+      var rangeUnit    = rangeUnitEl ? rangeUnitEl.value : 'ft';
+      var longRangeNum = parseInt(longRangeEl ? longRangeEl.value : '') || 0;
+      var rangeStr;
+      if (rangeUnit === 'ft' && longRangeNum > 0) {
+        rangeStr = rangeNum + '/' + longRangeNum + ' ft';
+      } else {
+        rangeStr = rangeNum + ' ' + rangeUnit;
       }
 
       var sortOrder = document.querySelectorAll('.weapons-table tbody tr').length;
@@ -2266,11 +2318,11 @@
         character_id: characterId,
         name:         name,
         atk_bonus:    atkBonus,
-        dmg_dice:     dmgDice || '1d6',
+        dmg_dice:     dmgDice,
         dmg_bonus:    dmgBonus,
-        dmg_type:     typeEl  ? typeEl.value.trim()  : '',
-        range:        rangeEl ? rangeEl.value.trim()  : '5 ft',
-        notes:        notesEl ? notesEl.value.trim()  : '',
+        dmg_type:     typeEl ? typeEl.value : 'Slashing',
+        range:        rangeStr,
+        notes:        notesEl ? notesEl.value.trim() : '',
         sort_order:   sortOrder
       });
 
@@ -2279,12 +2331,16 @@
         return;
       }
 
-      if (nameEl)  nameEl.value  = '';
-      if (atkEl)   atkEl.value   = '';
-      if (dmgEl)   dmgEl.value   = '';
-      if (typeEl)  typeEl.value  = '';
-      if (rangeEl) rangeEl.value = '';
-      if (notesEl) notesEl.value = '';
+      if (nameEl)      nameEl.value      = '';
+      if (atkEl)       atkEl.value       = '0';
+      if (diceCountEl) diceCountEl.value = '1';
+      if (diceSidesEl) diceSidesEl.value = '6';
+      if (dmgBonusEl)  dmgBonusEl.value  = '0';
+      if (typeEl)      typeEl.selectedIndex = 0;
+      if (rangeNumEl)  rangeNumEl.value  = '5';
+      if (rangeUnitEl) { rangeUnitEl.value = 'ft'; toggleLongRange('ft'); }
+      if (longRangeEl) longRangeEl.value = '';
+      if (notesEl)     notesEl.value     = '';
 
       closeModal('weapon-modal');
       await populateWeapons();
