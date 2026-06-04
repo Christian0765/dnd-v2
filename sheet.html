@@ -1627,6 +1627,11 @@
       }
       userMembership = membership;
 
+      if (userMembership.role === 'dm') {
+        window.location.href = 'campaign.html?c=' + campaignId;
+        return;
+      }
+
       // 5. Load character by membership_id — no URL param needed
       const { data: character, error: charErr } = await supabaseClient
         .from('characters')

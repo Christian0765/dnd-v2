@@ -341,7 +341,7 @@
     </div>
 
     <nav class="top-bar-nav">
-      <button class="btn btn-gold" id="btn-sheet" onclick="goToSheet()">⚔ My Sheet</button>
+      <button class="btn btn-gold" id="btn-sheet" onclick="goToSheet()" style="display:none;">⚔ My Sheet</button>
       <button class="btn btn-ghost" id="btn-combat" onclick="goToCombat()">⚡ Combat</button>
     </nav>
 
@@ -450,6 +450,10 @@
       if (memErr || !mem) { window.location.href = 'home.html'; return; }
       userMembership = mem;
 
+      if (userMembership.role === 'player') {
+        document.getElementById('btn-sheet').style.display = '';
+      }
+
       // Load campaign
       const { data: campaign, error: campErr } = await supabaseClient
         .from('campaigns')
@@ -546,7 +550,9 @@
         membershipByUser[mem.user_id] = mem;
       }
 
-      const cards = memberships.map(mem => {
+      const cards = memberships
+        .filter(mem => mem.role === 'player')
+        .map(mem => {
         const playerName = mem.profiles?.display_name || 'Unknown Player';
 
         // Try primary match first, then fall back to any character in the
