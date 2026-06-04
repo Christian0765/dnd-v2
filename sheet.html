@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>D&D Tracker — Character Sheet</title>
+  <title>D&amp;D Tracker — Character Sheet</title>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;900&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/variables.css">
   <link rel="stylesheet" href="css/base.css">
@@ -1258,4 +1258,1377 @@
         </div>
       </div>
 
-      <!-- ── Weapons
+      <!-- ── Weapons ── -->
+      <div class="sheet-section-wrap" id="section-weapons">
+        <div class="section-handle">⠿</div>
+        <div class="sec">Weapons</div>
+        <table class="weapons-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Atk Bonus</th>
+              <th>Damage</th>
+              <th>Type</th>
+              <th>Range</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Shortsword</td>
+              <td>+2</td>
+              <td>1d6+0</td>
+              <td>Piercing</td>
+              <td>5 ft</td>
+              <td></td>
+            </tr>
+          </tbody>
+        </table>
+        <button class="btn btn-gold" onclick="openModal('weapon-modal')">＋ Add Weapon</button>
+      </div>
+
+      <!-- ── Features & Traits ── -->
+      <div class="sheet-section-wrap" id="section-features">
+        <div class="section-handle">⠿</div>
+        <div class="sec">Features &amp; Traits</div>
+        <div class="features-list">
+          <div class="feature-card">
+            <div class="feature-card-header">
+              <span class="feature-name">Second Wind</span>
+              <span class="feature-pill" style="background: var(--cat-action)">action</span>
+            </div>
+            <div class="feature-recharge">Short rest</div>
+            <div class="feature-desc">Bonus action: regain 1d10 + level HP.</div>
+          </div>
+          <div class="feature-card">
+            <div class="feature-card-header">
+              <span class="feature-name">Darkvision</span>
+              <span class="feature-pill" style="background: var(--cat-passive)">passive</span>
+            </div>
+            <div class="feature-desc">See in darkness up to 60 ft.</div>
+          </div>
+        </div>
+        <button class="btn btn-gold" onclick="openModal('feature-modal')">＋ Add Feature</button>
+      </div>
+
+      <!-- ── Proficiencies & Languages ── -->
+      <div class="sheet-section-wrap" id="section-proficiencies">
+        <div class="section-handle">⠿</div>
+        <div class="sec">Proficiencies &amp; Languages</div>
+        <div class="form-field">
+          <label class="form-label">Proficiencies</label>
+          <textarea class="form-input" rows="3" style="resize:vertical">Light armor, medium armor, shields, simple weapons, martial weapons</textarea>
+        </div>
+        <div class="form-field">
+          <label class="form-label">Languages</label>
+          <textarea class="form-input" rows="2" style="resize:vertical">Common, Elvish</textarea>
+        </div>
+      </div>
+
+      <!-- ── Equipment ── -->
+      <div class="sheet-section-wrap" id="section-equipment">
+        <div class="section-handle">⠿</div>
+        <div class="sec">Equipment</div>
+        <div class="form-field">
+          <label class="form-label">Carried Equipment</label>
+          <textarea class="form-input" rows="4" style="resize:vertical">Backpack, bedroll, rope (50 ft), torch x5, rations x5</textarea>
+        </div>
+      </div>
+
+      <!-- ── Currency ── -->
+      <div class="sheet-section-wrap" id="section-currency">
+        <div class="section-handle">⠿</div>
+        <div class="sec">Currency</div>
+        <div class="currency-row">
+          <div class="currency-box">
+            <span class="currency-label">CP</span>
+            <span class="currency-value">0</span>
+          </div>
+          <div class="currency-box">
+            <span class="currency-label">SP</span>
+            <span class="currency-value">0</span>
+          </div>
+          <div class="currency-box">
+            <span class="currency-label">EP</span>
+            <span class="currency-value">0</span>
+          </div>
+          <div class="currency-box">
+            <span class="currency-label">GP</span>
+            <span class="currency-value">10</span>
+          </div>
+          <div class="currency-box">
+            <span class="currency-label">PP</span>
+            <span class="currency-value">0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Personality ── -->
+      <div class="sheet-section-wrap" id="section-personality">
+        <div class="section-handle">⠿</div>
+        <div class="sec">Personality</div>
+        <div class="personality-grid">
+          <div class="form-field">
+            <label class="form-label">Personality Traits</label>
+            <textarea class="form-input" rows="3" style="resize:vertical">I am always calm, no matter what the situation.</textarea>
+          </div>
+          <div class="form-field">
+            <label class="form-label">Ideals</label>
+            <textarea class="form-input" rows="3" style="resize:vertical">Greater Good. My gifts are meant to be shared with all.</textarea>
+          </div>
+          <div class="form-field">
+            <label class="form-label">Bonds</label>
+            <textarea class="form-input" rows="3" style="resize:vertical">I protect those who cannot protect themselves.</textarea>
+          </div>
+          <div class="form-field">
+            <label class="form-label">Flaws</label>
+            <textarea class="form-input" rows="3" style="resize:vertical">I have a weakness for the vices of the city.</textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Backstory ── -->
+      <div class="sheet-section-wrap" id="section-backstory">
+        <div class="section-handle">⠿</div>
+        <div class="sec">Backstory</div>
+        <div class="form-field">
+          <label class="form-label">Character Backstory</label>
+          <textarea class="form-input" rows="6" style="resize:vertical">A wanderer from the northern lands...</textarea>
+        </div>
+      </div>
+
+      <!-- ── Conditions ── -->
+      <div class="sheet-section-wrap" id="section-conditions">
+        <div class="section-handle">⠿</div>
+        <div class="sec">Conditions</div>
+        <div class="conditions-wrap">
+          <button class="condition-pill">Blinded</button>
+          <button class="condition-pill">Charmed</button>
+          <button class="condition-pill">Deafened</button>
+          <button class="condition-pill">Frightened</button>
+          <button class="condition-pill">Grappled</button>
+          <button class="condition-pill">Incapacitated</button>
+          <button class="condition-pill">Invisible</button>
+          <button class="condition-pill">Paralyzed</button>
+          <button class="condition-pill">Petrified</button>
+          <button class="condition-pill">Poisoned</button>
+          <button class="condition-pill">Prone</button>
+          <button class="condition-pill">Restrained</button>
+          <button class="condition-pill">Stunned</button>
+          <button class="condition-pill">Unconscious</button>
+        </div>
+        <div class="exhaustion-row">
+          <button class="exhaustion-btn" onclick="changeExhaustion(-1)">−</button>
+          <span class="exhaustion-label">Exhaustion: <span id="exhaustion-value">0</span></span>
+          <button class="exhaustion-btn" onclick="changeExhaustion(1)">＋</button>
+        </div>
+      </div>
+
+      <!-- ── Spell Slots ── -->
+      <div class="sheet-section-wrap" id="section-spell-slots">
+        <div class="section-handle">⠿</div>
+        <div class="sec">Spell Slots</div>
+        <div class="slots-grid">
+          <div class="slot-box">
+            <span class="slot-level">1</span>
+            <span class="slot-count">2 / 2</span>
+            <div class="slot-pips">
+              <span class="slot-pip filled"></span>
+              <span class="slot-pip filled"></span>
+            </div>
+          </div>
+          <div class="slot-box">
+            <span class="slot-level">2</span>
+            <span class="slot-count">0 / 0</span>
+            <div class="slot-pips"></div>
+          </div>
+          <div class="slot-box">
+            <span class="slot-level">3</span>
+            <span class="slot-count">0 / 0</span>
+            <div class="slot-pips"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Spells ── -->
+      <div class="sheet-section-wrap" id="section-spells">
+        <div class="section-handle">⠿</div>
+        <div class="sec">Spells</div>
+        <span class="spell-subsection-label">Cantrips</span>
+        <div class="cantrip-chips">
+          <span class="cantrip-chip">Eldritch Blast</span>
+          <span class="cantrip-chip">Minor Illusion</span>
+        </div>
+        <button class="btn btn-ghost" style="margin-bottom:14px">＋ Add Cantrip</button>
+        <span class="spell-subsection-label">Spells</span>
+        <div class="spells-list">
+          <div class="spell-card">
+            <span class="spell-name">Hex</span>
+            <span class="spell-level-badge">Lvl 1</span>
+          </div>
+          <div class="spell-card">
+            <span class="spell-name">Armor of Agathys</span>
+            <span class="spell-level-badge">Lvl 1</span>
+          </div>
+        </div>
+        <button class="btn btn-ghost">＋ Add Spell</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── Weapon Modal ── -->
+  <div class="modal-overlay" id="weapon-modal">
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeModal('weapon-modal')">✕</button>
+      <div class="modal-title">Add Weapon</div>
+      <div class="modal-sub">New weapon entry</div>
+      <div class="form-field">
+        <label class="form-label">Name</label>
+        <input type="text" class="form-input" placeholder="e.g. Longsword">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Attack Bonus</label>
+        <input type="text" class="form-input" placeholder="e.g. +4">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Damage Dice</label>
+        <input type="text" class="form-input" placeholder="e.g. 1d6+2">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Damage Type</label>
+        <input type="text" class="form-input" placeholder="e.g. Slashing">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Range</label>
+        <input type="text" class="form-input" placeholder="e.g. 5 ft">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Notes</label>
+        <input type="text" class="form-input" placeholder="">
+      </div>
+      <button class="btn btn-gold">Add Weapon</button>
+    </div>
+  </div>
+
+  <!-- ── Feature Modal ── -->
+  <div class="modal-overlay" id="feature-modal">
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeModal('feature-modal')">✕</button>
+      <div class="modal-title">Add Feature</div>
+      <div class="modal-sub">New feature or trait</div>
+      <div class="form-field">
+        <label class="form-label">Name</label>
+        <input type="text" class="form-input" placeholder="e.g. Action Surge">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Category</label>
+        <select class="form-input">
+          <option value="action">Action</option>
+          <option value="passive">Passive</option>
+          <option value="reaction">Reaction</option>
+          <option value="maneuver">Maneuver</option>
+          <option value="racial">Racial</option>
+          <option value="fighting-style">Fighting Style</option>
+          <option value="homebrew">Homebrew</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label class="form-label">Recharge (optional)</label>
+        <input type="text" class="form-input" placeholder="e.g. Short rest">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Description</label>
+        <textarea class="form-input" rows="3" style="resize:vertical" placeholder="Describe the feature..."></textarea>
+      </div>
+      <button class="btn btn-gold">Add Feature</button>
+    </div>
+  </div>
+
+  <!-- ── Customise Modal ── -->
+  <div class="modal-overlay" id="customise-modal">
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeModal('customise-modal')">✕</button>
+      <div class="modal-title">✦ Customise</div>
+      <div class="modal-sub">Appearance &amp; Layout</div>
+
+      <!-- Tab bar -->
+      <div class="cust-tab-bar">
+        <button class="cust-tab active" data-tab="appearance" onclick="switchCustTab('appearance')">Appearance</button>
+        <button class="cust-tab" data-tab="layout" onclick="switchCustTab('layout')">Layout</button>
+      </div>
+
+      <!-- Appearance Panel -->
+      <div class="cust-panel active" id="cust-panel-appearance">
+
+        <div class="cust-section-label">Accent Color</div>
+        <div class="swatch-row" id="accent-swatches"></div>
+        <input type="color" id="accent-picker" class="color-picker-input" value="#c4920a" title="Custom color">
+
+        <div class="cust-section-label">Outer Background</div>
+        <div class="swatch-row" id="outer-bg-swatches"></div>
+
+        <div class="cust-section-label">Sheet Background</div>
+        <div class="swatch-row" id="sheet-bg-swatches"></div>
+
+      </div>
+
+      <!-- Layout Panel -->
+      <div class="cust-panel" id="cust-panel-layout">
+
+        <div class="cust-section-label">Section Visibility</div>
+        <div id="visibility-list"></div>
+
+        <div class="cust-section-label">Section Order</div>
+        <div class="layout-edit-controls">
+          <button class="btn btn-ghost" id="layout-edit-btn" onclick="toggleLayoutEditing()">⠿ Enable Layout Editing</button>
+          <button class="reset-btn" onclick="resetSectionOrder()">↺ Reset to Default Order</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ─── State ───────────────────────────────────────────────────────────────
+    let campaignId       = null;
+    let characterId      = null;
+    let viewingCharId    = null;
+    let currentUser      = null;
+    let userMembership   = null;
+    let currentCharacter = null;
+    let isReadOnly       = false;
+
+    // ─── On Load Sequence ────────────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', async function () {
+      // 1. Parse URL params
+      const params = new URLSearchParams(window.location.search);
+      campaignId    = params.get('c');
+      viewingCharId = params.get('p');
+
+      if (!campaignId) {
+        window.location.href = 'home.html';
+        return;
+      }
+
+      // 2. Auth check
+      const session = await requireAuth();
+      if (!session) return;
+
+      // 3. Current user
+      currentUser = await getUser();
+
+      // 4. Verify membership
+      const { data: membership, error: memberErr } = await supabaseClient
+        .from('memberships')
+        .select('id, role, accent_hex')
+        .eq('campaign_id', campaignId)
+        .eq('user_id', currentUser.id)
+        .maybeSingle();
+      if (memberErr || !membership) {
+        window.location.href = 'home.html';
+        return;
+      }
+      userMembership = membership;
+
+      // 5. DM redirect — only when no ?p= param present
+      if (userMembership.role === 'dm' && !viewingCharId) {
+        window.location.href = 'campaign.html?c=' + campaignId;
+        return;
+      }
+
+      // 6. Load character
+      if (viewingCharId) {
+        // DM viewing a player's sheet OR player viewing another player's sheet
+        const { data: character, error: charErr } = await supabaseClient
+          .from('characters')
+          .select('*')
+          .eq('id', viewingCharId)
+          .eq('campaign_id', campaignId)
+          .is('deleted_at', null)
+          .maybeSingle();
+
+        if (charErr) {
+          console.error('[load] Character query error:', charErr.message);
+        }
+        if (!character) {
+          window.location.href = 'campaign.html?c=' + campaignId;
+          return;
+        }
+
+        currentCharacter = character;
+        characterId = character.id;
+
+        // Player viewing someone else's character → read-only
+        if (userMembership.role === 'player' && character.membership_id !== userMembership.id) {
+          isReadOnly = true;
+        }
+
+        // Resolve accent: character's → owner membership's → campaign default
+        let accentHex = character.accent_hex || null;
+        if (!accentHex && character.membership_id) {
+          const { data: ownerMem } = await supabaseClient
+            .from('memberships')
+            .select('accent_hex')
+            .eq('id', character.membership_id)
+            .maybeSingle();
+          accentHex = ownerMem?.accent_hex || null;
+        }
+        applyAccentFromDb(accentHex || '#c4920a');
+
+        populateHeader(character);
+        populateAbilityScores(character);
+        populateCombatStats(character);
+        populateHp(character);
+        populateSavingThrows(character);
+        populateSkills(character);
+        populateDeathSaves(character);
+
+        if (isReadOnly) {
+          applyReadOnlyMode();
+        } else {
+          subscribeToCharacter();
+        }
+
+      } else {
+        // Player viewing their own sheet (no ?p= param)
+        const { data: character, error: charErr } = await supabaseClient
+          .from('characters')
+          .select('*')
+          .eq('membership_id', userMembership.id)
+          .is('deleted_at', null)
+          .maybeSingle();
+        if (charErr) {
+          console.error('[load] Character query error:', charErr.message);
+        }
+
+        characterId = character ? character.id : crypto.randomUUID();
+
+        if (!character) {
+          showCreateCharacterForm();
+        } else {
+          currentCharacter = character;
+          const accentHex = character.accent_hex || userMembership.accent_hex || '#c4920a';
+          applyAccentFromDb(accentHex);
+          populateHeader(character);
+          populateAbilityScores(character);
+          populateCombatStats(character);
+          populateHp(character);
+          populateSavingThrows(character);
+          populateSkills(character);
+          populateDeathSaves(character);
+        }
+
+        subscribeToCharacter();
+      }
+
+      // 7. Campaign name + back link
+      const { data: campaign } = await supabaseClient
+        .from('campaigns')
+        .select('name')
+        .eq('id', campaignId)
+        .maybeSingle();
+      const backLink = document.querySelector('.back-link');
+      if (backLink) {
+        backLink.href = 'campaign.html?c=' + campaignId;
+        if (campaign && campaign.name) {
+          backLink.textContent = '← ' + campaign.name;
+        }
+      }
+    });
+
+    // ─── Populate Header ─────────────────────────────────────────────────────
+    function populateHeader(char) {
+      document.querySelector('.char-name-display').textContent =
+        escHtml(char.name || 'Unnamed Character');
+      document.querySelector('[data-field="class"]').textContent =
+        escHtml(char.class || '—');
+      document.querySelector('[data-field="race"]').textContent =
+        escHtml(char.race || '—');
+      document.querySelector('[data-field="background"]').textContent =
+        escHtml(char.background || '—');
+      document.querySelector('[data-field="alignment"]').textContent =
+        escHtml(char.alignment || '—');
+      document.querySelector('[data-field="level"]').textContent =
+        char.level || 1;
+      document.querySelector('[data-field="xp"]').textContent =
+        char.xp || 0;
+      document.title = 'D&D Tracker — ' + escHtml(char.name || 'Character Sheet');
+    }
+
+    // ─── Field-Level Save ────────────────────────────────────────────────────
+    async function saveField(field, value) {
+      if (isReadOnly) return;
+      setSyncStatus('saving');
+      const { error } = await supabaseClient
+        .from('characters')
+        .update({ [field]: value })
+        .eq('id', characterId);
+      if (error) {
+        console.error('[saveField] Failed:', error.message);
+        setSyncStatus('error');
+        return;
+      }
+      setSyncStatus('saved');
+    }
+
+    // ─── Sync Pill ───────────────────────────────────────────────────────────
+    function setSyncStatus(state) {
+      const pill = document.querySelector('.sync-status');
+      if (!pill) return;
+      pill.className = 'sync-status';
+      if (state === 'saving') {
+        pill.classList.add('saving');
+        pill.textContent = 'Saving…';
+      } else if (state === 'saved') {
+        pill.classList.add('ok');
+        pill.textContent = '✓ Saved';
+      } else if (state === 'error') {
+        pill.classList.add('error');
+        pill.textContent = 'Error';
+      }
+    }
+
+    // ─── Real-Time Subscription ──────────────────────────────────────────────
+    function subscribeToCharacter() {
+      supabaseClient
+        .channel('sheet-character-' + characterId)
+        .on('postgres_changes', {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'characters',
+          filter: 'id=eq.' + characterId
+        }, function (payload) {
+          currentCharacter = payload.new;
+          populateHeader(payload.new);
+          populateAbilityScores(payload.new);
+          populateCombatStats(payload.new);
+          populateHp(payload.new);
+          populateSavingThrows(payload.new);
+          populateSkills(payload.new);
+          populateDeathSaves(payload.new);
+        })
+        .subscribe();
+    }
+
+    window.addEventListener('beforeunload', function () {
+      supabaseClient.removeAllChannels();
+    });
+
+    // ─── Populate Ability Scores ─────────────────────────────────────────────
+    function populateAbilityScores(char) {
+      ['str', 'dex', 'con', 'int', 'wis', 'cha'].forEach(function(ab) {
+        const score  = char[ab] ?? 10;
+        const mod    = char[ab + '_mod'] !== null && char[ab + '_mod'] !== undefined
+                       ? char[ab + '_mod']
+                       : Math.floor((score - 10) / 2);
+        const modEl   = document.querySelector('[data-ability="' + ab + '"]');
+        const scoreEl = document.querySelector('[data-field="' + ab + '"]');
+        if (modEl)   modEl.textContent   = (mod >= 0 ? '+' : '') + mod;
+        if (scoreEl) {
+          scoreEl.textContent = '(' + score + ')';
+          if (!isReadOnly) {
+            scoreEl.contentEditable = 'true';
+            scoreEl.onblur = (function(ability, el) {
+              return function() { saveAbilityScore(ability, el); };
+            })(ab, scoreEl);
+          }
+        }
+      });
+    }
+
+    // ─── Save Ability Score + auto-recalculate modifier ─────────────────────
+    async function saveAbilityScore(ability, el) {
+      if (isReadOnly) return;
+      const raw   = parseInt(el.textContent.replace(/[()]/g, '').trim());
+      const score = isNaN(raw) ? 10 : Math.max(1, Math.min(30, raw));
+      const mod   = Math.floor((score - 10) / 2);
+      el.textContent = '(' + score + ')';
+      const modEl = document.querySelector('[data-ability="' + ability + '"]');
+      if (modEl) modEl.textContent = (mod >= 0 ? '+' : '') + mod;
+      setSyncStatus('saving');
+      const { error } = await supabaseClient
+        .from('characters')
+        .update({ [ability]: score, [ability + '_mod']: mod })
+        .eq('id', characterId);
+      setSyncStatus(error ? 'error' : 'saved');
+      if (error) console.error('[saveAbilityScore]', error.message);
+    }
+
+    // ─── Populate Combat Stats ───────────────────────────────────────────────
+    function populateCombatStats(char) {
+      const defs = {
+        ac:         { val: char.ac         ?? 10, fmt: function(v) { return v; } },
+        initiative: { val: char.initiative ?? 0,  fmt: function(v) { return (v >= 0 ? '+' : '') + v; } },
+        speed:      { val: char.speed      ?? 30, fmt: function(v) { return v + ' ft'; } },
+        prof_bonus: { val: char.prof_bonus ?? 2,  fmt: function(v) { return (v >= 0 ? '+' : '') + v; } }
+      };
+      Object.keys(defs).forEach(function(field) {
+        const el = document.querySelector('[data-field="' + field + '"]');
+        if (!el) return;
+        const def = defs[field];
+        el.textContent = def.fmt(def.val);
+        if (!isReadOnly) {
+          el.contentEditable = 'true';
+          el.onblur = (function(f, fmtFn) {
+            return function() {
+              const parsed = parseInt(el.textContent.replace(/[^0-9\-]/g, '')) || 0;
+              el.textContent = fmtFn(parsed);
+              saveField(f, parsed);
+            };
+          })(field, def.fmt);
+        }
+      });
+    }
+
+    // ─── Populate HP ─────────────────────────────────────────────────────────
+    function populateHp(char) {
+      const maxHp   = char.max_hp  ?? 10;
+      const curHp   = char.cur_hp  ?? 10;
+      const tempHp  = char.temp_hp ?? 0;
+      const hitDice = char.hit_dice || '1d8';
+
+      const maxEl  = document.querySelector('[data-field="max_hp"]');
+      const curEl  = document.querySelector('[data-field="cur_hp"]');
+      const tmpEl  = document.querySelector('[data-field="temp_hp"]');
+      const diceEl = document.querySelector('[data-field="hit_dice"]');
+
+      if (maxEl) {
+        maxEl.textContent = maxHp;
+        if (!isReadOnly) {
+          maxEl.contentEditable = 'true';
+          maxEl.onblur = function() {
+            saveField('max_hp', parseInt(maxEl.textContent.trim()) || 0);
+          };
+        }
+      }
+      if (curEl) {
+        curEl.textContent = curHp;
+        if (!isReadOnly) {
+          curEl.contentEditable = 'true';
+          curEl.onblur = function() { saveCurrentHp(curEl); };
+        }
+      }
+      if (tmpEl) {
+        tmpEl.textContent = tempHp;
+        if (!isReadOnly) {
+          tmpEl.contentEditable = 'true';
+          tmpEl.onblur = function() {
+            saveField('temp_hp', parseInt(tmpEl.textContent.trim()) || 0);
+          };
+        }
+      }
+      if (diceEl) {
+        diceEl.textContent = hitDice;
+        if (!isReadOnly) {
+          diceEl.contentEditable = 'true';
+          diceEl.onblur = function() {
+            saveField('hit_dice', diceEl.textContent.trim() || '1d8');
+          };
+        }
+      }
+
+      updateHpBar(curHp, maxHp);
+    }
+
+    // ─── Save Current HP via adjust_hp RPC ───────────────────────────────────
+    async function saveCurrentHp(el) {
+      if (isReadOnly) return;
+      const newHp = parseInt(el.textContent.trim());
+      if (isNaN(newHp)) {
+        el.textContent = currentCharacter ? (currentCharacter.cur_hp ?? 0) : 0;
+        return;
+      }
+      const oldHp = currentCharacter ? (currentCharacter.cur_hp ?? 0) : 0;
+      const delta  = newHp - oldHp;
+      if (delta === 0) return;
+      setSyncStatus('saving');
+      const { error } = await supabaseClient.rpc('adjust_hp', {
+        character_id: characterId,
+        delta:        delta
+      });
+      if (error) {
+        console.error('[saveCurrentHp] RPC failed:', error.message);
+        setSyncStatus('error');
+        return;
+      }
+      if (currentCharacter) currentCharacter.cur_hp = newHp;
+      setSyncStatus('saved');
+    }
+
+    // ─── Update HP Bar colour and label ──────────────────────────────────────
+    function updateHpBar(cur, max) {
+      const fill  = document.getElementById('hp-bar-fill');
+      const label = document.getElementById('hp-bar-label');
+      if (!fill || !label) return;
+      const ratio = max > 0 ? Math.min(1, Math.max(0, cur / max)) : 0;
+      fill.style.width = (ratio * 100) + '%';
+      fill.className = 'hp-bar-fill';
+      if (ratio > 0.5)       fill.classList.add('hp-green');
+      else if (ratio > 0.25) fill.classList.add('hp-gold');
+      else                   fill.classList.add('hp-red');
+      label.textContent = cur + ' / ' + max + ' HP';
+    }
+
+    // ─── Prof Bonus Parser ────────────────────────────────────────────────────
+    function parseProfBonus(str) {
+      return parseInt(String(str || '0').replace('+', '')) || 0;
+    }
+
+    // ─── Saving Throw Config ──────────────────────────────────────────────────
+    const SAVES = [
+      { ability: 'str', field: 'save_prof_str' },
+      { ability: 'dex', field: 'save_prof_dex' },
+      { ability: 'con', field: 'save_prof_con' },
+      { ability: 'int', field: 'save_prof_int' },
+      { ability: 'wis', field: 'save_prof_wis' },
+      { ability: 'cha', field: 'save_prof_cha' },
+    ];
+
+    // ─── Skill Config (order matches HTML) ───────────────────────────────────
+    const SKILLS = [
+      { key: 'acrobatics',      ability: 'dex' },
+      { key: 'animal_handling', ability: 'wis' },
+      { key: 'arcana',          ability: 'int' },
+      { key: 'athletics',       ability: 'str' },
+      { key: 'deception',       ability: 'cha' },
+      { key: 'history',         ability: 'int' },
+      { key: 'insight',         ability: 'wis' },
+      { key: 'intimidation',    ability: 'cha' },
+      { key: 'investigation',   ability: 'int' },
+      { key: 'medicine',        ability: 'wis' },
+      { key: 'nature',          ability: 'int' },
+      { key: 'perception',      ability: 'wis' },
+      { key: 'performance',     ability: 'cha' },
+      { key: 'persuasion',      ability: 'cha' },
+      { key: 'religion',        ability: 'int' },
+      { key: 'sleight_of_hand', ability: 'dex' },
+      { key: 'stealth',         ability: 'dex' },
+      { key: 'survival',        ability: 'wis' },
+    ];
+
+    // ─── Populate Saving Throws ───────────────────────────────────────────────
+    function populateSavingThrows(char) {
+      const profBonusInt = parseProfBonus(char.prof_bonus);
+      const rows = document.querySelectorAll('.saves-list .prof-row');
+      SAVES.forEach(function(save, i) {
+        const row = rows[i];
+        if (!row) return;
+        const circle     = row.querySelector('.prof-circle');
+        const bonusEl    = row.querySelector('.prof-bonus');
+        const proficient = !!char[save.field];
+        const abilityMod = char[save.ability + '_mod'] !== null && char[save.ability + '_mod'] !== undefined
+                           ? char[save.ability + '_mod']
+                           : Math.floor(((char[save.ability] ?? 10) - 10) / 2);
+        const bonus = proficient ? abilityMod + profBonusInt : abilityMod;
+        if (circle)  circle.classList.toggle('checked', proficient);
+        if (bonusEl) bonusEl.textContent = (bonus >= 0 ? '+' : '') + bonus;
+        if (!isReadOnly && circle) {
+          const fieldName  = save.field;
+          const abilityKey = save.ability;
+          circle.onclick = function() {
+            if (!currentCharacter) return;
+            const pb  = parseProfBonus(currentCharacter.prof_bonus);
+            const mod = currentCharacter[abilityKey + '_mod'] !== null && currentCharacter[abilityKey + '_mod'] !== undefined
+                        ? currentCharacter[abilityKey + '_mod']
+                        : Math.floor(((currentCharacter[abilityKey] ?? 10) - 10) / 2);
+            const newVal   = !currentCharacter[fieldName];
+            currentCharacter[fieldName] = newVal;
+            circle.classList.toggle('checked', newVal);
+            const newBonus = newVal ? mod + pb : mod;
+            bonusEl.textContent = (newBonus >= 0 ? '+' : '') + newBonus;
+            saveField(fieldName, newVal);
+          };
+        }
+      });
+    }
+
+    // ─── Update Passive Perception ────────────────────────────────────────────
+    function updatePassivePerception(char) {
+      const pb     = parseProfBonus(char.prof_bonus);
+      const wisMod = char.wis_mod !== null && char.wis_mod !== undefined
+                     ? char.wis_mod
+                     : Math.floor(((char.wis ?? 10) - 10) / 2);
+      const ppEl = document.querySelector('.passive-perception-value');
+      if (ppEl) ppEl.textContent = 10 + wisMod + (char.skill_perception ? pb : 0);
+    }
+
+    // ─── Populate Skills ──────────────────────────────────────────────────────
+    function populateSkills(char) {
+      const profBonusInt = parseProfBonus(char.prof_bonus);
+      const rows = document.querySelectorAll('.skills-list .prof-row');
+      SKILLS.forEach(function(skill, i) {
+        const row = rows[i];
+        if (!row) return;
+        const circle    = row.querySelector('.prof-circle');
+        const bonusEl   = row.querySelector('.prof-bonus');
+        const fieldName = 'skill_' + skill.key;
+        const proficient = !!char[fieldName];
+        const abilityMod = char[skill.ability + '_mod'] !== null && char[skill.ability + '_mod'] !== undefined
+                           ? char[skill.ability + '_mod']
+                           : Math.floor(((char[skill.ability] ?? 10) - 10) / 2);
+        const bonus = abilityMod + (proficient ? profBonusInt : 0);
+        if (circle)  circle.classList.toggle('checked', proficient);
+        if (bonusEl) bonusEl.textContent = (bonus >= 0 ? '+' : '') + bonus;
+        if (!isReadOnly && circle) {
+          const fn         = fieldName;
+          const abilityKey = skill.ability;
+          circle.onclick = function() {
+            if (!currentCharacter) return;
+            const pb  = parseProfBonus(currentCharacter.prof_bonus);
+            const mod = currentCharacter[abilityKey + '_mod'] !== null && currentCharacter[abilityKey + '_mod'] !== undefined
+                        ? currentCharacter[abilityKey + '_mod']
+                        : Math.floor(((currentCharacter[abilityKey] ?? 10) - 10) / 2);
+            const newVal   = !currentCharacter[fn];
+            currentCharacter[fn] = newVal;
+            circle.classList.toggle('checked', newVal);
+            const newBonus = mod + (newVal ? pb : 0);
+            bonusEl.textContent = (newBonus >= 0 ? '+' : '') + newBonus;
+            saveField(fn, newVal);
+            if (fn === 'skill_perception') updatePassivePerception(currentCharacter);
+          };
+        }
+      });
+      updatePassivePerception(char);
+    }
+
+    // ─── Populate Death Saves ─────────────────────────────────────────────────
+    function populateDeathSaves(char) {
+      const successes    = char.death_save_successes ?? 0;
+      const failures     = char.death_save_failures  ?? 0;
+      const successBoxes = document.querySelectorAll('.ds-box.success');
+      const failureBoxes = document.querySelectorAll('.ds-box.failure');
+      successBoxes.forEach(function(box, i) {
+        box.classList.toggle('checked', i < successes);
+        if (!isReadOnly) {
+          box.onclick = function() {
+            const cur    = currentCharacter ? (currentCharacter.death_save_successes ?? 0) : 0;
+            const newVal = (i < cur) ? i : i + 1;
+            if (currentCharacter) currentCharacter.death_save_successes = newVal;
+            successBoxes.forEach(function(b, j) { b.classList.toggle('checked', j < newVal); });
+            saveField('death_save_successes', newVal);
+          };
+        }
+      });
+      failureBoxes.forEach(function(box, i) {
+        box.classList.toggle('checked', i < failures);
+        if (!isReadOnly) {
+          box.onclick = function() {
+            const cur    = currentCharacter ? (currentCharacter.death_save_failures ?? 0) : 0;
+            const newVal = (i < cur) ? i : i + 1;
+            if (currentCharacter) currentCharacter.death_save_failures = newVal;
+            failureBoxes.forEach(function(b, j) { b.classList.toggle('checked', j < newVal); });
+            saveField('death_save_failures', newVal);
+          };
+        }
+      });
+    }
+
+    // ─── Apply Sheet Owner's Accent Color ────────────────────────────────────
+    function applyAccentFromDb(hex) {
+      if (!hex) return;
+      document.documentElement.style.setProperty('--accent',     hex);
+      document.documentElement.style.setProperty('--gold',       hex);
+      document.documentElement.style.setProperty('--gold-light', hex);
+      document.documentElement.style.setProperty('--accent-rgb', hexToRgb(hex));
+    }
+
+    // ─── Read-Only Mode ───────────────────────────────────────────────────────
+    function applyReadOnlyMode() {
+      const pill = document.querySelector('.sync-status');
+      if (pill) pill.style.display = 'none';
+      document.querySelectorAll('[contenteditable]').forEach(function(el) {
+        el.removeAttribute('contenteditable');
+        el.removeAttribute('onblur');
+      });
+    }
+
+    // ─── Create Character Form ───────────────────────────────────────────────
+    function showCreateCharacterForm() {
+      document.querySelector('.sheet-body').innerHTML =
+        '<div style="max-width:420px;margin:40px auto;">' +
+          '<div style="font-family:var(--font-heading);font-size:1.2rem;' +
+            'color:var(--ink);font-weight:700;margin-bottom:6px;text-align:center;">' +
+            'Create Your Character' +
+          '</div>' +
+          '<div style="font-family:var(--font-body);font-size:0.95rem;' +
+            'color:var(--ink-light);margin-bottom:24px;font-style:italic;text-align:center;">' +
+            'Fill in the basics — you can edit everything later on the sheet.' +
+          '</div>' +
+
+          '<div style="margin-bottom:14px;">' +
+            '<label style="font-family:var(--font-heading);font-size:0.55rem;' +
+              'text-transform:uppercase;letter-spacing:0.12em;color:var(--ink-light);' +
+              'display:block;margin-bottom:4px;">Character Name *</label>' +
+            '<input id="cc-name" type="text" maxlength="80" placeholder="e.g. Arannis"' +
+              ' style="width:100%;font-family:var(--font-body);font-size:0.95rem;' +
+              'background:rgba(255,255,255,0.6);border:1px solid var(--border);' +
+              'border-radius:var(--radius-sm);color:var(--ink);padding:8px 10px;' +
+              'outline:none;box-sizing:border-box;">' +
+          '</div>' +
+
+          '<div style="margin-bottom:14px;">' +
+            '<label style="font-family:var(--font-heading);font-size:0.55rem;' +
+              'text-transform:uppercase;letter-spacing:0.12em;color:var(--ink-light);' +
+              'display:block;margin-bottom:4px;">Class *</label>' +
+            '<input id="cc-class" type="text" maxlength="50" placeholder="e.g. Fighter"' +
+              ' style="width:100%;font-family:var(--font-body);font-size:0.95rem;' +
+              'background:rgba(255,255,255,0.6);border:1px solid var(--border);' +
+              'border-radius:var(--radius-sm);color:var(--ink);padding:8px 10px;' +
+              'outline:none;box-sizing:border-box;">' +
+          '</div>' +
+
+          '<div style="margin-bottom:14px;">' +
+            '<label style="font-family:var(--font-heading);font-size:0.55rem;' +
+              'text-transform:uppercase;letter-spacing:0.12em;color:var(--ink-light);' +
+              'display:block;margin-bottom:4px;">Race *</label>' +
+            '<input id="cc-race" type="text" maxlength="50" placeholder="e.g. Human"' +
+              ' style="width:100%;font-family:var(--font-body);font-size:0.95rem;' +
+              'background:rgba(255,255,255,0.6);border:1px solid var(--border);' +
+              'border-radius:var(--radius-sm);color:var(--ink);padding:8px 10px;' +
+              'outline:none;box-sizing:border-box;">' +
+          '</div>' +
+
+          '<div style="margin-bottom:14px;">' +
+            '<label style="font-family:var(--font-heading);font-size:0.55rem;' +
+              'text-transform:uppercase;letter-spacing:0.12em;color:var(--ink-light);' +
+              'display:block;margin-bottom:4px;">Background</label>' +
+            '<input id="cc-background" type="text" maxlength="50" placeholder="e.g. Soldier"' +
+              ' style="width:100%;font-family:var(--font-body);font-size:0.95rem;' +
+              'background:rgba(255,255,255,0.6);border:1px solid var(--border);' +
+              'border-radius:var(--radius-sm);color:var(--ink);padding:8px 10px;' +
+              'outline:none;box-sizing:border-box;">' +
+          '</div>' +
+
+          '<div style="margin-bottom:14px;">' +
+            '<label style="font-family:var(--font-heading);font-size:0.55rem;' +
+              'text-transform:uppercase;letter-spacing:0.12em;color:var(--ink-light);' +
+              'display:block;margin-bottom:4px;">Level</label>' +
+            '<input id="cc-level" type="number" min="1" max="20" value="1"' +
+              ' style="width:100%;font-family:var(--font-body);font-size:0.95rem;' +
+              'background:rgba(255,255,255,0.6);border:1px solid var(--border);' +
+              'border-radius:var(--radius-sm);color:var(--ink);padding:8px 10px;' +
+              'outline:none;box-sizing:border-box;">' +
+          '</div>' +
+
+          '<button class="btn btn-primary" style="width:100%;justify-content:center;' +
+            'margin-top:8px;" onclick="createCharacter()">Create Character</button>' +
+          '<div id="create-error" style="display:none;margin-top:10px;' +
+            'color:var(--red);font-family:var(--font-body);font-size:0.85rem;' +
+            'text-align:center;"></div>' +
+        '</div>';
+    }
+
+    async function createCharacter() {
+      const nameVal       = document.getElementById('cc-name').value.trim();
+      const classVal      = document.getElementById('cc-class').value.trim();
+      const raceVal       = document.getElementById('cc-race').value.trim();
+      const backgroundVal = document.getElementById('cc-background').value.trim();
+      const levelVal      = parseInt(document.getElementById('cc-level').value) || 1;
+      const errEl         = document.getElementById('create-error');
+
+      if (!nameVal || !classVal || !raceVal) {
+        errEl.textContent = 'Name, class, and race are required.';
+        errEl.style.display = 'block';
+        return;
+      }
+      errEl.style.display = 'none';
+
+      const { error: charInsertErr } = await supabaseClient
+        .from('characters')
+        .insert({
+          id:            characterId,
+          campaign_id:   campaignId,
+          membership_id: userMembership.id,
+          name:          nameVal,
+          class:         classVal,
+          race:          raceVal,
+          background:    backgroundVal,
+          level:         levelVal,
+          max_hp:        10,
+          cur_hp:        10,
+          ac:            10,
+          initiative:    0,
+          speed:         30
+        });
+
+      if (charInsertErr) {
+        console.error('[createCharacter] Insert failed:', charInsertErr.message);
+        errEl.textContent = 'Error creating character: ' + charInsertErr.message;
+        errEl.style.display = 'block';
+        return;
+      }
+
+      await supabaseClient
+        .from('currency')
+        .insert({ character_id: characterId });
+
+      window.location.reload();
+    }
+
+    // ─── Existing functionality (unchanged) ─────────────────────────────────
+
+    // Modal helpers
+    function openModal(id) {
+      document.getElementById(id).classList.add('open');
+    }
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('open');
+    }
+
+    // Close modal on overlay click
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+      overlay.addEventListener('click', function(e) {
+        if (e.target === this) closeModal(this.id);
+      });
+    });
+
+    // Condition pill toggle
+    document.querySelectorAll('.condition-pill').forEach(pill => {
+      pill.addEventListener('click', () => {
+        pill.classList.toggle('active');
+      });
+    });
+
+    // Exhaustion counter
+    let exhaustion = 0;
+    function changeExhaustion(delta) {
+      exhaustion = Math.max(0, Math.min(6, exhaustion + delta));
+      document.getElementById('exhaustion-value').textContent = exhaustion;
+    }
+
+    // Spell slot pip toggle
+    document.querySelectorAll('.slot-pip').forEach(pip => {
+      pip.addEventListener('click', () => {
+        pip.classList.toggle('used');
+      });
+    });
+
+    // ─── Customise System ────────────────────────────────────────────────────
+
+    const LS_APPEARANCE = 'sheet-appearance';
+    const LS_HIDDEN     = 'sheet-hidden-sections';
+    const LS_ORDER      = 'sheet-section-order';
+
+    const ACCENT_SWATCHES   = ['#c4920a','#c04040','#4a8aaa','#5a4a8a','#285a18','#c05a20','#e05a8a','#4a4a4a'];
+    const OUTER_BG_SWATCHES = ['#111008','#0a0a0f','#0f0a0a','#080f08','#0f0f0a','#000000'];
+    const SHEET_BG_SWATCHES = ['#f5ead2','#e8e8e8','#d4e8d4','#d4d4e8','#e8d4d4','#1a1208'];
+
+    const SECTIONS = [
+      { id: 'section-ability-scores', name: 'Ability Scores' },
+      { id: 'section-combat',         name: 'Combat' },
+      { id: 'section-hp',             name: 'Hit Points' },
+      { id: 'section-death-saves',    name: 'Death Saves' },
+      { id: 'section-saving-throws',  name: 'Saving Throws' },
+      { id: 'section-skills',         name: 'Skills' },
+      { id: 'section-weapons',        name: 'Weapons' },
+      { id: 'section-features',       name: 'Features & Traits' },
+      { id: 'section-proficiencies',  name: 'Proficiencies & Languages' },
+      { id: 'section-equipment',      name: 'Equipment' },
+      { id: 'section-currency',       name: 'Currency' },
+      { id: 'section-personality',    name: 'Personality' },
+      { id: 'section-backstory',      name: 'Backstory' },
+      { id: 'section-conditions',     name: 'Conditions' },
+      { id: 'section-spell-slots',    name: 'Spell Slots' },
+      { id: 'section-spells',         name: 'Spells' }
+    ];
+
+    const DEFAULT_ORDER = SECTIONS.map(s => s.id);
+
+    let appearanceState = { accent: null, outerBg: null, sheetBg: null };
+
+    // ── Modal open ──────────────────────────────────────────────────────────
+    function openCustomiseModal() {
+      openModal('customise-modal');
+    }
+
+    // ── Tab switching ────────────────────────────────────────────────────────
+    function switchCustTab(tab) {
+      document.querySelectorAll('.cust-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.cust-panel').forEach(p => p.classList.remove('active'));
+      document.querySelector('.cust-tab[data-tab="' + tab + '"]').classList.add('active');
+      document.getElementById('cust-panel-' + tab).classList.add('active');
+    }
+
+    // ── Utility: hex → "r,g,b" ──────────────────────────────────────────────
+    function hexToRgb(hex) {
+      const h = hex.replace('#', '');
+      return parseInt(h.substring(0,2),16) + ',' +
+             parseInt(h.substring(2,4),16) + ',' +
+             parseInt(h.substring(4,6),16);
+    }
+
+    // ── Appearance: apply functions ──────────────────────────────────────────
+    function applyAccent(hex, save) {
+      document.documentElement.style.setProperty('--accent',     hex);
+      document.documentElement.style.setProperty('--gold',       hex);
+      document.documentElement.style.setProperty('--gold-light', hex);
+      document.documentElement.style.setProperty('--accent-rgb', hexToRgb(hex));
+      if (save !== false) { appearanceState.accent = hex; saveAppearance(); }
+    }
+
+    function applyOuterBg(hex, save) {
+      document.documentElement.style.setProperty('--bg',          hex);
+      document.documentElement.style.setProperty('--bg-gradient', 'none');
+      document.body.style.background = hex;
+      if (save !== false) { appearanceState.outerBg = hex; saveAppearance(); }
+    }
+
+    function applySheetBg(hex, save) {
+      document.documentElement.style.setProperty('--sheet-bg', hex);
+      if (hex === '#1a1208') {
+        document.documentElement.style.setProperty('--ink',       'rgba(245,230,200,0.9)');
+        document.documentElement.style.setProperty('--ink-light', 'rgba(245,230,200,0.6)');
+      } else {
+        document.documentElement.style.setProperty('--ink',       '#1a1208');
+        document.documentElement.style.setProperty('--ink-light', '#4a3520');
+      }
+      if (save !== false) { appearanceState.sheetBg = hex; saveAppearance(); }
+    }
+
+    function saveAppearance() {
+      localStorage.setItem(LS_APPEARANCE, JSON.stringify(appearanceState));
+    }
+
+    function restoreAppearance() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(LS_APPEARANCE) || '{}');
+        if (saved.accent)  applyAccent(saved.accent, false);
+        if (saved.outerBg) applyOuterBg(saved.outerBg, false);
+        if (saved.sheetBg) applySheetBg(saved.sheetBg, false);
+        appearanceState = {
+          accent:  saved.accent  || null,
+          outerBg: saved.outerBg || null,
+          sheetBg: saved.sheetBg || null
+        };
+      } catch(e) {}
+    }
+
+    // ── Build swatch rows ────────────────────────────────────────────────────
+    function buildSwatches(containerId, colors, applyFn, defaultHex) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = '';
+      colors.forEach(function(hex) {
+        const div = document.createElement('div');
+        div.className = 'swatch' + (hex === defaultHex ? ' selected' : '');
+        div.style.backgroundColor = hex;
+        div.title = hex;
+        div.addEventListener('click', function() {
+          container.querySelectorAll('.swatch').forEach(function(s) {
+            s.classList.remove('selected');
+          });
+          div.classList.add('selected');
+          applyFn(hex);
+        });
+        container.appendChild(div);
+      });
+    }
+
+    function initSwatches() {
+      const saved = JSON.parse(localStorage.getItem(LS_APPEARANCE) || '{}');
+
+      buildSwatches('accent-swatches',   ACCENT_SWATCHES,   applyAccent,   saved.accent  || '#c4920a');
+      buildSwatches('outer-bg-swatches', OUTER_BG_SWATCHES, applyOuterBg,  saved.outerBg || '#111008');
+      buildSwatches('sheet-bg-swatches', SHEET_BG_SWATCHES, applySheetBg,  saved.sheetBg || '#f5ead2');
+
+      // Custom accent color picker
+      const picker = document.getElementById('accent-picker');
+      if (saved.accent) picker.value = saved.accent;
+      picker.addEventListener('input', function() {
+        document.getElementById('accent-swatches').querySelectorAll('.swatch').forEach(function(s) {
+          s.classList.remove('selected');
+        });
+        appearanceState.accent = picker.value;
+        applyAccent(picker.value);
+      });
+    }
+
+    // ── Section Visibility ───────────────────────────────────────────────────
+    function buildVisibilityList() {
+      const hiddenIds = JSON.parse(localStorage.getItem(LS_HIDDEN) || '[]');
+      const container = document.getElementById('visibility-list');
+      container.innerHTML = '';
+
+      SECTIONS.forEach(function(section) {
+        const isHidden = hiddenIds.indexOf(section.id) !== -1;
+        const row = document.createElement('div');
+        row.className = 'visibility-row';
+
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'visibility-name';
+        nameSpan.textContent = section.name;
+
+        const pill = document.createElement('button');
+        pill.className = 'visibility-pill ' + (isHidden ? 'hidden' : 'shown');
+        pill.setAttribute('data-id', section.id);
+        pill.textContent = isHidden ? 'Hidden' : 'Shown';
+        pill.addEventListener('click', function() {
+          toggleSectionVisibility(section.id, pill);
+        });
+
+        row.appendChild(nameSpan);
+        row.appendChild(pill);
+        container.appendChild(row);
+      });
+    }
+
+    function toggleSectionVisibility(sectionId, pillEl) {
+      const el = document.getElementById(sectionId);
+      if (!el) return;
+      const isNowHidden = pillEl.classList.contains('shown');
+      if (isNowHidden) {
+        el.style.display = 'none';
+        pillEl.classList.replace('shown', 'hidden');
+        pillEl.textContent = 'Hidden';
+      } else {
+        el.style.display = '';
+        pillEl.classList.replace('hidden', 'shown');
+        pillEl.textContent = 'Shown';
+      }
+      saveHiddenSections();
+    }
+
+    function saveHiddenSections() {
+      const hidden = [];
+      document.querySelectorAll('.visibility-pill.hidden').forEach(function(pill) {
+        hidden.push(pill.getAttribute('data-id'));
+      });
+      localStorage.setItem(LS_HIDDEN, JSON.stringify(hidden));
+    }
+
+    function restoreHiddenSections() {
+      try {
+        const hiddenIds = JSON.parse(localStorage.getItem(LS_HIDDEN) || '[]');
+        hiddenIds.forEach(function(id) {
+          const el = document.getElementById(id);
+          if (el) el.style.display = 'none';
+        });
+      } catch(e) {}
+    }
+
+    // ── Section Order ─────────────────────────────────────────────────────────
+    function saveSectionOrder() {
+      const order = [];
+      document.querySelectorAll('.sheet-body .sheet-section-wrap').forEach(function(el) {
+        order.push(el.id);
+      });
+      localStorage.setItem(LS_ORDER, JSON.stringify(order));
+    }
+
+    function restoreSectionOrder() {
+      try {
+        const savedOrder = JSON.parse(localStorage.getItem(LS_ORDER) || '[]');
+        if (!savedOrder.length) return;
+        const parent = document.querySelector('.sheet-body');
+        if (!parent) return;
+        savedOrder.forEach(function(id) {
+          const el = document.getElementById(id);
+          if (el) parent.appendChild(el);
+        });
+      } catch(e) {}
+    }
+
+    function resetSectionOrder() {
+      const parent = document.querySelector('.sheet-body');
+      if (!parent) return;
+      DEFAULT_ORDER.forEach(function(id) {
+        const el = document.getElementById(id);
+        if (el) parent.appendChild(el);
+      });
+      localStorage.removeItem(LS_ORDER);
+    }
+
+    // ── Layout Editing / Drag-and-Drop ────────────────────────────────────────
+    let layoutEditingActive = false;
+    let dragSrc = null;
+
+    function toggleLayoutEditing() {
+      layoutEditingActive = !layoutEditingActive;
+      const btn = document.getElementById('layout-edit-btn');
+      if (layoutEditingActive) {
+        document.body.classList.add('layout-editing');
+        document.querySelectorAll('.sheet-section-wrap').forEach(function(el) {
+          el.setAttribute('draggable', 'true');
+        });
+        btn.textContent = '✗ Disable Layout Editing';
+      } else {
+        document.body.classList.remove('layout-editing');
+        document.querySelectorAll('.sheet-section-wrap').forEach(function(el) {
+          el.removeAttribute('draggable');
+        });
+        btn.textContent = '⠿ Enable Layout Editing';
+      }
+    }
+
+    function clearDragClasses() {
+      document.querySelectorAll('.sheet-section-wrap').forEach(function(el) {
+        el.classList.remove('drag-over-top', 'drag-over-bottom');
+      });
+    }
+
+    document.addEventListener('dragstart', function(e) {
+      if (!layoutEditingActive) return;
+      const wrap = e.target.closest('.sheet-section-wrap');
+      if (!wrap) return;
+      dragSrc = wrap;
+      wrap.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', wrap.id);
+    });
+
+    document.addEventListener('dragend', function(e) {
+      if (dragSrc) dragSrc.classList.remove('dragging');
+      clearDragClasses();
+      dragSrc = null;
+    });
+
+    document.addEventListener('dragover', function(e) {
+      if (!dragSrc || !layoutEditingActive) return;
+      const wrap = e.target.closest('.sheet-section-wrap');
+      if (!wrap || wrap === dragSrc) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      clearDragClasses();
+      const rect = wrap.getBoundingClientRect();
+      if (e.clientY < rect.top + rect.height / 2) {
+        wrap.classList.add('drag-over-top');
+      } else {
+        wrap.classList.add('drag-over-bottom');
+      }
+    });
+
+    document.addEventListener('dragleave', function(e) {
+      if (!layoutEditingActive) return;
+      const wrap = e.target.closest('.sheet-section-wrap');
+      if (!wrap) return;
+      if (!wrap.contains(e.relatedTarget)) {
+        wrap.classList.remove('drag-over-top', 'drag-over-bottom');
+      }
+    });
+
+    document.addEventListener('drop', function(e) {
+      if (!dragSrc || !layoutEditingActive) return;
+      const wrap = e.target.closest('.sheet-section-wrap');
+      if (!wrap || wrap === dragSrc) return;
+      e.preventDefault();
+      const isTop = wrap.classList.contains('drag-over-top');
+      clearDragClasses();
+      const parent = wrap.parentNode;
+      if (isTop) {
+        parent.insertBefore(dragSrc, wrap);
+      } else {
+        parent.insertBefore(dragSrc, wrap.nextSibling);
+      }
+      saveSectionOrder();
+    });
+
+    // ── Initialize ────────────────────────────────────────────────────────────
+    restoreAppearance();
+    restoreHiddenSections();
+    restoreSectionOrder();
+    initSwatches();
+    buildVisibilityList();
+  </script>
+
+</body>
+</html>
