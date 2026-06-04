@@ -1317,11 +1317,11 @@
         <div class="sec">Proficiencies &amp; Languages</div>
         <div class="form-field">
           <label class="form-label">Proficiencies</label>
-          <textarea class="form-input" rows="3" style="resize:vertical">Light armor, medium armor, shields, simple weapons, martial weapons</textarea>
+          <textarea id="prof-textarea" class="form-input" rows="3" style="resize:vertical"></textarea>
         </div>
         <div class="form-field">
           <label class="form-label">Languages</label>
-          <textarea class="form-input" rows="2" style="resize:vertical">Common, Elvish</textarea>
+          <textarea id="lang-textarea" class="form-input" rows="2" style="resize:vertical"></textarea>
         </div>
       </div>
 
@@ -1331,7 +1331,7 @@
         <div class="sec">Equipment</div>
         <div class="form-field">
           <label class="form-label">Carried Equipment</label>
-          <textarea class="form-input" rows="4" style="resize:vertical">Backpack, bedroll, rope (50 ft), torch x5, rations x5</textarea>
+          <textarea id="equip-textarea" class="form-input" rows="4" style="resize:vertical"></textarea>
         </div>
       </div>
 
@@ -1342,23 +1342,23 @@
         <div class="currency-row">
           <div class="currency-box">
             <span class="currency-label">CP</span>
-            <span class="currency-value">0</span>
+            <span class="currency-value" data-denomination="cp">0</span>
           </div>
           <div class="currency-box">
             <span class="currency-label">SP</span>
-            <span class="currency-value">0</span>
+            <span class="currency-value" data-denomination="sp">0</span>
           </div>
           <div class="currency-box">
             <span class="currency-label">EP</span>
-            <span class="currency-value">0</span>
+            <span class="currency-value" data-denomination="ep">0</span>
           </div>
           <div class="currency-box">
             <span class="currency-label">GP</span>
-            <span class="currency-value">10</span>
+            <span class="currency-value" data-denomination="gp">0</span>
           </div>
           <div class="currency-box">
             <span class="currency-label">PP</span>
-            <span class="currency-value">0</span>
+            <span class="currency-value" data-denomination="pp">0</span>
           </div>
         </div>
       </div>
@@ -1370,19 +1370,19 @@
         <div class="personality-grid">
           <div class="form-field">
             <label class="form-label">Personality Traits</label>
-            <textarea class="form-input" rows="3" style="resize:vertical">I am always calm, no matter what the situation.</textarea>
+            <textarea id="traits-textarea" class="form-input" rows="3" style="resize:vertical"></textarea>
           </div>
           <div class="form-field">
             <label class="form-label">Ideals</label>
-            <textarea class="form-input" rows="3" style="resize:vertical">Greater Good. My gifts are meant to be shared with all.</textarea>
+            <textarea id="ideals-textarea" class="form-input" rows="3" style="resize:vertical"></textarea>
           </div>
           <div class="form-field">
             <label class="form-label">Bonds</label>
-            <textarea class="form-input" rows="3" style="resize:vertical">I protect those who cannot protect themselves.</textarea>
+            <textarea id="bonds-textarea" class="form-input" rows="3" style="resize:vertical"></textarea>
           </div>
           <div class="form-field">
             <label class="form-label">Flaws</label>
-            <textarea class="form-input" rows="3" style="resize:vertical">I have a weakness for the vices of the city.</textarea>
+            <textarea id="flaws-textarea" class="form-input" rows="3" style="resize:vertical"></textarea>
           </div>
         </div>
       </div>
@@ -1393,7 +1393,7 @@
         <div class="sec">Backstory</div>
         <div class="form-field">
           <label class="form-label">Character Backstory</label>
-          <textarea class="form-input" rows="6" style="resize:vertical">A wanderer from the northern lands...</textarea>
+          <textarea id="backstory-textarea" class="form-input" rows="6" style="resize:vertical"></textarea>
         </div>
       </div>
 
@@ -1485,29 +1485,29 @@
       <div class="modal-sub">New weapon entry</div>
       <div class="form-field">
         <label class="form-label">Name</label>
-        <input type="text" class="form-input" placeholder="e.g. Longsword">
+        <input id="weapon-name" type="text" class="form-input" placeholder="e.g. Longsword">
       </div>
       <div class="form-field">
         <label class="form-label">Attack Bonus</label>
-        <input type="text" class="form-input" placeholder="e.g. +4">
+        <input id="weapon-atk-bonus" type="text" class="form-input" placeholder="e.g. +4">
       </div>
       <div class="form-field">
         <label class="form-label">Damage Dice</label>
-        <input type="text" class="form-input" placeholder="e.g. 1d6+2">
+        <input id="weapon-dmg-dice" type="text" class="form-input" placeholder="e.g. 1d6+2">
       </div>
       <div class="form-field">
         <label class="form-label">Damage Type</label>
-        <input type="text" class="form-input" placeholder="e.g. Slashing">
+        <input id="weapon-dmg-type" type="text" class="form-input" placeholder="e.g. Slashing">
       </div>
       <div class="form-field">
         <label class="form-label">Range</label>
-        <input type="text" class="form-input" placeholder="e.g. 5 ft">
+        <input id="weapon-range" type="text" class="form-input" placeholder="e.g. 5 ft">
       </div>
       <div class="form-field">
         <label class="form-label">Notes</label>
-        <input type="text" class="form-input" placeholder="">
+        <input id="weapon-notes" type="text" class="form-input" placeholder="">
       </div>
-      <button class="btn btn-gold">Add Weapon</button>
+      <button class="btn btn-gold" onclick="saveWeapon()">Add Weapon</button>
     </div>
   </div>
 
@@ -1519,11 +1519,11 @@
       <div class="modal-sub">New feature or trait</div>
       <div class="form-field">
         <label class="form-label">Name</label>
-        <input type="text" class="form-input" placeholder="e.g. Action Surge">
+        <input id="feature-name" type="text" class="form-input" placeholder="e.g. Action Surge">
       </div>
       <div class="form-field">
         <label class="form-label">Category</label>
-        <select class="form-input">
+        <select id="feature-category" class="form-input">
           <option value="action">Action</option>
           <option value="passive">Passive</option>
           <option value="reaction">Reaction</option>
@@ -1535,13 +1535,13 @@
       </div>
       <div class="form-field">
         <label class="form-label">Recharge (optional)</label>
-        <input type="text" class="form-input" placeholder="e.g. Short rest">
+        <input id="feature-recharge" type="text" class="form-input" placeholder="e.g. Short rest">
       </div>
       <div class="form-field">
         <label class="form-label">Description</label>
-        <textarea class="form-input" rows="3" style="resize:vertical" placeholder="Describe the feature..."></textarea>
+        <textarea id="feature-desc" class="form-input" rows="3" style="resize:vertical" placeholder="Describe the feature..."></textarea>
       </div>
-      <button class="btn btn-gold">Add Feature</button>
+      <button class="btn btn-gold" onclick="saveFeature()">Add Feature</button>
     </div>
   </div>
 
@@ -1598,6 +1598,7 @@
     let userMembership   = null;
     let currentCharacter = null;
     let isReadOnly       = false;
+    let currentCurrency  = { cp: 0, sp: 0, ep: 0, gp: 0, pp: 0 };
 
     // ─── On Load Sequence ────────────────────────────────────────────────────
     document.addEventListener('DOMContentLoaded', async function () {
@@ -1683,6 +1684,12 @@
         populateSavingThrows(character);
         populateSkills(character);
         populateDeathSaves(character);
+        populateProficiencies(character);
+        populateEquipment(character);
+        populatePersonalityBackstory(character);
+        await populateCurrency();
+        await populateWeapons();
+        await populateFeatures();
 
         if (isReadOnly) {
           applyReadOnlyMode();
@@ -1717,6 +1724,12 @@
           populateSavingThrows(character);
           populateSkills(character);
           populateDeathSaves(character);
+          populateProficiencies(character);
+          populateEquipment(character);
+          populatePersonalityBackstory(character);
+          await populateCurrency();
+          await populateWeapons();
+          await populateFeatures();
         }
 
         subscribeToCharacter();
@@ -1807,6 +1820,10 @@
           populateSavingThrows(payload.new);
           populateSkills(payload.new);
           populateDeathSaves(payload.new);
+          populateProficiencies(payload.new);
+          populateEquipment(payload.new);
+          populatePersonalityBackstory(payload.new);
+          populateCurrency();
         })
         .subscribe();
     }
@@ -2124,6 +2141,296 @@
       });
     }
 
+    // ─── Currency ────────────────────────────────────────────────────────────
+    async function populateCurrency() {
+      if (!characterId) return;
+      var { data, error } = await supabaseClient
+        .from('currency')
+        .select('cp, sp, ep, gp, pp')
+        .eq('character_id', characterId)
+        .maybeSingle();
+      if (error) {
+        console.error('[populateCurrency]', error.message);
+        return;
+      }
+      if (!data) return;
+      currentCurrency = {
+        cp: data.cp ?? 0,
+        sp: data.sp ?? 0,
+        ep: data.ep ?? 0,
+        gp: data.gp ?? 0,
+        pp: data.pp ?? 0
+      };
+      ['cp', 'sp', 'ep', 'gp', 'pp'].forEach(function(denom) {
+        var el = document.querySelector('[data-denomination="' + denom + '"]');
+        if (!el) return;
+        el.textContent = currentCurrency[denom];
+        if (!isReadOnly) {
+          el.contentEditable = 'true';
+          el.onblur = (function(d, spanEl) {
+            return async function() {
+              var newVal = parseInt(spanEl.textContent.trim());
+              if (isNaN(newVal) || newVal < 0) {
+                spanEl.textContent = currentCurrency[d];
+                return;
+              }
+              var delta = newVal - currentCurrency[d];
+              if (delta === 0) return;
+              setSyncStatus('saving');
+              var { error: rpcErr } = await supabaseClient.rpc('adjust_currency', {
+                character_id: characterId,
+                denomination: d,
+                delta:        delta
+              });
+              if (rpcErr) {
+                console.error('[adjust_currency]', rpcErr.message);
+                setSyncStatus('error');
+                spanEl.textContent = currentCurrency[d];
+                return;
+              }
+              currentCurrency[d] = Math.max(0, currentCurrency[d] + delta);
+              spanEl.textContent = currentCurrency[d];
+              setSyncStatus('saved');
+            };
+          })(denom, el);
+        }
+      });
+    }
+
+    // ─── Weapons ─────────────────────────────────────────────────────────────
+    async function populateWeapons() {
+      if (!characterId) return;
+      var { data, error } = await supabaseClient
+        .from('weapons')
+        .select('*')
+        .eq('character_id', characterId)
+        .is('deleted_at', null)
+        .order('sort_order');
+      if (error) {
+        console.error('[populateWeapons]', error.message);
+        return;
+      }
+      var tbody = document.querySelector('.weapons-table tbody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+      if (!data || data.length === 0) return;
+      data.forEach(function(w) {
+        var atkVal  = w.atk_bonus ?? 0;
+        var atkStr  = (atkVal >= 0 ? '+' : '') + atkVal;
+        var dmgStr  = (w.dmg_dice || '1d6');
+        if (w.dmg_bonus && w.dmg_bonus !== 0) {
+          dmgStr += (w.dmg_bonus > 0 ? '+' : '') + w.dmg_bonus;
+        }
+        var tr = document.createElement('tr');
+        tr.innerHTML =
+          '<td>' + escHtml(w.name || '') + '</td>' +
+          '<td>' + escHtml(atkStr) + '</td>' +
+          '<td>' + escHtml(dmgStr) + '</td>' +
+          '<td>' + escHtml(w.dmg_type || '') + '</td>' +
+          '<td>' + escHtml(w.range || '') + '</td>' +
+          '<td>' + escHtml(w.notes || '') + '</td>';
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function saveWeapon() {
+      if (isReadOnly) return;
+      var nameEl  = document.getElementById('weapon-name');
+      var atkEl   = document.getElementById('weapon-atk-bonus');
+      var dmgEl   = document.getElementById('weapon-dmg-dice');
+      var typeEl  = document.getElementById('weapon-dmg-type');
+      var rangeEl = document.getElementById('weapon-range');
+      var notesEl = document.getElementById('weapon-notes');
+
+      var name = nameEl ? nameEl.value.trim() : '';
+      if (!name) {
+        if (nameEl) nameEl.focus();
+        return;
+      }
+
+      var atkBonus = parseInt((atkEl ? atkEl.value : '').replace(/[^0-9\-]/g, '')) || 0;
+      var dmgRaw   = dmgEl ? dmgEl.value.trim() : '1d6';
+      var dmgDice  = dmgRaw;
+      var dmgBonus = 0;
+      var dmgMatch = dmgRaw.match(/^([0-9]+d[0-9]+)([+\-][0-9]+)?$/i);
+      if (dmgMatch) {
+        dmgDice  = dmgMatch[1];
+        dmgBonus = dmgMatch[2] ? parseInt(dmgMatch[2]) : 0;
+      }
+
+      var sortOrder = document.querySelectorAll('.weapons-table tbody tr').length;
+      var id = crypto.randomUUID();
+
+      var { error } = await supabaseClient.from('weapons').insert({
+        id:           id,
+        character_id: characterId,
+        name:         name,
+        atk_bonus:    atkBonus,
+        dmg_dice:     dmgDice || '1d6',
+        dmg_bonus:    dmgBonus,
+        dmg_type:     typeEl  ? typeEl.value.trim()  : '',
+        range:        rangeEl ? rangeEl.value.trim()  : '5 ft',
+        notes:        notesEl ? notesEl.value.trim()  : '',
+        sort_order:   sortOrder
+      });
+
+      if (error) {
+        console.error('[saveWeapon]', error.message);
+        return;
+      }
+
+      if (nameEl)  nameEl.value  = '';
+      if (atkEl)   atkEl.value   = '';
+      if (dmgEl)   dmgEl.value   = '';
+      if (typeEl)  typeEl.value  = '';
+      if (rangeEl) rangeEl.value = '';
+      if (notesEl) notesEl.value = '';
+
+      closeModal('weapon-modal');
+      await populateWeapons();
+    }
+
+    // ─── Features ────────────────────────────────────────────────────────────
+    function getCategoryColor(category) {
+      var map = {
+        'action':        'var(--cat-action)',
+        'passive':       'var(--cat-passive)',
+        'reaction':      'var(--cat-reaction)',
+        'maneuver':      'var(--cat-maneuver)',
+        'racial':        'var(--cat-racial)',
+        'fighting-style':'var(--cat-fighting)',
+        'homebrew':      'var(--cat-homebrew)',
+        'spell':         'var(--cat-passive)',
+        'cantrip':       'var(--cat-passive)'
+      };
+      return map[category] || 'var(--cat-passive)';
+    }
+
+    async function populateFeatures() {
+      if (!characterId) return;
+      var { data, error } = await supabaseClient
+        .from('features')
+        .select('*')
+        .eq('character_id', characterId)
+        .is('deleted_at', null)
+        .order('sort_order');
+      if (error) {
+        console.error('[populateFeatures]', error.message);
+        return;
+      }
+      var list = document.querySelector('.features-list');
+      if (!list) return;
+      list.innerHTML = '';
+      if (!data || data.length === 0) return;
+      data.forEach(function(f) {
+        var color = getCategoryColor(f.category);
+        var label = (f.category || 'passive').replace('-', ' ');
+        var card  = document.createElement('div');
+        card.className = 'feature-card';
+        card.innerHTML =
+          '<div class="feature-card-header">' +
+            '<span class="feature-name">' + escHtml(f.name) + '</span>' +
+            '<span class="feature-pill" style="background:' + color + '">' + escHtml(label) + '</span>' +
+          '</div>' +
+          (f.recharge ? '<div class="feature-recharge">' + escHtml(f.recharge) + '</div>' : '') +
+          (f.description ? '<div class="feature-desc">' + escHtml(f.description) + '</div>' : '');
+        list.appendChild(card);
+      });
+    }
+
+    async function saveFeature() {
+      if (isReadOnly) return;
+      var nameEl     = document.getElementById('feature-name');
+      var catEl      = document.getElementById('feature-category');
+      var rechargeEl = document.getElementById('feature-recharge');
+      var descEl     = document.getElementById('feature-desc');
+
+      var name = nameEl ? nameEl.value.trim() : '';
+      if (!name) {
+        if (nameEl) nameEl.focus();
+        return;
+      }
+
+      var sortOrder = document.querySelectorAll('.features-list .feature-card').length;
+      var id        = crypto.randomUUID();
+
+      var { error } = await supabaseClient.from('features').insert({
+        id:           id,
+        character_id: characterId,
+        name:         name,
+        category:     catEl      ? catEl.value              : 'passive',
+        recharge:     rechargeEl ? rechargeEl.value.trim()  : '',
+        description:  descEl     ? descEl.value.trim()      : '',
+        sort_order:   sortOrder
+      });
+
+      if (error) {
+        console.error('[saveFeature]', error.message);
+        return;
+      }
+
+      if (nameEl)     nameEl.value     = '';
+      if (catEl)      catEl.value      = 'action';
+      if (rechargeEl) rechargeEl.value = '';
+      if (descEl)     descEl.value     = '';
+
+      closeModal('feature-modal');
+      await populateFeatures();
+    }
+
+    // ─── Proficiencies & Languages ────────────────────────────────────────────
+    function populateProficiencies(char) {
+      var profEl = document.getElementById('prof-textarea');
+      var langEl = document.getElementById('lang-textarea');
+      if (profEl) {
+        profEl.value    = char.proficiencies_text || '';
+        profEl.disabled = !!isReadOnly;
+        if (!isReadOnly) {
+          profEl.onblur = function() { saveField('proficiencies_text', profEl.value); };
+        }
+      }
+      if (langEl) {
+        langEl.value    = char.languages_text || '';
+        langEl.disabled = !!isReadOnly;
+        if (!isReadOnly) {
+          langEl.onblur = function() { saveField('languages_text', langEl.value); };
+        }
+      }
+    }
+
+    // ─── Equipment ────────────────────────────────────────────────────────────
+    function populateEquipment(char) {
+      var equEl = document.getElementById('equip-textarea');
+      if (!equEl) return;
+      equEl.value    = char.equipment_text || '';
+      equEl.disabled = !!isReadOnly;
+      if (!isReadOnly) {
+        equEl.onblur = function() { saveField('equipment_text', equEl.value); };
+      }
+    }
+
+    // ─── Personality & Backstory ──────────────────────────────────────────────
+    function populatePersonalityBackstory(char) {
+      var fields = [
+        { id: 'traits-textarea',    field: 'traits'    },
+        { id: 'ideals-textarea',    field: 'ideals'    },
+        { id: 'bonds-textarea',     field: 'bonds'     },
+        { id: 'flaws-textarea',     field: 'flaws'     },
+        { id: 'backstory-textarea', field: 'backstory' }
+      ];
+      fields.forEach(function(item) {
+        var el = document.getElementById(item.id);
+        if (!el) return;
+        el.value    = char[item.field] || '';
+        el.disabled = !!isReadOnly;
+        if (!isReadOnly) {
+          el.onblur = (function(f) {
+            return function() { saveField(f, el.value); };
+          })(item.field);
+        }
+      });
+    }
+
     // ─── Apply Sheet Owner's Accent Color ────────────────────────────────────
     function applyAccentFromDb(hex) {
       if (!hex) return;
@@ -2141,6 +2448,11 @@
         el.removeAttribute('contenteditable');
         el.removeAttribute('onblur');
       });
+      // Hide add weapon / add feature buttons
+      var addWeaponBtn = document.querySelector('#section-weapons .btn-gold');
+      if (addWeaponBtn) addWeaponBtn.style.display = 'none';
+      var addFeatureBtn = document.querySelector('#section-features .btn-gold');
+      if (addFeatureBtn) addFeatureBtn.style.display = 'none';
     }
 
     // ─── Create Character Form ───────────────────────────────────────────────
