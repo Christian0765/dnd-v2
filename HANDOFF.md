@@ -5,6 +5,29 @@
 
 ## What's Been Built
 
+### PR 5b-1 (+ bugfix) — `sheet.html` — Auth + Character Load + Header (Supabase wiring)
+- DOMContentLoaded load sequence: reads `?c=` URL param only; redirects to home.html if missing
+- Calls `requireAuth()` → redirects to login.html if unauthenticated
+- Verifies membership via `memberships` table (`.maybeSingle()`)
+- Loads character via `.eq('membership_id', userMembership.id)` — NOT by URL param
+- `characterId` set from DB row if character exists, or `crypto.randomUUID()` for the create flow
+- If no character found → shows inline Create Character form (replaces `.sheet-body` innerHTML)
+- If character found → calls `populateHeader(character)`
+- Loads campaign name and wires up `.back-link` href to `campaign.html?c={campaignId}`
+- `populateHeader(char)` sets `.char-name-display` and all 6 `.char-meta-value` elements via `data-field` attributes
+- `saveField(field, value)` — field-level UPDATE on blur, drives sync pill
+- `setSyncStatus(state)` — drives `.sync-status` pill: saving / saved / error
+- `subscribeToCharacter()` — Supabase Realtime channel on `characters` table, calls `populateHeader` on UPDATE
+- `showCreateCharacterForm()` / `createCharacter()` — inline create form; inserts into `characters` then `currency`, then reloads
+- `data-field` attributes on `.char-name-display` (name) and all `.char-meta-value` elements (class, race, background, alignment, level, xp)
+- All header fields are `contenteditable="true"` with `onblur` save handlers
+- `level` and `xp` parsed as integers on save (`parseInt(...) || default`)
+- No HTML structure or CSS changed from the 5a PRs
+
+**BUG FIXED:** Previous version read `?char=` from the URL (a param that never existed),
+causing `characterId` to always be null and every user to be redirected to home.html.
+Fixed by querying characters via `membership_id` instead.
+
 ### PR 5a-4 — `sheet.html` — Personality, Backstory, Conditions, Spell Slots, Spells (layout only)
 - Personality section: 2×2 grid of textareas (Traits, Ideals, Bonds, Flaws), stacks to 1-col on mobile (≤500px)
 - Backstory section: single large textarea (6 rows), label "Character Backstory"
@@ -34,7 +57,7 @@
 - Combat Stats section: 4 boxes (Armor Class · Initiative · Speed · Prof Bonus)
 - All placeholder default values — no Supabase calls
 - Mobile responsive: ability grid wraps 3×2 at ≤500px, combat grid wraps 2×2 at ≤500px
-- Includes auth.js and utils.js (will be wired in PR 5b)
+- Includes auth.js and utils.js
 
 ### PR 4 — `campaign.html` — main campaign page (party overview, DM tools)
 - `campaign.html` — campaign landing page at `campaign.html?c={campaignId}`
@@ -47,7 +70,7 @@
 
 ### PR 3 — `home.html` — campaign lobby (list, create, join campaigns)
 - Campaign lobby landing page after login
-- Create Campaign modal — uses `crypto.randomUUID()` client-side to generate campaign ID before insert (avoids RLS timing issue on chained `.select()`)
+- Create Campaign modal — uses `crypto.randomUUID()` client-side to generate campaign ID before insert
 - Join Campaign modal — looks up campaign by UUID, inserts membership, redirects
 - Campaign grid (3-col desktop, 1-col mobile) showing name, role badge, created date
 - Empty state when user has no campaigns
@@ -80,6 +103,7 @@
 - index.html redirects correctly (no leading slash paths)
 - auth.js uses relative paths throughout (no leading slash)
 - profiles query uses .maybeSingle() throughout
+- sheet.html: auth, membership check, character load by membership_id, header population, field-level saves, sync pill, realtime subscription, create character flow
 
 ---
 
@@ -87,121 +111,10 @@
 
 ### BUG — profiles row not always created on signup
 
-**Symptom:** When a new user signs up, they sometimes land in `auth.users` 
-but NOT in `profiles`. This causes a foreign key error when they try to join 
+**Symptom:** When a new user signs up, they sometimes land in `auth.users`
+but NOT in `profiles`. This causes a foreign key error when they try to join
 or create a campaign:
 `insert or update on table "memberships" violates foreign key constraint "memberships_user_id_fkey"`
 
 **Affected accounts found so far:**
-- `8b2caacd-647f-4340-add7-6e99848c3339` (crm070506@gmail.com) — profile row 
-  was missing, manually inserted with display_name 'Poop'
-
-**Workaround (manual fix):**
-```sql
-INSERT INTO profiles (id, display_name)
-VALUES ('{user_id_from_auth.users}', '{display_name}');
-```
-
-**Root cause (unknown — needs investigation):**
-The signup flow in `login.html` runs this after `supabase.auth.signUp()`:
-```js
-if (authData?.user) {
-  await supabaseClient.from('profiles').insert({
-    id: authData.user.id,
-    display_name: displayName
-  });
-}
-```
-Possible causes:
-1. `authData.user` is null or undefined on some signups — the insert is 
-   silently skipped
-2. The profiles INSERT is failing silently (no error handling on it)
-3. Supabase email confirmation is interfering — if confirmation is required,
-   `authData.user` may not be fully formed at signup time
-
-**What the next agent should do:**
-1. Add proper error handling and console logging to the profiles insert in 
-   `login.html` so failures are visible
-2. Check if `authData.user` is ever null after a successful `signUp()` call
-3. Consider adding a fallback: on every page load, check if the current user 
-   has a profiles row and create one if missing
-4. Fix must not break existing working signups
-
-### RLS on campaigns table
-- `campaigns_insert` policy: `WITH CHECK (true)` — allows any authenticated user to insert
-- `campaigns_select` policy: only returns campaigns the user is a member of
-- `campaigns_update` policy: only allows DMs to update
-- Do NOT chain `.select('id').single()` after a campaign insert — the membership row doesn't exist yet so the SELECT policy blocks it. Always use `crypto.randomUUID()` to generate the ID client-side instead.
-
-### profiles table
-- The `handle_new_user` trigger was dropped — profiles are created manually in login.html after signup
-- Profile rows must exist before memberships can be inserted (foreign key constraint)
-- If a user exists in auth.users but not profiles, insert manually:
-  `INSERT INTO profiles (id, display_name) VALUES ('{user_id}', '{name}');`
-
-### auth.js path fix
-- All redirects use relative paths: `login.html` not `/login.html`
-- Site lives at `christian0765.github.io/dnd-v2/` — absolute paths cause 404s
-
-### Planned features (not built yet)
-- Display name change from within the app (currently must be done via SQL)
-
----
-
-## Current File Structure
-dnd-v2/
-├── index.html
-├── login.html
-├── home.html
-├── campaign.html
-├── sheet.html                  ← PR 5a-2: + HP, death saves, saving throws, skills
-├── supabase-config.js.template
-├── HANDOFF.md
-├── DND-ARCHITECTURE-SPEC.md
-├── AGENT-RULES.md
-├── FILE-ORGANIZATION.md
-├── .gitignore
-├── README.md
-│
-├── /css/
-│   ├── variables.css
-│   ├── base.css
-│   └── components.css
-│
-├── /js/
-│   ├── supabase-client.js
-│   ├── auth.js
-│   ├── theme.js
-│   └── utils.js
-│
-└── /data/
-    └── /rulesets/
-        └── /5e-2014/
-            ├── sheet_schema.json
-            └── /classes/
-                └── fighter.json
-
----
-
-## What The Next Agent Should Build
-
-**PR 5b — `sheet.html` Supabase wiring**
-
-Wire up all sections to Supabase:
-- Read `?c=campaignId`, look up character via membership
-- Field-level saves on blur for every input
-- Atomic HP adjustments via RPC (`adjust_hp`)
-- Real-time subscription so DM edits appear live
-- Create Character flow if no character exists yet
-- Reads/writes: `characters`, `currency`, `weapons`, `features`, `resources`, `spell_slots`, `character_inventory`
-
-- ### Planned Cleanup (do after sheet.html is fully complete)
-- Reorganize HTML files into /pages/ subfolder
-- This requires updating ALL relative paths in every HTML file:
-  - All href="filename.html" → href="pages/filename.html" (from root)
-  - All href="../css/..." and href="../js/..." (from inside /pages/)
-  - All window.location.href redirects in every JS block and auth.js
-  - The redirectTo URL in login.html password recovery
-  - index.html stays in root — GitHub Pages requires it there
-- Do this as one dedicated PR with no other changes
-- Do NOT do this while sheet.html is still being built
+- `8b2caacd-647f-4340-add7-6e99848c3339` (crm070506@gmail.com) — profile row
