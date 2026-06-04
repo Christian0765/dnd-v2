@@ -438,6 +438,7 @@
       if (!session) return;
 
       currentUser = session.user;
+      await repairProfile();
 
       // Load membership for this user in this campaign
       const { data: mem, error: memErr } = await supabaseClient

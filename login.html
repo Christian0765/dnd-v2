@@ -281,10 +281,16 @@
       if (authError) { showError(authError.message); setLoading(false); return; }
 
       if (authData?.user) {
-        await supabaseClient.from('profiles').insert({
-          id: authData.user.id,
-          display_name: displayName
-        });
+        const { error: profileErr } = await supabaseClient
+          .from('profiles')
+          .insert({
+            id: authData.user.id,
+            display_name: displayName
+          });
+        if (profileErr) {
+          console.error('[signUp] Failed to create profile:', profileErr.message);
+          // Don't block the user — profile repair on next load will fix it
+        }
       }
 
       window.location.href = 'home.html';

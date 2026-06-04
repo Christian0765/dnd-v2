@@ -191,6 +191,7 @@
       if (!session) return;
 
       currentUser = session.user;
+      await repairProfile();
 
       const { data: profile } = await supabaseClient
         .from('profiles')
