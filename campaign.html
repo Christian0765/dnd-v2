@@ -521,6 +521,12 @@
       }
 
       allMemberships = memberships || [];
+      console.log('[loadParty] player memberships fetched:', allMemberships.length, allMemberships);
+
+      if (allMemberships.length === 0) {
+        grid.innerHTML = '<div style="color:var(--border-light);font-size:0.85rem;">No player memberships found — RLS may be blocking the query. Check console.</div>';
+        return;
+      }
 
       // Load all non-deleted characters for this campaign
       const { data: characters, error: charErr } = await supabaseClient
@@ -536,6 +542,7 @@
       }
 
       const allChars = characters || [];
+      console.log('[loadParty] characters fetched:', allChars.length, allChars);
 
       // Repair orphaned characters that have a null membership_id.
       // Match them to unmatched player memberships and patch the DB.
