@@ -525,12 +525,22 @@
       const viewerIsDM     = userMembership && userMembership.role === 'dm';
       const viewerIsPlayer = userMembership && userMembership.role === 'player';
 
-      if (characters.length === 0) {
+      // Own character always first for players; DMs see alphabetical order
+      const sorted = [...characters].sort((a, b) => {
+        if (viewerIsPlayer) {
+          const aOwn = a.membership_id === userMembership.id ? -1 : 1;
+          const bOwn = b.membership_id === userMembership.id ? -1 : 1;
+          if (aOwn !== bOwn) return aOwn - bOwn;
+        }
+        return (a.name || '').localeCompare(b.name || '');
+      });
+
+      if (sorted.length === 0) {
         grid.innerHTML = '<div style="color:var(--border-light);font-size:0.85rem;">No characters yet.</div>';
         return;
       }
 
-      const cards = characters.map(char => {
+      const cards = sorted.map(char => {
         const isOwnCard = viewerIsPlayer && char.membership_id === userMembership.id;
 
         const hpPct = char.max_hp > 0
