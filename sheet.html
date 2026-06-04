@@ -991,33 +991,33 @@
         <div class="ability-grid">
           <div class="ability-box">
             <span class="ability-name">STR</span>
-            <span class="ability-mod">+0</span>
-            <span class="ability-score">(10)</span>
+            <span class="ability-mod" data-ability="str">+0</span>
+            <span class="ability-score" data-field="str">(10)</span>
           </div>
           <div class="ability-box">
             <span class="ability-name">DEX</span>
-            <span class="ability-mod">+0</span>
-            <span class="ability-score">(10)</span>
+            <span class="ability-mod" data-ability="dex">+0</span>
+            <span class="ability-score" data-field="dex">(10)</span>
           </div>
           <div class="ability-box">
             <span class="ability-name">CON</span>
-            <span class="ability-mod">+0</span>
-            <span class="ability-score">(10)</span>
+            <span class="ability-mod" data-ability="con">+0</span>
+            <span class="ability-score" data-field="con">(10)</span>
           </div>
           <div class="ability-box">
             <span class="ability-name">INT</span>
-            <span class="ability-mod">+0</span>
-            <span class="ability-score">(10)</span>
+            <span class="ability-mod" data-ability="int">+0</span>
+            <span class="ability-score" data-field="int">(10)</span>
           </div>
           <div class="ability-box">
             <span class="ability-name">WIS</span>
-            <span class="ability-mod">+0</span>
-            <span class="ability-score">(10)</span>
+            <span class="ability-mod" data-ability="wis">+0</span>
+            <span class="ability-score" data-field="wis">(10)</span>
           </div>
           <div class="ability-box">
             <span class="ability-name">CHA</span>
-            <span class="ability-mod">+0</span>
-            <span class="ability-score">(10)</span>
+            <span class="ability-mod" data-ability="cha">+0</span>
+            <span class="ability-score" data-field="cha">(10)</span>
           </div>
         </div>
       </div>
@@ -1029,19 +1029,19 @@
         <div class="combat-grid">
           <div class="combat-box">
             <span class="combat-label">Armor Class</span>
-            <span class="combat-value">10</span>
+            <span class="combat-value" data-field="ac">10</span>
           </div>
           <div class="combat-box">
             <span class="combat-label">Initiative</span>
-            <span class="combat-value">+0</span>
+            <span class="combat-value" data-field="initiative">+0</span>
           </div>
           <div class="combat-box">
             <span class="combat-label">Speed</span>
-            <span class="combat-value">30 ft</span>
+            <span class="combat-value" data-field="speed">30 ft</span>
           </div>
           <div class="combat-box">
             <span class="combat-label">Prof Bonus</span>
-            <span class="combat-value">+2</span>
+            <span class="combat-value" data-field="prof_bonus">+2</span>
           </div>
         </div>
       </div>
@@ -1053,25 +1053,25 @@
         <div class="hp-stat-row">
           <div class="hp-stat-box">
             <span class="hp-stat-label">Max HP</span>
-            <span class="hp-stat-value">10</span>
+            <span class="hp-stat-value" data-field="max_hp">10</span>
           </div>
           <div class="hp-stat-box">
             <span class="hp-stat-label">Current HP</span>
-            <span class="hp-stat-value">10</span>
+            <span class="hp-stat-value" data-field="cur_hp">10</span>
           </div>
         </div>
         <div class="hp-bar-track">
-          <div class="hp-bar-fill hp-green" style="width:100%"></div>
+          <div class="hp-bar-fill hp-green" id="hp-bar-fill" style="width:100%"></div>
         </div>
-        <div class="hp-bar-label">10 / 10 HP</div>
+        <div class="hp-bar-label" id="hp-bar-label">10 / 10 HP</div>
         <div class="hp-stat-row" style="margin-top:10px">
           <div class="hp-stat-box">
             <span class="hp-stat-label">Temp HP</span>
-            <span class="hp-stat-value-sm">0</span>
+            <span class="hp-stat-value-sm" data-field="temp_hp">0</span>
           </div>
           <div class="hp-stat-box">
             <span class="hp-stat-label">Hit Dice</span>
-            <span class="hp-stat-value-sm">1 / 1 d8</span>
+            <span class="hp-stat-value-sm" data-field="hit_dice">1d8</span>
           </div>
         </div>
       </div>
@@ -1677,6 +1677,9 @@
         applyAccentFromDb(accentHex || '#c4920a');
 
         populateHeader(character);
+        populateAbilityScores(character);
+        populateCombatStats(character);
+        populateHp(character);
 
         if (isReadOnly) {
           applyReadOnlyMode();
@@ -1705,6 +1708,9 @@
           const accentHex = character.accent_hex || userMembership.accent_hex || '#c4920a';
           applyAccentFromDb(accentHex);
           populateHeader(character);
+          populateAbilityScores(character);
+          populateCombatStats(character);
+          populateHp(character);
         }
 
         subscribeToCharacter();
@@ -1787,7 +1793,11 @@
           table: 'characters',
           filter: 'id=eq.' + characterId
         }, function (payload) {
+          currentCharacter = payload.new;
           populateHeader(payload.new);
+          populateAbilityScores(payload.new);
+          populateCombatStats(payload.new);
+          populateHp(payload.new);
         })
         .subscribe();
     }
@@ -1795,6 +1805,161 @@
     window.addEventListener('beforeunload', function () {
       supabaseClient.removeAllChannels();
     });
+
+    // ─── Populate Ability Scores ─────────────────────────────────────────────
+    function populateAbilityScores(char) {
+      ['str', 'dex', 'con', 'int', 'wis', 'cha'].forEach(function(ab) {
+        const score  = char[ab] ?? 10;
+        const mod    = char[ab + '_mod'] !== null && char[ab + '_mod'] !== undefined
+                       ? char[ab + '_mod']
+                       : Math.floor((score - 10) / 2);
+        const modEl   = document.querySelector('[data-ability="' + ab + '"]');
+        const scoreEl = document.querySelector('[data-field="' + ab + '"]');
+        if (modEl)   modEl.textContent   = (mod >= 0 ? '+' : '') + mod;
+        if (scoreEl) {
+          scoreEl.textContent = '(' + score + ')';
+          if (!isReadOnly) {
+            scoreEl.contentEditable = 'true';
+            scoreEl.onblur = (function(ability, el) {
+              return function() { saveAbilityScore(ability, el); };
+            })(ab, scoreEl);
+          }
+        }
+      });
+    }
+
+    // ─── Save Ability Score + auto-recalculate modifier ─────────────────────
+    async function saveAbilityScore(ability, el) {
+      if (isReadOnly) return;
+      const raw   = parseInt(el.textContent.replace(/[()]/g, '').trim());
+      const score = isNaN(raw) ? 10 : Math.max(1, Math.min(30, raw));
+      const mod   = Math.floor((score - 10) / 2);
+      el.textContent = '(' + score + ')';
+      const modEl = document.querySelector('[data-ability="' + ability + '"]');
+      if (modEl) modEl.textContent = (mod >= 0 ? '+' : '') + mod;
+      setSyncStatus('saving');
+      const { error } = await supabaseClient
+        .from('characters')
+        .update({ [ability]: score, [ability + '_mod']: mod })
+        .eq('id', characterId);
+      setSyncStatus(error ? 'error' : 'saved');
+      if (error) console.error('[saveAbilityScore]', error.message);
+    }
+
+    // ─── Populate Combat Stats ───────────────────────────────────────────────
+    function populateCombatStats(char) {
+      const defs = {
+        ac:         { val: char.ac         ?? 10, fmt: function(v) { return v; } },
+        initiative: { val: char.initiative ?? 0,  fmt: function(v) { return (v >= 0 ? '+' : '') + v; } },
+        speed:      { val: char.speed      ?? 30, fmt: function(v) { return v + ' ft'; } },
+        prof_bonus: { val: char.prof_bonus ?? 2,  fmt: function(v) { return (v >= 0 ? '+' : '') + v; } }
+      };
+      Object.keys(defs).forEach(function(field) {
+        const el = document.querySelector('[data-field="' + field + '"]');
+        if (!el) return;
+        const def = defs[field];
+        el.textContent = def.fmt(def.val);
+        if (!isReadOnly) {
+          el.contentEditable = 'true';
+          el.onblur = (function(f, fmtFn) {
+            return function() {
+              const parsed = parseInt(el.textContent.replace(/[^0-9\-]/g, '')) || 0;
+              el.textContent = fmtFn(parsed);
+              saveField(f, parsed);
+            };
+          })(field, def.fmt);
+        }
+      });
+    }
+
+    // ─── Populate HP ─────────────────────────────────────────────────────────
+    function populateHp(char) {
+      const maxHp   = char.max_hp  ?? 10;
+      const curHp   = char.cur_hp  ?? 10;
+      const tempHp  = char.temp_hp ?? 0;
+      const hitDice = char.hit_dice || '1d8';
+
+      const maxEl  = document.querySelector('[data-field="max_hp"]');
+      const curEl  = document.querySelector('[data-field="cur_hp"]');
+      const tmpEl  = document.querySelector('[data-field="temp_hp"]');
+      const diceEl = document.querySelector('[data-field="hit_dice"]');
+
+      if (maxEl) {
+        maxEl.textContent = maxHp;
+        if (!isReadOnly) {
+          maxEl.contentEditable = 'true';
+          maxEl.onblur = function() {
+            saveField('max_hp', parseInt(maxEl.textContent.trim()) || 0);
+          };
+        }
+      }
+      if (curEl) {
+        curEl.textContent = curHp;
+        if (!isReadOnly) {
+          curEl.contentEditable = 'true';
+          curEl.onblur = function() { saveCurrentHp(curEl); };
+        }
+      }
+      if (tmpEl) {
+        tmpEl.textContent = tempHp;
+        if (!isReadOnly) {
+          tmpEl.contentEditable = 'true';
+          tmpEl.onblur = function() {
+            saveField('temp_hp', parseInt(tmpEl.textContent.trim()) || 0);
+          };
+        }
+      }
+      if (diceEl) {
+        diceEl.textContent = hitDice;
+        if (!isReadOnly) {
+          diceEl.contentEditable = 'true';
+          diceEl.onblur = function() {
+            saveField('hit_dice', diceEl.textContent.trim() || '1d8');
+          };
+        }
+      }
+
+      updateHpBar(curHp, maxHp);
+    }
+
+    // ─── Save Current HP via adjust_hp RPC ───────────────────────────────────
+    async function saveCurrentHp(el) {
+      if (isReadOnly) return;
+      const newHp = parseInt(el.textContent.trim());
+      if (isNaN(newHp)) {
+        el.textContent = currentCharacter ? (currentCharacter.cur_hp ?? 0) : 0;
+        return;
+      }
+      const oldHp = currentCharacter ? (currentCharacter.cur_hp ?? 0) : 0;
+      const delta  = newHp - oldHp;
+      if (delta === 0) return;
+      setSyncStatus('saving');
+      const { error } = await supabaseClient.rpc('adjust_hp', {
+        character_id: characterId,
+        delta:        delta
+      });
+      if (error) {
+        console.error('[saveCurrentHp] RPC failed:', error.message);
+        setSyncStatus('error');
+        return;
+      }
+      if (currentCharacter) currentCharacter.cur_hp = newHp;
+      setSyncStatus('saved');
+    }
+
+    // ─── Update HP Bar colour and label ──────────────────────────────────────
+    function updateHpBar(cur, max) {
+      const fill  = document.getElementById('hp-bar-fill');
+      const label = document.getElementById('hp-bar-label');
+      if (!fill || !label) return;
+      const ratio = max > 0 ? Math.min(1, Math.max(0, cur / max)) : 0;
+      fill.style.width = (ratio * 100) + '%';
+      fill.className = 'hp-bar-fill';
+      if (ratio > 0.5)       fill.classList.add('hp-green');
+      else if (ratio > 0.25) fill.classList.add('hp-gold');
+      else                   fill.classList.add('hp-red');
+      label.textContent = cur + ' / ' + max + ' HP';
+    }
 
     // ─── Apply Sheet Owner's Accent Color ────────────────────────────────────
     function applyAccentFromDb(hex) {
