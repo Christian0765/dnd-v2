@@ -1,0 +1,17 @@
+Checking active players
+
+SELECT 
+  p.id,
+  p.display_name,
+  u.email,
+  u.created_at,
+  COUNT(m.id) as campaign_count
+FROM profiles p
+JOIN auth.users u ON u.id = p.id
+LEFT JOIN memberships m ON m.user_id = p.id
+GROUP BY p.id, p.display_name, u.email, u.created_at
+ORDER BY u.created_at DESC;
+
+-- This removes everything: profile, memberships, characters
+DELETE FROM auth.users WHERE email = 'player@example.com';
+
