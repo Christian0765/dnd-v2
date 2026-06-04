@@ -562,6 +562,8 @@
 
     function renderParty(memberships, characters) {
       const grid = document.getElementById('party-grid');
+      const viewerIsDM     = userMembership && userMembership.role === 'dm';
+      const viewerIsPlayer = userMembership && userMembership.role === 'player';
 
       const charByMembership = {};
       for (const c of characters) {
@@ -571,6 +573,7 @@
       const cards = memberships.map(mem => {
         const playerName = mem.profiles?.display_name || 'Unknown Player';
         const char = charByMembership[mem.id];
+        const isOwnCard = viewerIsPlayer && mem.id === userMembership.id;
 
         if (!char) {
           return `
@@ -592,6 +595,13 @@
           ? `${escHtml(char.class || '—')} · ${escHtml(char.race || '—')}`
           : '—';
 
+        let actionBtn = '';
+        if (viewerIsDM) {
+          actionBtn = `<button class="btn btn-ghost" style="width:100%;margin-top:8px;font-size:0.52rem;" onclick="openPlayerSheet('${char.id}')">Open Sheet</button>`;
+        } else if (viewerIsPlayer && !isOwnCard) {
+          actionBtn = `<button class="btn btn-ghost" style="width:100%;margin-top:8px;font-size:0.52rem;" onclick="openPlayerSheet('${char.id}')">View Sheet</button>`;
+        }
+
         return `
           <div class="char-card">
             <div class="char-card-name">${escHtml(char.name || 'Unnamed')}</div>
@@ -606,12 +616,17 @@
               <div class="ac-badge">AC ${char.ac ?? '—'}</div>
             </div>
             <div class="char-card-player">⚔ ${escHtml(playerName)}</div>
+            ${actionBtn}
           </div>`;
       });
 
       grid.innerHTML = cards.length
         ? cards.join('')
         : '<div style="color:var(--border-light);font-size:0.85rem;">No players yet.</div>';
+    }
+
+    function openPlayerSheet(charId) {
+      window.location.href = 'sheet.html?c=' + campaignId + '&p=' + charId;
     }
 
     // ── Real-Time Subscription ────────────────────────────────────────────────
