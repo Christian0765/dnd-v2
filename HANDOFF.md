@@ -9,7 +9,7 @@
 - DOMContentLoaded load sequence: reads `?c=` URL param only; redirects to `home.html` if missing
 - Calls `requireAuth()` → redirects to `login.html` if unauthenticated
 - Verifies membership via `memberships` table (`.maybeSingle()`)
-- **DM redirect**: if `userMembership.role === 'dm'` → redirect to `campaign.html?c={campaignId}` immediately
+- **DM redirect**: if `userMembership.role === 'dm'` AND no `?p=` param → redirect to `campaign.html?c={campaignId}` immediately
 - Loads character via `.eq('membership_id', userMembership.id)` — NOT by URL param
 - `characterId` set from DB row if character exists, or `crypto.randomUUID()` for the create flow
 - If no character found → shows inline Create Character form (replaces `.sheet-body` innerHTML)
@@ -85,9 +85,11 @@
 - campaign.html — party overview (players only), DM panel, real-time sync
 - sheet.html — auth, membership check, DM redirect, character load by membership_id, header population, field-level saves, sync pill, realtime subscription, create character flow
 - "My Sheet" button only visible to players
-- DM visiting sheet.html is redirected to campaign.html immediately
+- DM visiting sheet.html (with no ?p= param) is redirected to campaign.html immediately
 - Sign out works
 - All paths are relative (no leading slash)
+- New account signup creates profile row correctly
+- repairProfile runs on every page load as a safety net
 
 ---
 
@@ -99,3 +101,79 @@
 **Workaround:**
 ```sql
 INSERT INTO profiles (id, display_name) VALUES ('{user_id}', '{name}');
+```
+
+### BUG — repairProfile not defined on home.html and campaign.html
+**Symptom:** `Uncaught (in promise) ReferenceError: repairProfile is not defined`
+**Root cause:** The `repairProfile` function existed in the local version of `auth.js`
+but had never been pushed to GitHub. The live site was serving the old cached
+version of the file which did not contain the function at all.
+**Fix:** Updated `js/auth.js` on GitHub to include the full `repairProfile` function
+at the bottom of the file. GitHub Pages was serving a 304 cached response so the
+fix only took effect after a hard refresh (Ctrl+Shift+R).
+
+### BUG — new account signup blocked by RLS on profiles table
+**Symptom:** `POST /rest/v1/profiles 403 (Forbidden)` — `new row violates
+row-level security policy for table "profiles"`
+**Root cause:** When the `profiles` table was created, RLS policies were added
+for SELECT and UPDATE but the INSERT policy was never created. This meant any
+attempt to insert a new profile row — including during signup and via
+`repairProfile` — was blocked by Supabase at the database level.
+**Fix:** Added the missing INSERT policy in Supabase SQL editor:
+```sql
+CREATE POLICY "profiles_insert_own" ON profiles
+FOR INSERT
+WITH CHECK (id = auth.uid());
+```
+This policy is permanent — all future signups are unaffected.
+
+---
+
+## Database Policies Currently On profiles Table
+- `profiles_select_own` — users can read their own row
+- `profiles_update_own` — users can update their own row
+- `profiles_insert_own` — users can insert their own row ← added this session
+
+---
+
+## What's NOT Done Yet — PR 5b-1 Incomplete
+
+The following was scoped for PR 5b-1 but not yet built. Must be completed
+before moving to PR 5b-2.
+
+### DM: View and edit a player's sheet
+- campaign.html player cards are not clickable for the DM
+- DM has no button or link to access any player's sheet
+- sheet.html currently redirects ALL DMs away immediately regardless of URL params
+- **What needs to be built:**
+  - Each player card in campaign.html gets an "Open Sheet" button visible only to the DM
+  - Clicking it navigates to `sheet.html?c={campaignId}&p={characterId}`
+  - sheet.html must read the `?p=` param — if present and viewer is DM, load that character instead of the DM's own
+  - DM redirect logic must be updated: only redirect if role === 'dm' AND `?p=` param is absent
+  - In DM view, header fields (name, class, race, background, alignment, level, xp) are editable and save via `saveField()`
+  - All other sections remain as-is (layout only, no save wiring yet)
+  - The character's `accent_hex` is applied to the sheet cosmetics when viewing — each player's sheet looks like their own sheet, not the DM's
+
+### Players: Read-only view of other players' sheets
+- campaign.html player cards are not clickable for players either
+- **What needs to be built:**
+  - Each other player's card in campaign.html gets a "View Sheet" button visible to players (not their own card)
+  - Clicking it navigates to `sheet.html?c={campaignId}&p={characterId}`
+  - sheet.html must detect: viewer is a player AND `?p=` points to someone else's character → render full sheet in read-only mode (all contenteditable removed, no save handlers, no sync pill)
+  - The viewed character's `accent_hex` is applied to cosmetics so the sheet looks like that player's sheet
+  - Back link returns to `campaign.html?c={campaignId}`
+
+### Cosmetics note (from DND-MASTER-PLAN.md)
+- Each character has an `accent_hex` column on the `characters` table
+- Each membership also has an `accent_hex` column on the `memberships` table
+- When viewing any sheet (own, DM view, or read-only), the sheet's accent color
+  should come from the character's `accent_hex` if set, falling back to the
+  membership's `accent_hex`, then the campaign default
+- This applies to the character header band color and all gold accent elements
+- Do NOT apply the viewer's own accent — always apply the sheet owner's accent
+
+---
+
+## Next Task
+Complete the remaining PR 5b-1 work described above before starting PR 5b-2.
+Files that will need changes: `campaign.html`, `sheet.html`
