@@ -5,6 +5,22 @@
 
 ## What's Been Built
 
+### fix-weapon-delete-hitbox complete — `sheet.html` — Weapon delete button no longer opens edit modal
+
+**Bug fixed:**
+- Clicking the ✕ delete button on a weapon row was also triggering the row's edit-modal click handler.
+- Root cause: the row used `setAttribute('onclick', ...)` (inline handler) and the delete button's inline handler called `deleteWeapon(...);event.stopPropagation()` — propagation was stopped too late, after the row's onclick had already fired.
+
+**Fix — weapon row now matches the feature-card pattern exactly:**
+- Row click wired via `tr.addEventListener('click', ...)` with a guard: `if (e.target.classList.contains('delete-btn')) return;`
+- Delete button created via DOM (`document.createElement('button')`), NOT via innerHTML; its `addEventListener('click', ...)` calls `e.stopPropagation()` FIRST, then `deleteWeapon(weaponId)`.
+- Inline `onclick` attribute on the `<tr>` is gone.
+- Inline `onclick` attribute on the delete `<button>` is gone.
+
+**Not touched:** feature/spell/cantrip handling (already worked correctly), CSS, schema, all other sections.
+
+---
+
 ### edit-delete-weapons-features complete — `sheet.html` — Edit + Delete for weapons, features, cantrips, spells
 
 **Edit (modal reuse):**
