@@ -154,6 +154,9 @@ ALTER TABLE features ADD COLUMN IF NOT EXISTS definition JSONB DEFAULT '{}';
 - sheet.html — currency loads from DB + editable on blur via adjust_currency RPC
 - sheet.html — read-only mode: no editing, add buttons hidden, sync pill hidden
 - sheet.html — DM view, player read-only view, own sheet — all three modes working
+- sheet.html — conditions load/save from `characters.conditions` JSONB + exhaustion from `characters.exhaustion`
+- sheet.html — spell slots load from `spell_slots` table; pip toggles via `adjust_spell_slot` RPC; totals editable inline
+- sheet.html — spells/cantrips are features filtered by category; Add Cantrip + Add Spell reuse the feature modal
 
 ---
 
@@ -182,6 +185,60 @@ WITH CHECK (id = auth.uid());
 - `profiles_select_own` — users can read their own row
 - `profiles_update_own` — users can update their own row
 - `profiles_insert_own` — users can insert their own row
+
+---
+
+## PR 5b-5 complete — `sheet.html` — Conditions + Spell Slots + Spells (Supabase wiring)
+
+**Conditions:**
+- `populateConditions(char)` — reads `char.conditions` (JSONB array) and `char.exhaustion`; sets `.active` on matching pills, sets `#exhaustion-value`
+- `toggleCondition(name)` — async; optimistically toggles pill active state, then writes updated `conditions` array to `characters` table field-level
+- `changeExhaustion(delta)` — async; replaces local-only version; clamps 0–6, writes `exhaustion` to `characters` table field-level
+- `subscribeToCharacter()` callback now calls `populateConditions(payload.new)`
+- Read-only: condition pill onclicks removed, exhaustion buttons disabled
+
+**Spell Slots:**
+- `populateSpellSlots()` — loads from `spell_slots` table (`.maybeSingle()`); renders all 9 levels dynamically into `#slots-grid`
+- Pips show filled (remaining) / used (spent); filled pip click → `adjust_spell_slot(delta=+1)`, used pip click → `adjust_spell_slot(delta=-1)`
+- `toggleSlotPip(pipEl)` — calls `adjust_spell_slot` RPC, then re-renders
+- Slot total is editable inline (`contenteditable` span with dashed underline); blur saves via `saveSlotTotal(level, newTotal)`
+- `saveSlotTotal(level, newTotal)` — inserts with `crypto.randomUUID()` if no row exists; updates `slots_total` JSONB field-level otherwise
+- Read-only: pips not wired, `contenteditable` stripped by `applyReadOnlyMode()`
+
+**Spells (resolved open question):**
+- Spells are features, NOT a separate table. Stored in `features` where `category IN ('spell','cantrip')`.
+- `populateSpells()` — filtered read from `features`; cantrips → `.cantrip-chip` spans in `#cantrip-chips`; leveled spells → `.spell-card` rows in `#spells-list`
+- `openAddCantrip()` / `openAddSpell()` — reuse the feature modal, pre-selecting `cantrip` or `spell` and showing/hiding the Spell Level field
+- `onFeatureCategoryChange(val)` — shows/hides the `#spell-level-wrap` field based on selected category
+- `saveFeature()` updated: reads `source_level` (spell level 1–9 for spells, 0 for cantrips); calls `populateSpells()` after insert; resets category select and hides spell-level field
+- `populateFeatures()` updated: now filters to non-spell categories (`in ['maneuver','action','passive','reaction','racial','fighting-style','homebrew']`) so spells don't double-render
+- Read-only: Add Cantrip and Add Spell buttons hidden by `applyReadOnlyMode()`
+
+**Feature modal updates:**
+- Added `Spell` and `Cantrip` options to `#feature-category` select
+- Added `#spell-level-wrap` div with a level 1–9 select (hidden until category = `spell`)
+- `onchange="onFeatureCategoryChange(this.value)"` on category select
+
+**State:**
+- `currentSlots = { total, used, rowExists }` — tracks spell slot state between renders
+
+**SQL run for this PR:**
+```sql
+CREATE OR REPLACE FUNCTION adjust_spell_slot(p_character_id UUID, p_level TEXT, p_delta INTEGER)
+RETURNS void AS $$
+BEGIN
+  UPDATE spell_slots
+  SET slots_used = jsonb_set(
+    slots_used, ARRAY[p_level],
+    to_jsonb(GREATEST(0, LEAST(
+      (slots_total->>p_level)::int,
+      (slots_used->>p_level)::int + p_delta
+    )))
+  )
+  WHERE character_id = p_character_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+```
 
 ---
 
@@ -253,17 +310,22 @@ No SQL was run for this PR. No UI changes. No existing files touched.
 
 ---
 
-### NEXT TASK — FE-4: Wire resolver into combat
+### NEXT TASK — PR 6: Layout persistence via ui_preferences
+Phase 1 complete. PR 6 wires the Customise panel's section order and hidden-section
+toggles to the `ui_preferences` table so layout state persists across sessions.
+The `ui_preferences` table is already in DND-MASTER-PLAN.md Part Two.
+
+### FE-4 — Wire resolver into combat (parallel track, after PR 6)
 Feed `resolve(definition, context)` into the DM decision card in `combat.html`.
 The DM's Apply/Adjust/Override decision triggers the SEPARATE commit step
 (`commitOutcome`) that spawns `active_effects` and writes HP/resource deltas.
 Compute and apply stay in different functions (the hard rule from the spec).
 
-### PR 5b-5 — Conditions + Spell Slots + Spells (Supabase wiring)
-Wire the remaining layout-only sections to the database:
-- Conditions (14 pills + exhaustion) — save/load from `characters.conditions` (JSONB array) and `characters.exhaustion`
-- Spell slots — load from `spell_slots` table; use `adjust_spell_slot` RPC for pip toggles
-- Spells — load cantrips and spells from a `spells` table (or `characters.spells_known` JSONB)
-- "Add Cantrip" and "Add Spell" buttons wired to insert
+### PR 5b-5 COMPLETE — Conditions + Spell Slots + Spells (Supabase wiring)
+See "PR 5b-5 complete" section above.
 
-**Before starting PR 5b-5, check DND-MASTER-PLAN.md for the `spell_slots` table schema and any required RPCs.**
+**OPEN QUESTION (now resolved):** Spells are features, NOT a separate table or
+`characters.spells_known` column. The `features` table stores them with
+`category IN ('spell','cantrip')`. `source_level` stores the spell level (0 for
+cantrips, 1–9 for spells). No `spells` table was created. No `spells_known` column
+was added to `characters`. The Spells section is a filtered view of `features`.
