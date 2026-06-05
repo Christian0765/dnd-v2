@@ -7,7 +7,7 @@
 ## The Golden Rules
 
 1. **One feature per PR.**
-   Never combine two features in one PR. If the prompt asks for login AND campaign creation, push back and ask which one to do first.
+   Never combine two features in one PR. If the prompt asks for login AND campaign creation, push back and ask which one to do first. With the branch workflow, the branch IS the PR (see rule 19).
 
 2. **Read HANDOFF.md first, every time.**
    The handoff document tells you what exists, what works, and what the file structure looks like. Never assume — always check.
@@ -94,6 +94,9 @@
 
     Do NOT use `<script src="supabase-config.js"></script>` — that file
     does not exist on the live site.
+    NOTE: the inlined key is the ANON key, which is designed to be public. Security comes
+    from RLS policies, not key secrecy. The service_role key must NEVER appear in any
+    committed file.
 
 14. **Never use .single() — always use .maybeSingle().**
     `.single()` throws a 406 error if no row is found.
@@ -133,103 +136,139 @@
 
 ---
 
-## PR Rules
+## The Workflow At A Glance
 
-19. **PR description must include:**
-    - What was built
-    - What files were changed
-    - What was NOT touched
-    - The testing checklist results
+The agent runs in Claude Code with git, `gh`, and console/SQL access. The agent does the
+mechanics; the owner makes the decisions. The single rule that governs everything:
 
-20. **Update HANDOFF.md in every PR.**
-    The last step of every PR must update HANDOFF.md to reflect:
-    - What was just built
-    - Current file structure
-    - Any known issues discovered
-    - What the next task is
+> **The agent works on a PR branch and opens a pull request. The owner tests the branch
+> and merges. The agent NEVER merges, NEVER pushes to `main`, NEVER deletes branches.**
+
+The merge button is the one irreversible act, and it belongs to the owner alone — it is
+the moment the owner has tested and approved. Pushing to a branch is reversible; merging
+to `main` is what ships.
 
 ---
 
-## How To Deliver Files
+## Branch & PR Rules
 
-The project owner copies files manually — the agent does NOT push to GitHub.
-The owner is not a developer. Follow this delivery process exactly, every time.
-
-21. **Deliver files one at a time.**
-    Present each file separately. Do not dump everything at once.
-    Wait for the owner to confirm "got it" or "next" before showing the next file.
-
-22. **Every file delivery must follow this exact format:**
+19. **One PR branch per conceptual PR.**
+    One feature per branch (this is rule 1, enforced by git). Branch name matches the PR
+    in the build order, lowercase, hyphenated:
     ```
-    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    📁 FILE 1 of 3
-    Path: home.html
-    Action: Replace the existing file at dnd-v2/home.html
-    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-    [complete file contents here]
-
-    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    Got it? Reply "next" for file 2.
-    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    fe-2-definition-column
+    pr-5b-5-spells-wiring
     ```
+    The branch IS the PR. Never combine two features in one branch.
 
-    The "Path" line must say exactly where the file goes in the repo.
-    The "Action" line must say whether to REPLACE an existing file or CREATE a new one.
-    Never say "put it somewhere" or leave the location ambiguous.
-
-23. **Always specify the exact file action:**
-    - `Action: Replace the existing file at dnd-v2/home.html`
-    - `Action: Create a new file at dnd-v2/js/friends.js`
-    - `Action: Create a new file at dnd-v2/friends.html`
-    Never leave this ambiguous.
-
-24. **Never tell the owner to push to main directly.**
-    The owner uploads files via the GitHub web interface or copies them locally.
-    End every PR with this exact push command:
+20. **Always branch from fresh `main`.**
+    Before creating any branch:
     ```
-    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    ✓ ALL FILES DELIVERED
-
-    To publish: go to github.com/Christian0765/dnd-v2,
-    upload each file to its correct location, then commit.
-
-    OR if using terminal:
-    cd C:\Users\cm070\Documents\dnd-v2 && git add . && git commit -m "PR X — description" && git push
-    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    git checkout main
+    git pull
+    git checkout -b <branch-name>
     ```
+    Branching from stale `main` causes conflicts the owner would have to resolve by hand.
 
-25. **HANDOFF.md is always pasted in chat — never delivered as a file.**
-    At the end of every PR, paste the full updated HANDOFF.md contents
-    directly in chat as a markdown code block. Do not attach it as a file.
-    The owner will copy and paste it into the GitHub web editor manually.
-    Format:
-    ```
-    Here is the updated HANDOFF.md — paste this into GitHub:
+21. **One PR in flight at a time.**
+    Do not open a second PR branch while another is still awaiting the owner's test/merge.
+    The next branch is cut only after the previous PR is merged, from the updated `main`.
+    (If the owner explicitly asks for parallel work, that overrides this — but the default
+    is one at a time.)
 
-    [full HANDOFF.md contents here]
+22. **The agent pushes to its branch and opens a real PR. Nothing more.**
     ```
+    git push -u origin <branch-name>
+    gh pr create --title "FE-2 — definition column + manual renderer" --body "<see rule 23>"
+    ```
+    Then STOP. Do not merge. Do not push to `main`. Do not delete the branch. Report the
+    PR link to the owner and wait.
+
+23. **Every PR description must contain, in this order:**
+    - **What was built** — one short paragraph.
+    - **Files changed** — exact repo paths (e.g. `dnd-v2/sheet.html`, `dnd-v2/js/utils.js`).
+    - **What was NOT touched** — the working features deliberately left alone (rule 5).
+    - **RUN BEFORE TESTING** — see rule 25. Omit the header only if there is no SQL/console step.
+    - **Test plan** — the exact steps the owner follows to verify the branch works.
+
+24. **The owner merges; the agent never does.**
+    After the owner has tested the branch and is satisfied, the OWNER merges (GitHub web
+    "merge" button, or `gh pr merge` run by the owner). The agent does not run merge
+    commands even if asked mid-task — if the owner says "merge it," the agent confirms the
+    owner has tested it, then reminds the owner that clicking merge is theirs. The agent's
+    job ends at "PR is open and green."
+
+---
+
+## SQL & Schema Rules (single shared database)
+
+25. **Schema changes are a PR gate, listed as "RUN BEFORE TESTING."**
+    Schema lives in Supabase, not git. A branch can carry code that needs a column that
+    does not exist yet. So if a PR needs any schema change, the PR body MUST include:
+    ```
+    ## RUN BEFORE TESTING
+    Run this in the Supabase SQL editor before checking out and testing this branch:
+
+    ALTER TABLE features ADD COLUMN IF NOT EXISTS definition JSONB DEFAULT '{}';
+    ```
+    The owner runs the SQL first, THEN tests the branch. Testing before the SQL will fail
+    and look like a code bug when it is not.
+
+26. **Schema changes are additive and reversible by default.**
+    There is ONE Supabase project shared across all branches — there is no per-branch
+    database. A destructive change on a test branch hits the same data `main` reads from.
+    Therefore, by default:
+    - Use `ADD COLUMN IF NOT EXISTS`, `CREATE TABLE IF NOT EXISTS`, new RPC functions.
+    - Never `DROP COLUMN`, `DROP TABLE`, or `ALTER COLUMN ... TYPE` as part of normal PR
+      work. New columns are additive; old ones are left in place until a dedicated cleanup.
+    - A genuinely destructive change requires its own explicit, owner-approved step,
+      announced in the PR body under a `## DESTRUCTIVE — CONFIRM FIRST` header, and is
+      never bundled with feature work.
+    (Future upgrade, not required now: a separate staging Supabase project for branch
+    testing. Until then, additive-only is the safety boundary.)
+
+27. **Other console steps follow the same gate.**
+    Any required step outside git — RPC creation, RLS policy changes, storage config —
+    goes in the PR body under "RUN BEFORE TESTING" with the exact command. Never assume a
+    console step was done; state it explicitly so the owner runs it before testing.
+
+---
+
+## HANDOFF.md Rules
+
+28. **HANDOFF.md is updated ON the PR branch, as the last commit.**
+    HANDOFF.md always reflects what is on `main`. So the doc update rides with the work:
+    the final commit of every branch updates HANDOFF.md, and merging the PR merges the doc
+    update atomically. HANDOFF never drifts from the code it describes.
+
+29. **Every HANDOFF.md update must reflect:**
+    - What this PR built.
+    - Current file structure (if it changed).
+    - Any known issues discovered.
+    - The next task in the build order.
+    - Any SQL/console steps that were run (mirror the "RUN BEFORE TESTING" section so the
+      record of what the database now contains lives in the repo too).
 
 ---
 
 ## What To Do When Something Is Unclear
 
-26. **Ask before building.**
+30. **Ask before building.**
     If the prompt is ambiguous about a design decision, ask one clear question
     before writing code. Don't guess and build the wrong thing.
 
-27. **If it's not in the prompt, don't build it.**
+31. **If it's not in the prompt, don't build it.**
     Scope creep causes bugs. If you think of a related feature while building,
-    note it as a suggestion — don't add it unasked.
+    note it as a suggestion in the PR body — don't add it unasked.
 
-28. **If something in the master plan or architecture spec conflicts with the prompt, flag it.**
+32. **If something in the master plan or architecture spec conflicts with the prompt, flag it.**
     Don't silently pick one. Point out the conflict and ask which takes priority.
 
 ---
 
 ## GitHub Pages Path Rule
 
-29. **Never use absolute paths starting with `/`.**
+33. **Never use absolute paths starting with `/`.**
     The site lives at `christian0765.github.io/dnd-v2/` — not the root.
     Absolute paths cause 404 errors.
 
@@ -246,6 +285,29 @@ The owner is not a developer. Follow this delivery process exactly, every time.
 
 ---
 
+## Quick Command Reference (the whole happy path)
+
+```bash
+# Start a PR
+git checkout main && git pull
+git checkout -b fe-2-definition-column
+
+# ... do the work, commit in logical steps ...
+git add -A && git commit -m "FE-2 — add definition column read/write to sheet.html"
+
+# ... final commit updates HANDOFF.md ...
+git add HANDOFF.md && git commit -m "FE-2 — update HANDOFF"
+
+# Open the PR and stop
+git push -u origin fe-2-definition-column
+gh pr create --title "FE-2 — definition column + manual renderer" --body "..."
+
+# AGENT STOPS HERE.
+# Owner runs any RUN-BEFORE-TESTING SQL, tests the branch, and merges.
+```
+
+---
+
 ## The Stack At A Glance
 
 | Layer | Technology |
@@ -258,6 +320,7 @@ The owner is not a developer. Follow this delivery process exactly, every time.
 | Fonts | Google Fonts (Cinzel, Crimson Text) |
 | Images | base64 in database |
 | Build | None — direct file editing |
+| Workflow | Claude Code → PR branch → owner tests → owner merges |
 
 ---
 
@@ -272,9 +335,10 @@ The owner is not a developer. Follow this delivery process exactly, every time.
 | `sheet.html` | Character sheet |
 | `combat.html` | Combat tracker |
 | `friends.html` | Friends list and requests |
-| `HANDOFF.md` | Project state — update every PR |
+| `HANDOFF.md` | Project state — update every PR (on-branch, rule 28) |
 | `DND-MASTER-PLAN.md` | Full vision, schema, build order |
 | `DND-ARCHITECTURE-SPEC.md` | Database schema and patterns |
+| `FEATURE-ENGINE-SPEC.md` | Feature engine: namespace, definition shape, resolver, blocks |
 | `AGENT-RULES.md` | This file |
 | `GAME-DATA-RULES.md` | JSON data file format rules |
 | `FILE-ORGANIZATION.md` | Folder structure rules |
