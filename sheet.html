@@ -680,6 +680,16 @@
       display: block;
       margin-bottom: 4px;
     }
+    .slot-total-edit {
+      border-bottom: 1px dashed rgba(var(--border-rgb), 0.4);
+      cursor: text;
+      min-width: 1ch;
+      display: inline-block;
+    }
+    .slot-total-edit:focus {
+      outline: none;
+      border-bottom-color: var(--gold);
+    }
     .slot-pips {
       display: flex;
       justify-content: center;
@@ -1467,26 +1477,7 @@
       <div class="sheet-section-wrap" id="section-spell-slots">
         <div class="section-handle">⠿</div>
         <div class="sec">Spell Slots</div>
-        <div class="slots-grid">
-          <div class="slot-box">
-            <span class="slot-level">1</span>
-            <span class="slot-count">2 / 2</span>
-            <div class="slot-pips">
-              <span class="slot-pip filled"></span>
-              <span class="slot-pip filled"></span>
-            </div>
-          </div>
-          <div class="slot-box">
-            <span class="slot-level">2</span>
-            <span class="slot-count">0 / 0</span>
-            <div class="slot-pips"></div>
-          </div>
-          <div class="slot-box">
-            <span class="slot-level">3</span>
-            <span class="slot-count">0 / 0</span>
-            <div class="slot-pips"></div>
-          </div>
-        </div>
+        <div class="slots-grid" id="slots-grid"></div>
       </div>
 
       <!-- ── Spells ── -->
@@ -1494,23 +1485,11 @@
         <div class="section-handle">⠿</div>
         <div class="sec">Spells</div>
         <span class="spell-subsection-label">Cantrips</span>
-        <div class="cantrip-chips">
-          <span class="cantrip-chip">Eldritch Blast</span>
-          <span class="cantrip-chip">Minor Illusion</span>
-        </div>
-        <button class="btn btn-ghost" style="margin-bottom:14px">＋ Add Cantrip</button>
+        <div class="cantrip-chips" id="cantrip-chips"></div>
+        <button id="add-cantrip-btn" class="btn btn-ghost" style="margin-bottom:14px" onclick="openAddCantrip()">＋ Add Cantrip</button>
         <span class="spell-subsection-label">Spells</span>
-        <div class="spells-list">
-          <div class="spell-card">
-            <span class="spell-name">Hex</span>
-            <span class="spell-level-badge">Lvl 1</span>
-          </div>
-          <div class="spell-card">
-            <span class="spell-name">Armor of Agathys</span>
-            <span class="spell-level-badge">Lvl 1</span>
-          </div>
-        </div>
-        <button class="btn btn-ghost">＋ Add Spell</button>
+        <div class="spells-list" id="spells-list"></div>
+        <button id="add-spell-btn" class="btn btn-ghost" onclick="openAddSpell()">＋ Add Spell</button>
       </div>
 
     </div>
@@ -1599,7 +1578,7 @@
       </div>
       <div class="form-field">
         <label class="form-label">Category</label>
-        <select id="feature-category" class="form-input">
+        <select id="feature-category" class="form-input" onchange="onFeatureCategoryChange(this.value)">
           <option value="action">Action</option>
           <option value="passive">Passive</option>
           <option value="reaction">Reaction</option>
@@ -1607,6 +1586,22 @@
           <option value="racial">Racial</option>
           <option value="fighting-style">Fighting Style</option>
           <option value="homebrew">Homebrew</option>
+          <option value="spell">Spell</option>
+          <option value="cantrip">Cantrip</option>
+        </select>
+      </div>
+      <div class="form-field" id="spell-level-wrap" style="display:none">
+        <label class="form-label">Spell Level</label>
+        <select id="spell-level" class="form-input">
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+          <option value="5">5</option>
+          <option value="6">6</option>
+          <option value="7">7</option>
+          <option value="8">8</option>
+          <option value="9">9</option>
         </select>
       </div>
       <div class="form-field">
@@ -1687,6 +1682,7 @@
     let currentCharacter = null;
     let isReadOnly       = false;
     let currentCurrency  = { cp: 0, sp: 0, ep: 0, gp: 0, pp: 0 };
+    let currentSlots     = { total: {}, used: {}, rowExists: false };
 
     // ─── On Load Sequence ────────────────────────────────────────────────────
     document.addEventListener('DOMContentLoaded', async function () {
@@ -1775,9 +1771,12 @@
         populateProficiencies(character);
         populateEquipment(character);
         populatePersonalityBackstory(character);
+        populateConditions(character);
         await populateCurrency();
         await populateWeapons();
         await populateFeatures();
+        await populateSpellSlots();
+        await populateSpells();
 
         if (isReadOnly) {
           applyReadOnlyMode();
@@ -1815,9 +1814,12 @@
           populateProficiencies(character);
           populateEquipment(character);
           populatePersonalityBackstory(character);
+          populateConditions(character);
           await populateCurrency();
           await populateWeapons();
           await populateFeatures();
+          await populateSpellSlots();
+          await populateSpells();
         }
 
         subscribeToCharacter();
@@ -1911,6 +1913,7 @@
           populateProficiencies(payload.new);
           populateEquipment(payload.new);
           populatePersonalityBackstory(payload.new);
+          populateConditions(payload.new);
           populateCurrency();
         })
         .subscribe();
@@ -2419,6 +2422,7 @@
         .from('features')
         .select('*')
         .eq('character_id', characterId)
+        .in('category', ['maneuver','action','passive','reaction','racial','fighting-style','homebrew'])
         .is('deleted_at', null)
         .order('sort_order');
       if (error) {
@@ -2561,6 +2565,15 @@
         if (defErrEl) defErrEl.classList.remove('show');
       }
 
+      var category  = catEl ? catEl.value : 'passive';
+      var spellLvlEl = document.getElementById('spell-level');
+      var sourceLevel = 1;
+      if (category === 'spell' && spellLvlEl) {
+        sourceLevel = parseInt(spellLvlEl.value) || 1;
+      } else if (category === 'cantrip') {
+        sourceLevel = 0;
+      }
+
       var sortOrder = document.querySelectorAll('.features-list .feature-card').length;
       var id        = crypto.randomUUID();
 
@@ -2568,10 +2581,11 @@
         id:           id,
         character_id: characterId,
         name:         name,
-        category:     catEl      ? catEl.value              : 'passive',
+        category:     category,
         recharge:     rechargeEl ? rechargeEl.value.trim()  : '',
         description:  descEl     ? descEl.value.trim()      : '',
         definition:   definitionValue,
+        source_level: sourceLevel,
         sort_order:   sortOrder
       });
 
@@ -2581,7 +2595,7 @@
       }
 
       if (nameEl)     nameEl.value     = '';
-      if (catEl)      catEl.value      = 'action';
+      if (catEl)      { catEl.value = 'action'; onFeatureCategoryChange('action'); }
       if (rechargeEl) rechargeEl.value = '';
       if (descEl)     descEl.value     = '';
       if (defEl)      defEl.value      = '';
@@ -2595,6 +2609,7 @@
 
       closeModal('feature-modal');
       await populateFeatures();
+      await populateSpells();
     }
 
     // ─── Proficiencies & Languages ────────────────────────────────────────────
@@ -2650,6 +2665,228 @@
       });
     }
 
+    // ─── Conditions ──────────────────────────────────────────────────────────
+    function populateConditions(char) {
+      var active = Array.isArray(char.conditions) ? char.conditions : [];
+      document.querySelectorAll('.condition-pill').forEach(function(pill) {
+        var name = pill.textContent.trim();
+        pill.classList.toggle('active', active.includes(name));
+        if (!isReadOnly) {
+          pill.onclick = function() { toggleCondition(name); };
+        }
+      });
+      var exVal = char.exhaustion || 0;
+      var el = document.getElementById('exhaustion-value');
+      if (el) el.textContent = exVal;
+      if (currentCharacter) currentCharacter.exhaustion = exVal;
+    }
+
+    async function toggleCondition(name) {
+      if (isReadOnly) return;
+      var cur = Array.isArray(currentCharacter.conditions) ? currentCharacter.conditions.slice() : [];
+      var idx = cur.indexOf(name);
+      if (idx >= 0) cur.splice(idx, 1); else cur.push(name);
+      currentCharacter.conditions = cur;
+      document.querySelectorAll('.condition-pill').forEach(function(pill) {
+        pill.classList.toggle('active', cur.includes(pill.textContent.trim()));
+      });
+      var { error } = await supabaseClient
+        .from('characters')
+        .update({ conditions: cur })
+        .eq('id', characterId);
+      if (error) console.error('[toggleCondition]', error.message);
+    }
+
+    async function changeExhaustion(delta) {
+      if (isReadOnly) return;
+      var cur = (currentCharacter && currentCharacter.exhaustion != null) ? currentCharacter.exhaustion : 0;
+      var next = Math.max(0, Math.min(6, cur + delta));
+      currentCharacter.exhaustion = next;
+      var el = document.getElementById('exhaustion-value');
+      if (el) el.textContent = next;
+      var { error } = await supabaseClient
+        .from('characters')
+        .update({ exhaustion: next })
+        .eq('id', characterId);
+      if (error) console.error('[changeExhaustion]', error.message);
+    }
+
+    // ─── Spell Slots ──────────────────────────────────────────────────────────
+    async function populateSpellSlots() {
+      if (!characterId) return;
+      var { data, error } = await supabaseClient
+        .from('spell_slots')
+        .select('*')
+        .eq('character_id', characterId)
+        .maybeSingle();
+      if (error) {
+        console.error('[populateSpellSlots]', error.message);
+        return;
+      }
+      var slotsTotal = (data && data.slots_total) ? data.slots_total : {};
+      var slotsUsed  = (data && data.slots_used)  ? data.slots_used  : {};
+      currentSlots = { total: slotsTotal, used: slotsUsed, rowExists: !!data };
+
+      var grid = document.getElementById('slots-grid');
+      if (!grid) return;
+      grid.innerHTML = '';
+
+      for (var lvl = 1; lvl <= 9; lvl++) {
+        var total = parseInt(slotsTotal[String(lvl)] || 0);
+        var used  = parseInt(slotsUsed[String(lvl)]  || 0);
+        var remaining = Math.max(0, total - used);
+
+        var pipsHtml = '';
+        for (var p = 0; p < total; p++) {
+          var cls = p < remaining ? 'slot-pip filled' : 'slot-pip used';
+          pipsHtml += '<span class="' + cls + '" data-level="' + lvl + '" data-pip="' + p + '"></span>';
+        }
+
+        var countHtml;
+        if (!isReadOnly) {
+          countHtml = '<span class="slot-count">' + remaining + ' / ' +
+            '<span class="slot-total-edit" data-level="' + lvl + '" contenteditable="true" title="Click to set total">' +
+            total + '</span></span>';
+        } else {
+          countHtml = '<span class="slot-count">' + remaining + ' / ' + total + '</span>';
+        }
+
+        var box = document.createElement('div');
+        box.className = 'slot-box';
+        box.dataset.level = String(lvl);
+        box.innerHTML =
+          '<span class="slot-level">' + lvl + '</span>' +
+          countHtml +
+          '<div class="slot-pips">' + pipsHtml + '</div>';
+        grid.appendChild(box);
+      }
+
+      if (!isReadOnly) {
+        grid.querySelectorAll('.slot-pip').forEach(function(pip) {
+          pip.onclick = function() { toggleSlotPip(this); };
+        });
+        grid.querySelectorAll('.slot-total-edit').forEach(function(el) {
+          el.addEventListener('blur', function() {
+            var lvl = parseInt(this.dataset.level);
+            var val = parseInt(this.textContent.trim());
+            saveSlotTotal(lvl, isNaN(val) ? 0 : val);
+          });
+          el.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') { e.preventDefault(); this.blur(); }
+          });
+        });
+      }
+    }
+
+    async function toggleSlotPip(pipEl) {
+      if (isReadOnly) return;
+      var level = String(pipEl.dataset.level);
+      var delta = pipEl.classList.contains('filled') ? 1 : -1;
+      var { error } = await supabaseClient.rpc('adjust_spell_slot', {
+        p_character_id: characterId,
+        p_level:        level,
+        p_delta:        delta
+      });
+      if (error) {
+        console.error('[toggleSlotPip]', error.message);
+        return;
+      }
+      await populateSpellSlots();
+    }
+
+    async function saveSlotTotal(level, newTotal) {
+      if (isReadOnly) return;
+      var lvl = String(level);
+      var total = Math.max(0, Math.min(9, newTotal));
+      var newSlotsTotal = Object.assign({}, currentSlots.total);
+      newSlotsTotal[lvl] = total;
+
+      var op;
+      if (!currentSlots.rowExists) {
+        var id = crypto.randomUUID();
+        var defaultUsed = {'1':0,'2':0,'3':0,'4':0,'5':0,'6':0,'7':0,'8':0,'9':0};
+        op = supabaseClient.from('spell_slots').insert({
+          id: id,
+          character_id: characterId,
+          slots_total: newSlotsTotal,
+          slots_used: defaultUsed
+        });
+      } else {
+        op = supabaseClient.from('spell_slots').update({ slots_total: newSlotsTotal }).eq('character_id', characterId);
+      }
+      var { error } = await op;
+      if (error) {
+        console.error('[saveSlotTotal]', error.message);
+        return;
+      }
+      currentSlots.total = newSlotsTotal;
+      currentSlots.rowExists = true;
+      await populateSpellSlots();
+    }
+
+    // ─── Spells ───────────────────────────────────────────────────────────────
+    async function populateSpells() {
+      if (!characterId) return;
+      var { data, error } = await supabaseClient
+        .from('features')
+        .select('*')
+        .eq('character_id', characterId)
+        .in('category', ['spell', 'cantrip'])
+        .is('deleted_at', null)
+        .order('source_level')
+        .order('sort_order');
+      if (error) {
+        console.error('[populateSpells]', error.message);
+        return;
+      }
+      var rows = data || [];
+      var cantrips = rows.filter(function(f) { return f.category === 'cantrip'; });
+      var spells   = rows.filter(function(f) { return f.category === 'spell';   });
+
+      var cantripWrap = document.getElementById('cantrip-chips');
+      if (cantripWrap) {
+        cantripWrap.innerHTML = '';
+        cantrips.forEach(function(c) {
+          var chip = document.createElement('span');
+          chip.className = 'cantrip-chip';
+          chip.textContent = c.name;
+          cantripWrap.appendChild(chip);
+        });
+      }
+
+      var spellsList = document.getElementById('spells-list');
+      if (spellsList) {
+        spellsList.innerHTML = '';
+        spells.forEach(function(s) {
+          var card = document.createElement('div');
+          card.className = 'spell-card';
+          card.innerHTML =
+            '<span class="spell-name">' + escHtml(s.name) + '</span>' +
+            '<span class="spell-level-badge">Lvl ' + (s.source_level || '?') + '</span>';
+          spellsList.appendChild(card);
+        });
+      }
+    }
+
+    function openAddCantrip() {
+      if (isReadOnly) return;
+      var catEl = document.getElementById('feature-category');
+      if (catEl) { catEl.value = 'cantrip'; onFeatureCategoryChange('cantrip'); }
+      openModal('feature-modal');
+    }
+
+    function openAddSpell() {
+      if (isReadOnly) return;
+      var catEl = document.getElementById('feature-category');
+      if (catEl) { catEl.value = 'spell'; onFeatureCategoryChange('spell'); }
+      openModal('feature-modal');
+    }
+
+    function onFeatureCategoryChange(val) {
+      var wrap = document.getElementById('spell-level-wrap');
+      if (wrap) wrap.style.display = (val === 'spell') ? '' : 'none';
+    }
+
     // ─── Apply Sheet Owner's Accent Color ────────────────────────────────────
     function applyAccentFromDb(hex) {
       if (!hex) return;
@@ -2672,6 +2909,20 @@
       if (addWeaponBtn) addWeaponBtn.style.display = 'none';
       var addFeatureBtn = document.querySelector('#section-features .btn-gold');
       if (addFeatureBtn) addFeatureBtn.style.display = 'none';
+      // Hide add cantrip / add spell buttons
+      var addCantripBtn = document.getElementById('add-cantrip-btn');
+      if (addCantripBtn) addCantripBtn.style.display = 'none';
+      var addSpellBtn = document.getElementById('add-spell-btn');
+      if (addSpellBtn) addSpellBtn.style.display = 'none';
+      // Disable condition pills and exhaustion buttons
+      document.querySelectorAll('.condition-pill').forEach(function(p) {
+        p.onclick = null;
+        p.style.cursor = 'default';
+      });
+      document.querySelectorAll('.exhaustion-btn').forEach(function(b) {
+        b.disabled = true;
+      });
+      // Slot pips are not wired in populateSpellSlots when isReadOnly=true
     }
 
     // ─── Create Character Form ───────────────────────────────────────────────
@@ -2814,26 +3065,7 @@
       });
     });
 
-    // Condition pill toggle
-    document.querySelectorAll('.condition-pill').forEach(pill => {
-      pill.addEventListener('click', () => {
-        pill.classList.toggle('active');
-      });
-    });
-
-    // Exhaustion counter
-    let exhaustion = 0;
-    function changeExhaustion(delta) {
-      exhaustion = Math.max(0, Math.min(6, exhaustion + delta));
-      document.getElementById('exhaustion-value').textContent = exhaustion;
-    }
-
-    // Spell slot pip toggle
-    document.querySelectorAll('.slot-pip').forEach(pip => {
-      pip.addEventListener('click', () => {
-        pip.classList.toggle('used');
-      });
-    });
+    // (condition pills, exhaustion, and slot pips are now wired in populateConditions / populateSpellSlots)
 
     // ─── Customise System ────────────────────────────────────────────────────
 
