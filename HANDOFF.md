@@ -178,6 +178,28 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 ---
 
 ## What's NOT Done Yet — Next: PR 5b-5
+## Feature Engine — FE-1 COMPLETE (namespace ratified)
+
+The @ namespace in FEATURE-ENGINE-SPEC.md is RATIFIED and LOCKED. Feature data may now
+be authored against it. Final set: 6 ability mods; @char.level / @char.max_hp / @char.ac
+/ @prof_bonus / @classes.{name}.level; @slot_level / @spellcasting_mod / @spell_save_dc
+/ @spell_attack_bonus; @target.ac / @target.hp / @attack_total. Raw scores cut;
+@char.cur_hp + initiative + speed + hit-dice deferred (reasons recorded in spec).
+
+Rule: adding tokens later is safe; removing/renaming is NOT (silently breaks features).
+
+### Still open (not blocking FE-2)
+- Condition operator list: proposed ==, !=, >, >=, <, <=, in, not_in. Confirm before
+  authoring any feature that carries a condition. Pure-formula features don't need it.
+
+### NEXT TASK — FE-2: definition column + manual renderer + raw JSON authoring
+- ALTER TABLE features ADD COLUMN IF NOT EXISTS definition JSONB DEFAULT '{}';
+- Build the definition→readable-text renderer (permanent, not interim — player must see
+  what a feature does before triggering; DM must see it to override).
+- Add a raw JSON authoring textarea + schema validator to the Add Feature modal (owner is
+  sole author this phase; pretty form comes much later at tier 5).
+- Formulas are DISPLAYED, not evaluated. No resolver yet. Shippable with zero engine code.
+- Author features in real token syntax from day one so nothing is re-entered at FE-3.
 
 PR 5b-4 is fully complete. The next task is PR 5b-5.
 
