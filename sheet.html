@@ -561,6 +561,45 @@
     }
     .definition-toggle:hover { color: var(--gold-light); }
 
+    /* ── Edit / Delete controls ── */
+    .delete-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--border-light);
+      font-size: 0.7rem;
+      padding: 2px 5px;
+      border-radius: var(--radius-sm);
+      line-height: 1;
+      transition: color var(--transition-fast), background var(--transition-fast);
+      flex-shrink: 0;
+    }
+    .delete-btn:hover {
+      color: #e05555;
+      background: rgba(224, 85, 85, 0.12);
+    }
+    .chip-delete {
+      margin-left: 4px;
+      font-size: 0.6rem;
+      opacity: 0.6;
+      cursor: pointer;
+      transition: opacity var(--transition-fast);
+    }
+    .chip-delete:hover { opacity: 1; color: #e05555; }
+    .feature-card.editable:hover,
+    .spell-card.editable:hover {
+      border-color: rgba(var(--border-rgb), 0.5);
+      cursor: pointer;
+    }
+    .weapons-table tbody tr.editable:hover { cursor: pointer; }
+    .weapons-table tbody tr.editable:hover td { background: rgba(255,255,255,0.03); }
+    .weapons-table th.weapon-actions-th,
+    .weapons-table td.weapon-actions-td {
+      width: 28px;
+      padding: 0;
+      text-align: center;
+    }
+
     /* ── Currency ── */
     .currency-row {
       display: grid;
@@ -1498,9 +1537,9 @@
   <!-- ── Weapon Modal ── -->
   <div class="modal-overlay" id="weapon-modal">
     <div class="modal-box">
-      <button class="modal-close" onclick="closeModal('weapon-modal')">✕</button>
-      <div class="modal-title">Add Weapon</div>
-      <div class="modal-sub">New weapon entry</div>
+      <button class="modal-close" onclick="resetWeaponModal();closeModal('weapon-modal')">✕</button>
+      <div class="modal-title" id="weapon-modal-title">Add Weapon</div>
+      <div class="modal-sub" id="weapon-modal-sub">New weapon entry</div>
       <div class="form-field">
         <label class="form-label">Name</label>
         <input id="weapon-name" type="text" class="form-input" placeholder="e.g. Longsword">
@@ -1562,16 +1601,16 @@
         <label class="form-label">Notes</label>
         <input id="weapon-notes" type="text" class="form-input" placeholder="">
       </div>
-      <button class="btn btn-gold" onclick="saveWeapon()">Add Weapon</button>
+      <button class="btn btn-gold" id="weapon-save-btn" onclick="saveWeapon()">Add Weapon</button>
     </div>
   </div>
 
   <!-- ── Feature Modal ── -->
   <div class="modal-overlay" id="feature-modal">
     <div class="modal-box">
-      <button class="modal-close" onclick="closeModal('feature-modal')">✕</button>
-      <div class="modal-title">Add Feature</div>
-      <div class="modal-sub">New feature or trait</div>
+      <button class="modal-close" onclick="resetFeatureModal();closeModal('feature-modal')">✕</button>
+      <div class="modal-title" id="feature-modal-title">Add Feature</div>
+      <div class="modal-sub" id="feature-modal-sub">New feature or trait</div>
       <div class="form-field">
         <label class="form-label">Name</label>
         <input id="feature-name" type="text" class="form-input" placeholder="e.g. Action Surge">
@@ -1624,7 +1663,7 @@
           </div>
         </div>
       </div>
-      <button class="btn btn-gold" onclick="saveFeature()">Add Feature</button>
+      <button class="btn btn-gold" id="feature-save-btn" onclick="saveFeature()">Add Feature</button>
     </div>
   </div>
 
@@ -1683,6 +1722,11 @@
     let isReadOnly       = false;
     let currentCurrency  = { cp: 0, sp: 0, ep: 0, gp: 0, pp: 0 };
     let currentSlots     = { total: {}, used: {}, rowExists: false };
+    let weaponEditId     = null;
+    let featureEditId    = null;
+    let cachedWeapons    = [];
+    let cachedFeatures   = [];
+    let cachedSpells     = [];
 
     // ─── On Load Sequence ────────────────────────────────────────────────────
     document.addEventListener('DOMContentLoaded', async function () {
@@ -2301,11 +2345,25 @@
         console.error('[populateWeapons]', error.message);
         return;
       }
-      var tbody = document.querySelector('.weapons-table tbody');
+      cachedWeapons = data || [];
+      var table = document.querySelector('.weapons-table');
+      if (!table) return;
+      // Manage actions column header
+      var thead = table.querySelector('thead tr');
+      if (thead) {
+        var existingTh = thead.querySelector('.weapon-actions-th');
+        if (existingTh) existingTh.remove();
+        if (!isReadOnly) {
+          var th = document.createElement('th');
+          th.className = 'weapon-actions-th';
+          thead.appendChild(th);
+        }
+      }
+      var tbody = table.querySelector('tbody');
       if (!tbody) return;
       tbody.innerHTML = '';
-      if (!data || data.length === 0) return;
-      data.forEach(function(w) {
+      if (!cachedWeapons.length) return;
+      cachedWeapons.forEach(function(w) {
         var atkVal  = w.atk_bonus ?? 0;
         var atkStr  = (atkVal >= 0 ? '+' : '') + atkVal;
         var dmgStr  = (w.dmg_dice || '1d6');
@@ -2313,13 +2371,19 @@
           dmgStr += (w.dmg_bonus > 0 ? '+' : '') + w.dmg_bonus;
         }
         var tr = document.createElement('tr');
+        if (!isReadOnly) {
+          tr.className = 'editable';
+          tr.title = 'Click to edit';
+          tr.setAttribute('onclick', 'openEditWeapon(' + JSON.stringify(w.id) + ')');
+        }
         tr.innerHTML =
           '<td>' + escHtml(w.name || '') + '</td>' +
           '<td>' + escHtml(atkStr) + '</td>' +
           '<td>' + escHtml(dmgStr) + '</td>' +
           '<td>' + escHtml(w.dmg_type || '') + '</td>' +
           '<td>' + escHtml(w.range || '') + '</td>' +
-          '<td>' + escHtml(w.notes || '') + '</td>';
+          '<td>' + escHtml(w.notes || '') + '</td>' +
+          (!isReadOnly ? '<td class="weapon-actions-td"><button class="delete-btn" title="Delete weapon" onclick="deleteWeapon(' + JSON.stringify(w.id) + ');event.stopPropagation()">✕</button></td>' : '');
         tbody.appendChild(tr);
       });
     }
@@ -2364,38 +2428,46 @@
         rangeStr = rangeNum + ' ' + rangeUnit;
       }
 
-      var sortOrder = document.querySelectorAll('.weapons-table tbody tr').length;
-      var id = crypto.randomUUID();
-
-      var { error } = await supabaseClient.from('weapons').insert({
-        id:           id,
-        character_id: characterId,
-        name:         name,
-        atk_bonus:    atkBonus,
-        dmg_dice:     dmgDice,
-        dmg_bonus:    dmgBonus,
-        dmg_type:     typeEl ? typeEl.value : 'Slashing',
-        range:        rangeStr,
-        notes:        notesEl ? notesEl.value.trim() : '',
-        sort_order:   sortOrder
-      });
-
-      if (error) {
-        console.error('[saveWeapon]', error.message);
-        return;
+      if (weaponEditId) {
+        var { error } = await supabaseClient
+          .from('weapons')
+          .update({
+            name:      name,
+            atk_bonus: atkBonus,
+            dmg_dice:  dmgDice,
+            dmg_bonus: dmgBonus,
+            dmg_type:  typeEl ? typeEl.value : 'Slashing',
+            range:     rangeStr,
+            notes:     notesEl ? notesEl.value.trim() : ''
+          })
+          .eq('id', weaponEditId)
+          .eq('character_id', characterId);
+        if (error) {
+          console.error('[saveWeapon] update', error.message);
+          return;
+        }
+      } else {
+        var sortOrder = document.querySelectorAll('.weapons-table tbody tr').length;
+        var id = crypto.randomUUID();
+        var { error } = await supabaseClient.from('weapons').insert({
+          id:           id,
+          character_id: characterId,
+          name:         name,
+          atk_bonus:    atkBonus,
+          dmg_dice:     dmgDice,
+          dmg_bonus:    dmgBonus,
+          dmg_type:     typeEl ? typeEl.value : 'Slashing',
+          range:        rangeStr,
+          notes:        notesEl ? notesEl.value.trim() : '',
+          sort_order:   sortOrder
+        });
+        if (error) {
+          console.error('[saveWeapon] insert', error.message);
+          return;
+        }
       }
 
-      if (nameEl)      nameEl.value      = '';
-      if (atkEl)       atkEl.value       = '0';
-      if (diceCountEl) diceCountEl.value = '1';
-      if (diceSidesEl) diceSidesEl.value = '6';
-      if (dmgBonusEl)  dmgBonusEl.value  = '0';
-      if (typeEl)      typeEl.selectedIndex = 0;
-      if (rangeNumEl)  rangeNumEl.value  = '5';
-      if (rangeUnitEl) { rangeUnitEl.value = 'ft'; toggleLongRange('ft'); }
-      if (longRangeEl) longRangeEl.value = '';
-      if (notesEl)     notesEl.value     = '';
-
+      resetWeaponModal();
       closeModal('weapon-modal');
       await populateWeapons();
     }
@@ -2429,15 +2501,16 @@
         console.error('[populateFeatures]', error.message);
         return;
       }
+      cachedFeatures = data || [];
       var list = document.querySelector('.features-list');
       if (!list) return;
       list.innerHTML = '';
-      if (!data || data.length === 0) return;
-      data.forEach(function(f) {
+      if (!cachedFeatures.length) return;
+      cachedFeatures.forEach(function(f) {
         var color = getCategoryColor(f.category);
         var label = (f.category || 'passive').replace('-', ' ');
         var card  = document.createElement('div');
-        card.className = 'feature-card';
+        card.className = 'feature-card' + (!isReadOnly ? ' editable' : '');
         var defHtml = renderDefinition(f.definition);
         card.innerHTML =
           '<div class="feature-card-header">' +
@@ -2447,6 +2520,24 @@
           (f.recharge ? '<div class="feature-recharge">' + escHtml(f.recharge) + '</div>' : '') +
           (f.description ? '<div class="feature-desc">' + escHtml(f.description) + '</div>' : '') +
           (defHtml ? '<div class="feature-definition">' + defHtml + '</div>' : '');
+        if (!isReadOnly) {
+          (function(feature) {
+            card.title = 'Click to edit';
+            card.addEventListener('click', function(e) {
+              if (e.target.classList.contains('delete-btn')) return;
+              openEditFeature(feature.id);
+            });
+            var delBtn = document.createElement('button');
+            delBtn.className = 'delete-btn';
+            delBtn.title = 'Delete feature';
+            delBtn.textContent = '✕';
+            delBtn.addEventListener('click', function(e) {
+              e.stopPropagation();
+              deleteFeature(feature.id, feature.category);
+            });
+            card.querySelector('.feature-card-header').appendChild(delBtn);
+          })(f);
+        }
         list.appendChild(card);
       });
     }
@@ -2574,39 +2665,43 @@
         sourceLevel = 0;
       }
 
-      var sortOrder = document.querySelectorAll('.features-list .feature-card').length;
-      var id        = crypto.randomUUID();
-
-      var { error } = await supabaseClient.from('features').insert({
-        id:           id,
-        character_id: characterId,
-        name:         name,
-        category:     category,
-        recharge:     rechargeEl ? rechargeEl.value.trim()  : '',
-        description:  descEl     ? descEl.value.trim()      : '',
-        definition:   definitionValue,
-        source_level: sourceLevel,
-        sort_order:   sortOrder
-      });
-
-      if (error) {
-        console.error('[saveFeature]', error.message);
-        return;
+      if (featureEditId) {
+        var { error } = await supabaseClient
+          .from('features')
+          .update({
+            name:         name,
+            category:     category,
+            recharge:     rechargeEl ? rechargeEl.value.trim() : '',
+            description:  descEl ? descEl.value.trim() : '',
+            source_level: sourceLevel
+          })
+          .eq('id', featureEditId)
+          .eq('character_id', characterId);
+        if (error) {
+          console.error('[saveFeature] update', error.message);
+          return;
+        }
+      } else {
+        var sortOrder = document.querySelectorAll('.features-list .feature-card').length;
+        var id        = crypto.randomUUID();
+        var { error } = await supabaseClient.from('features').insert({
+          id:           id,
+          character_id: characterId,
+          name:         name,
+          category:     category,
+          recharge:     rechargeEl ? rechargeEl.value.trim()  : '',
+          description:  descEl     ? descEl.value.trim()      : '',
+          definition:   definitionValue,
+          source_level: sourceLevel,
+          sort_order:   sortOrder
+        });
+        if (error) {
+          console.error('[saveFeature] insert', error.message);
+          return;
+        }
       }
 
-      if (nameEl)     nameEl.value     = '';
-      if (catEl)      { catEl.value = 'action'; onFeatureCategoryChange('action'); }
-      if (rechargeEl) rechargeEl.value = '';
-      if (descEl)     descEl.value     = '';
-      if (defEl)      defEl.value      = '';
-      if (defErrEl)   defErrEl.classList.remove('show');
-
-      // Reset definition toggle to collapsed state
-      var defInner  = document.getElementById('definition-field-inner');
-      var defToggle = document.getElementById('def-toggle');
-      if (defInner)  defInner.style.display = 'none';
-      if (defToggle) defToggle.textContent  = '+ Definition JSON (optional)';
-
+      resetFeatureModal();
       closeModal('feature-modal');
       await populateFeatures();
       await populateSpells();
@@ -2839,9 +2934,9 @@
         console.error('[populateSpells]', error.message);
         return;
       }
-      var rows = data || [];
-      var cantrips = rows.filter(function(f) { return f.category === 'cantrip'; });
-      var spells   = rows.filter(function(f) { return f.category === 'spell';   });
+      cachedSpells = data || [];
+      var cantrips = cachedSpells.filter(function(f) { return f.category === 'cantrip'; });
+      var spells   = cachedSpells.filter(function(f) { return f.category === 'spell';   });
 
       var cantripWrap = document.getElementById('cantrip-chips');
       if (cantripWrap) {
@@ -2849,7 +2944,28 @@
         cantrips.forEach(function(c) {
           var chip = document.createElement('span');
           chip.className = 'cantrip-chip';
-          chip.textContent = c.name;
+          if (!isReadOnly) {
+            chip.style.cursor = 'pointer';
+            chip.title = 'Click to edit';
+            (function(cantrip) {
+              chip.addEventListener('click', function(e) {
+                if (e.target.classList.contains('chip-delete')) return;
+                openEditFeature(cantrip.id);
+              });
+              var del = document.createElement('span');
+              del.className = 'chip-delete delete-btn';
+              del.title = 'Delete cantrip';
+              del.textContent = '✕';
+              del.addEventListener('click', function(e) {
+                e.stopPropagation();
+                deleteFeature(cantrip.id, 'cantrip');
+              });
+              chip.appendChild(document.createTextNode(cantrip.name));
+              chip.appendChild(del);
+            })(c);
+          } else {
+            chip.textContent = c.name;
+          }
           cantripWrap.appendChild(chip);
         });
       }
@@ -2859,10 +2975,33 @@
         spellsList.innerHTML = '';
         spells.forEach(function(s) {
           var card = document.createElement('div');
-          card.className = 'spell-card';
-          card.innerHTML =
-            '<span class="spell-name">' + escHtml(s.name) + '</span>' +
-            '<span class="spell-level-badge">Lvl ' + (s.source_level || '?') + '</span>';
+          card.className = 'spell-card' + (!isReadOnly ? ' editable' : '');
+          var nameSpan = document.createElement('span');
+          nameSpan.className = 'spell-name';
+          nameSpan.textContent = s.name;
+          var lvlSpan = document.createElement('span');
+          lvlSpan.className = 'spell-level-badge';
+          lvlSpan.textContent = 'Lvl ' + (s.source_level || '?');
+          card.appendChild(nameSpan);
+          card.appendChild(lvlSpan);
+          if (!isReadOnly) {
+            card.title = 'Click to edit';
+            (function(spell) {
+              card.addEventListener('click', function(e) {
+                if (e.target.classList.contains('delete-btn')) return;
+                openEditFeature(spell.id);
+              });
+              var delBtn = document.createElement('button');
+              delBtn.className = 'delete-btn';
+              delBtn.title = 'Delete spell';
+              delBtn.textContent = '✕';
+              delBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                deleteFeature(spell.id, 'spell');
+              });
+              card.appendChild(delBtn);
+            })(s);
+          }
           spellsList.appendChild(card);
         });
       }
@@ -2885,6 +3024,179 @@
     function onFeatureCategoryChange(val) {
       var wrap = document.getElementById('spell-level-wrap');
       if (wrap) wrap.style.display = (val === 'spell') ? '' : 'none';
+    }
+
+    // ─── Weapon Edit / Delete ─────────────────────────────────────────────────
+    function resetWeaponModal() {
+      weaponEditId = null;
+      var titleEl = document.getElementById('weapon-modal-title');
+      var subEl   = document.getElementById('weapon-modal-sub');
+      var btnEl   = document.getElementById('weapon-save-btn');
+      if (titleEl) titleEl.textContent = 'Add Weapon';
+      if (subEl)   subEl.textContent   = 'New weapon entry';
+      if (btnEl)   btnEl.textContent   = 'Add Weapon';
+      var nameEl      = document.getElementById('weapon-name');
+      var atkEl       = document.getElementById('weapon-atk-bonus');
+      var diceCountEl = document.getElementById('weapon-dice-count');
+      var diceSidesEl = document.getElementById('weapon-dice-sides');
+      var dmgBonusEl  = document.getElementById('weapon-dmg-bonus-val');
+      var typeEl      = document.getElementById('weapon-dmg-type');
+      var rangeNumEl  = document.getElementById('weapon-range-num');
+      var rangeUnitEl = document.getElementById('weapon-range-unit');
+      var longRangeEl = document.getElementById('weapon-long-range-num');
+      var notesEl     = document.getElementById('weapon-notes');
+      if (nameEl)      nameEl.value          = '';
+      if (atkEl)       atkEl.value           = '0';
+      if (diceCountEl) diceCountEl.value     = '1';
+      if (diceSidesEl) diceSidesEl.value     = '6';
+      if (dmgBonusEl)  dmgBonusEl.value      = '0';
+      if (typeEl)      typeEl.selectedIndex  = 0;
+      if (rangeNumEl)  rangeNumEl.value      = '5';
+      if (rangeUnitEl) { rangeUnitEl.value   = 'ft'; toggleLongRange('ft'); }
+      if (longRangeEl) longRangeEl.value     = '';
+      if (notesEl)     notesEl.value         = '';
+    }
+
+    function openEditWeapon(id) {
+      if (isReadOnly) return;
+      var w = cachedWeapons.find(function(x) { return x.id === id; });
+      if (!w) return;
+      weaponEditId = w.id;
+      var titleEl = document.getElementById('weapon-modal-title');
+      var subEl   = document.getElementById('weapon-modal-sub');
+      var btnEl   = document.getElementById('weapon-save-btn');
+      if (titleEl) titleEl.textContent = 'Edit Weapon';
+      if (subEl)   subEl.textContent   = 'Update weapon entry';
+      if (btnEl)   btnEl.textContent   = 'Save Changes';
+      var nameEl      = document.getElementById('weapon-name');
+      var atkEl       = document.getElementById('weapon-atk-bonus');
+      var diceCountEl = document.getElementById('weapon-dice-count');
+      var diceSidesEl = document.getElementById('weapon-dice-sides');
+      var dmgBonusEl  = document.getElementById('weapon-dmg-bonus-val');
+      var typeEl      = document.getElementById('weapon-dmg-type');
+      var rangeNumEl  = document.getElementById('weapon-range-num');
+      var rangeUnitEl = document.getElementById('weapon-range-unit');
+      var longRangeEl = document.getElementById('weapon-long-range-num');
+      var notesEl     = document.getElementById('weapon-notes');
+      if (nameEl) nameEl.value     = w.name || '';
+      if (atkEl)  atkEl.value      = w.atk_bonus != null ? w.atk_bonus : 0;
+      // Parse dmg_dice e.g. "2d6"
+      var diceParts = (w.dmg_dice || '1d6').split('d');
+      if (diceCountEl) diceCountEl.value = diceParts[0] || '1';
+      if (diceSidesEl) diceSidesEl.value = diceParts[1] || '6';
+      if (dmgBonusEl)  dmgBonusEl.value  = w.dmg_bonus != null ? w.dmg_bonus : 0;
+      if (typeEl)      typeEl.value      = w.dmg_type || 'Slashing';
+      // Parse range e.g. "5 ft", "5/20 ft", "5 reach"
+      var rangeStr   = w.range || '5 ft';
+      var rangeMatch = rangeStr.match(/^(\d+)(?:\/(\d+))?\s*(ft|reach)/);
+      if (rangeMatch) {
+        if (rangeNumEl)  rangeNumEl.value  = rangeMatch[1];
+        if (rangeUnitEl) rangeUnitEl.value = rangeMatch[3];
+        if (longRangeEl) longRangeEl.value = rangeMatch[2] || '';
+        toggleLongRange(rangeMatch[3]);
+      } else {
+        if (rangeNumEl)  rangeNumEl.value  = '5';
+        if (rangeUnitEl) rangeUnitEl.value = 'ft';
+        if (longRangeEl) longRangeEl.value = '';
+        toggleLongRange('ft');
+      }
+      if (notesEl) notesEl.value = w.notes || '';
+      openModal('weapon-modal');
+    }
+
+    async function deleteWeapon(id) {
+      if (isReadOnly) return;
+      if (!confirm('Delete this weapon?')) return;
+      var { error } = await supabaseClient
+        .from('weapons')
+        .update({ deleted_at: new Date().toISOString() })
+        .eq('id', id)
+        .eq('character_id', characterId);
+      if (error) {
+        console.error('[deleteWeapon]', error.message);
+        return;
+      }
+      await populateWeapons();
+    }
+
+    // ─── Feature Edit / Delete ────────────────────────────────────────────────
+    function resetFeatureModal() {
+      featureEditId = null;
+      var titleEl = document.getElementById('feature-modal-title');
+      var subEl   = document.getElementById('feature-modal-sub');
+      var btnEl   = document.getElementById('feature-save-btn');
+      if (titleEl) titleEl.textContent = 'Add Feature';
+      if (subEl)   subEl.textContent   = 'New feature or trait';
+      if (btnEl)   btnEl.textContent   = 'Add Feature';
+      var nameEl     = document.getElementById('feature-name');
+      var catEl      = document.getElementById('feature-category');
+      var rechargeEl = document.getElementById('feature-recharge');
+      var descEl     = document.getElementById('feature-desc');
+      var defEl      = document.getElementById('feature-definition-json');
+      var defErrEl   = document.getElementById('definition-json-error');
+      if (nameEl)     nameEl.value     = '';
+      if (catEl)      { catEl.value = 'action'; onFeatureCategoryChange('action'); }
+      if (rechargeEl) rechargeEl.value = '';
+      if (descEl)     descEl.value     = '';
+      if (defEl)      defEl.value      = '';
+      if (defErrEl)   defErrEl.classList.remove('show');
+      var defInner  = document.getElementById('definition-field-inner');
+      var defToggle = document.getElementById('def-toggle');
+      if (defInner)  defInner.style.display = 'none';
+      if (defToggle) defToggle.textContent  = '+ Definition JSON (optional)';
+    }
+
+    function openEditFeature(id) {
+      if (isReadOnly) return;
+      // Look in both feature and spell caches
+      var f = cachedFeatures.find(function(x) { return x.id === id; }) ||
+              cachedSpells.find(function(x) { return x.id === id; });
+      if (!f) return;
+      featureEditId = f.id;
+      var titleEl = document.getElementById('feature-modal-title');
+      var subEl   = document.getElementById('feature-modal-sub');
+      var btnEl   = document.getElementById('feature-save-btn');
+      if (titleEl) titleEl.textContent = 'Edit Feature';
+      if (subEl)   subEl.textContent   = 'Update feature or trait';
+      if (btnEl)   btnEl.textContent   = 'Save Changes';
+      var nameEl     = document.getElementById('feature-name');
+      var catEl      = document.getElementById('feature-category');
+      var rechargeEl = document.getElementById('feature-recharge');
+      var descEl     = document.getElementById('feature-desc');
+      if (nameEl)     nameEl.value     = f.name || '';
+      if (catEl)      { catEl.value = f.category || 'passive'; onFeatureCategoryChange(f.category || 'passive'); }
+      if (rechargeEl) rechargeEl.value = f.recharge || '';
+      if (descEl)     descEl.value     = f.description || '';
+      // Set spell level if applicable
+      if (f.category === 'spell') {
+        var spellLvlEl = document.getElementById('spell-level');
+        if (spellLvlEl) spellLvlEl.value = f.source_level || '1';
+      }
+      // Definition JSON editing deferred to combat-phase PR — keep panel collapsed
+      var defEl     = document.getElementById('feature-definition-json');
+      var defInner  = document.getElementById('definition-field-inner');
+      var defToggle = document.getElementById('def-toggle');
+      if (defEl)     defEl.value            = '';
+      if (defInner)  defInner.style.display = 'none';
+      if (defToggle) defToggle.textContent  = '+ Definition JSON (optional)';
+      openModal('feature-modal');
+    }
+
+    async function deleteFeature(id, type) {
+      if (isReadOnly) return;
+      var label = type === 'cantrip' ? 'cantrip' : type === 'spell' ? 'spell' : 'feature';
+      if (!confirm('Delete this ' + label + '?')) return;
+      var { error } = await supabaseClient
+        .from('features')
+        .update({ deleted_at: new Date().toISOString() })
+        .eq('id', id)
+        .eq('character_id', characterId);
+      if (error) {
+        console.error('[deleteFeature]', error.message);
+        return;
+      }
+      await populateFeatures();
+      await populateSpells();
     }
 
     // ─── Apply Sheet Owner's Accent Color ────────────────────────────────────
@@ -2923,6 +3235,10 @@
         b.disabled = true;
       });
       // Slot pips are not wired in populateSpellSlots when isReadOnly=true
+      // Hide any edit/delete controls (belt-and-suspenders; populate functions already skip them)
+      document.querySelectorAll('.delete-btn, .chip-delete').forEach(function(el) {
+        el.style.display = 'none';
+      });
     }
 
     // ─── Create Character Form ───────────────────────────────────────────────
@@ -3058,10 +3374,14 @@
       document.getElementById(id).classList.remove('open');
     }
 
-    // Close modal on overlay click
+    // Close modal on overlay click — also reset edit state for weapon/feature modals
     document.querySelectorAll('.modal-overlay').forEach(overlay => {
       overlay.addEventListener('click', function(e) {
-        if (e.target === this) closeModal(this.id);
+        if (e.target === this) {
+          if (this.id === 'weapon-modal')  resetWeaponModal();
+          if (this.id === 'feature-modal') resetFeatureModal();
+          closeModal(this.id);
+        }
       });
     });
 

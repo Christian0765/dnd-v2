@@ -5,6 +5,38 @@
 
 ## What's Been Built
 
+### edit-delete-weapons-features complete — `sheet.html` — Edit + Delete for weapons, features, cantrips, spells
+
+**Edit (modal reuse):**
+- Clicking a weapon row / feature card / cantrip chip / spell card opens the existing modal pre-filled in edit mode.
+- Modals operate in two modes: "add" (insert, as before) and "edit" (UPDATE by id). `weaponEditId` / `featureEditId` track which mode. Both are `null` by default (add mode).
+- Modal title, subtitle, and save button text change dynamically (`"Add Weapon"` / `"Edit Weapon"`, etc.) and reset when the modal closes.
+- `openEditWeapon(id)` / `openEditFeature(id)` — look up by id in `cachedWeapons` / `cachedFeatures` / `cachedSpells`, pre-fill all readable fields, open modal.
+- `resetWeaponModal()` / `resetFeatureModal()` — restore modal to add mode (called by ✕ button, overlay click, and after successful save).
+- Edit covers: name, atk_bonus, dmg_dice, dmg_bonus, dmg_type, range, notes for weapons; name, category, recharge, description, spell level for features/cantrips/spells.
+- **Definition JSON editing is intentionally NOT exposed** in edit mode — deferred to the combat-phase PR (see Deferred Items below).
+
+**Delete (soft delete):**
+- Each weapon row has a ✕ button; each feature card / cantrip chip / spell card has a ✕ control.
+- Delete prompts `confirm("Delete this weapon?")` / `confirm("Delete this spell?")` etc. before acting.
+- On confirm: sets `deleted_at = new Date().toISOString()` — never `.delete()` (rule 11).
+- After delete, the relevant section re-renders.
+
+**Read-only / lock state:**
+- All edit and delete controls check `isReadOnly` — not rendered at all in read-only mode.
+- `applyReadOnlyMode()` also runs `querySelectorAll('.delete-btn, .chip-delete')` and hides any that were rendered (belt-and-suspenders per rule requirements).
+- DM viewing a player's sheet today gets read-only correctly. A future "lock" toggle will work with zero rework on edit/delete controls.
+
+**Other implementation notes:**
+- `cachedWeapons`, `cachedFeatures`, `cachedSpells` arrays populated by their respective `populate*()` functions; `openEditWeapon/Feature` looks up by id (no extra DB call).
+- Overlay click on weapon/feature modal calls `resetWeaponModal/FeatureModal()` before closing so edit state is always cleared.
+- Field-level UPDATE (rule 9), `.maybeSingle()` never `.single()` (rule 14), `crypto.randomUUID()` for new inserts (rule 15), error-checked Supabase calls (rule 12).
+- `subscribeToCharacter()` calls all populate functions — live sync continues to work after edit/delete.
+
+**No SQL needed:** Both tables already have `deleted_at`. Edits are field-level UPDATEs. No schema changes in this PR.
+
+---
+
 ### FE-2 complete — `sheet.html` — Definition renderer + raw JSON authoring
 
 **Definition renderer (`renderDefinition`):**
@@ -157,6 +189,19 @@ ALTER TABLE features ADD COLUMN IF NOT EXISTS definition JSONB DEFAULT '{}';
 - sheet.html — conditions load/save from `characters.conditions` JSONB + exhaustion from `characters.exhaustion`
 - sheet.html — spell slots load from `spell_slots` table; pip toggles via `adjust_spell_slot` RPC; totals editable inline
 - sheet.html — spells/cantrips are features filtered by category; Add Cantrip + Add Spell reuse the feature modal
+- sheet.html — weapons: click row to edit, ✕ to soft-delete (confirm step)
+- sheet.html — features/cantrips/spells: click card/chip to edit, ✕ to soft-delete (confirm step)
+- sheet.html — edit/delete controls hidden in all read-only modes; future lock toggle will work with zero rework
+
+---
+
+## Deferred Items (from edit-delete-weapons-features PR)
+
+### Deferred: Definition JSON editing in edit mode (rule 31)
+The edit modal does NOT expose the `definition` JSONB field. When a user edits a feature that has a definition, the definition is preserved as-is in the database — it is never overwritten. Editing the definition is deferred to the combat-phase PR where the full block-editor UI belongs. Record in that PR's plan.
+
+### Open design question: Character lock toggle (rule 31)
+The prompt requires that edit/delete obey a future "lock character after creation" toggle. The controls already respect `isReadOnly` with zero extra code needed. The open design question — whether the lock reuses `characters.locked` or adds a separate `creation_complete` flag — is **undecided and not resolved in this PR**. Do not implement the toggle or the column until the DM and owner agree on the flag design.
 
 ---
 
@@ -329,3 +374,42 @@ See "PR 5b-5 complete" section above.
 `category IN ('spell','cantrip')`. `source_level` stores the spell level (0 for
 cantrips, 1–9 for spells). No `spells` table was created. No `spells_known` column
 was added to `characters`. The Spells section is a filtered view of `features`.
+
+---
+
+## Out-of-Band SQL Applied During PR 5b-5 Testing (rule 29)
+
+The following SQL was run **manually in the Supabase SQL editor** during 5b-5 testing.
+It is NOT in the migration history but IS now in the live database. Record here so
+documented schema matches the live database. **Do NOT re-run — already applied.**
+
+```sql
+ALTER TABLE characters
+  ADD COLUMN IF NOT EXISTS conditions JSONB DEFAULT '[]',
+  ADD COLUMN IF NOT EXISTS exhaustion INTEGER DEFAULT 0;
+
+ALTER TABLE features DROP CONSTRAINT IF EXISTS features_category_check;
+ALTER TABLE features ADD CONSTRAINT features_category_check
+  CHECK (category IN ('maneuver','action','passive','reaction','racial',
+                      'fighting-style','homebrew','spell','cantrip'));
+
+CREATE OR REPLACE FUNCTION adjust_spell_slot(p_character_id UUID, p_level TEXT, p_delta INTEGER)
+RETURNS void AS $$
+BEGIN
+  UPDATE spell_slots
+  SET slots_used = jsonb_set(slots_used, ARRAY[p_level],
+    to_jsonb(GREATEST(0, LEAST((slots_total->>p_level)::int,
+      (slots_used->>p_level)::int + p_delta))))
+  WHERE character_id = p_character_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE POLICY "spell_slots_write_dm" ON spell_slots
+  FOR ALL USING (
+    character_id IN (
+      SELECT c.id FROM characters c
+      JOIN memberships m ON m.campaign_id = c.campaign_id
+      WHERE m.user_id = auth.uid() AND m.role = 'dm'
+    )
+  );
+```
