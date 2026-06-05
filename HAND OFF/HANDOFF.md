@@ -206,34 +206,58 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 ---
 
-## What's NOT Done Yet — Next: PR 5b-5
-## Feature Engine — FE-1 COMPLETE (namespace ratified)
+## Feature Engine Status
 
-The @ namespace in FEATURE-ENGINE-SPEC.md is RATIFIED and LOCKED. Feature data may now
-be authored against it. Final set: 6 ability mods; @char.level / @char.max_hp / @char.ac
-/ @prof_bonus / @classes.{name}.level; @slot_level / @spellcasting_mod / @spell_save_dc
-/ @spell_attack_bonus; @target.ac / @target.hp / @attack_total. Raw scores cut;
-@char.cur_hp + initiative + speed + hit-dice deferred (reasons recorded in spec).
-
-Rule: adding tokens later is safe; removing/renaming is NOT (silently breaks features).
-
-### Still open (not blocking FE-2)
-- Condition operator list: proposed ==, !=, >, >=, <, <=, in, not_in. Confirm before
-  authoring any feature that carries a condition. Pure-formula features don't need it.
+### FE-1 COMPLETE — @ namespace ratified
+The @ namespace in FEATURE-ENGINE-SPEC.md is RATIFIED and LOCKED. Final set: 6 ability
+mods; @char.level / @char.max_hp / @char.ac / @prof_bonus / @classes.{name}.level;
+@slot_level / @spellcasting_mod / @spell_save_dc / @spell_attack_bonus;
+@target.ac / @target.hp / @attack_total.
+Rule: adding tokens later is safe; removing/renaming is NOT.
 
 ### FE-2 COMPLETE — definition renderer + raw JSON authoring
 - `renderDefinition()` — definition JSONB → human-readable rows on feature card (permanent).
 - Add Feature modal: collapsible JSON textarea + inline validator; saves `definition` to DB.
 - `definition` column already existed. No SQL was run for this PR.
 
-### NEXT TASK — FE-3: Resolver (pure function, no UI, no writes)
-Build `resolve(definition, context) → proposedOutcome` as a pure JS function.
-- No Supabase calls, no side effects, no UI.
-- Context object provides sheet values (@stats, @char.level, @prof_bonus, etc.).
-- Test against `definition` blobs authored via the FE-2 modal — they are the test corpus.
-- Wire into combat only in FE-4. FE-3 ships with zero UI change.
+### FE-3 COMPLETE — Pure resolver `js/feature-resolver.js`
+New file: `js/feature-resolver.js` — pure function, no DOM, no Supabase, no side effects.
 
-PR 5b-4 is fully complete. The next task is PR 5b-5.
+**`window.FeatureResolver.resolve(definition, context) → ProposedOutcome`**
+
+What it does:
+- Resolves all `@namespace` tokens from the ratified spec against the context object.
+- Evaluates conditions as structured triples `{ lhs, op, rhs }` using a switch over
+  the eight ratified operators: `==`, `!=`, `>`, `>=`, `<`, `<=`, `in`, `not_in`.
+  Never eval(). Condition operator list is now RATIFIED in FEATURE-ENGINE-SPEC.md.
+- Evaluates formulas (`2d8 + @stats.cha.mod`) in three safe steps: token substitution →
+  dice rolling (with individual result recording) → arithmetic evaluation (recursive
+  descent parser, no eval()).
+- Handles save branches `{ save, on_fail, on_success }` recursively — BOTH branches
+  are always resolved so the DM card can display both outcomes before any state is written.
+- Returns a `ProposedOutcome` with: `ok`, `conditions_met`, `conditions[]`, `effects[]`,
+  `cost`. Every resolved effect carries a full audit trail: `formula_raw`,
+  `formula_token_substituted`, `formula_dice_rolled`, `rolls[]`, `total`.
+
+Context object shape (both sources):
+- **Sheet values**: `stats.{stat}.mod`, `char.{field}`, `prof_bonus`, `classes.{name}.level`,
+  `spellcasting_mod`, `spell_save_dc`, `spell_attack_bonus`
+- **Combat values**: `slot_level`, `target.ac`, `target.hp`, `attack_total`
+- **Test helper**: `_rollFn` — inject a deterministic `Math.random` replacement
+
+Inline tests: `FeatureResolver.runTests()` — runnable in the browser console.
+Covers: Divine Smite (2d8 + conditional), Fireball (save branch), Healing Word
+(slot-scaling formula), negative modifiers, missing tokens, `in`/`not_in` operators.
+
+No SQL was run for this PR. No UI changes. No existing files touched.
+
+---
+
+### NEXT TASK — FE-4: Wire resolver into combat
+Feed `resolve(definition, context)` into the DM decision card in `combat.html`.
+The DM's Apply/Adjust/Override decision triggers the SEPARATE commit step
+(`commitOutcome`) that spawns `active_effects` and writes HP/resource deltas.
+Compute and apply stay in different functions (the hard rule from the spec).
 
 ### PR 5b-5 — Conditions + Spell Slots + Spells (Supabase wiring)
 Wire the remaining layout-only sections to the database:
