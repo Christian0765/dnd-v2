@@ -17,8 +17,12 @@ dnd-v2/
 ├── 📄 sheet.html                    # Character sheet (?c=campaignId)
 ├── 📄 combat.html                   # Combat tracker (?c=campaignId)
 │
-├── 📄 supabase-config.js            # ⚠ LOCAL ONLY — never commit with real keys
-├── 📄 supabase-config.js.template   # Safe template committed to repo
+│   # Supabase credentials are INLINED directly in each HTML file (anon key only).
+│   # See AGENT-RULES.md rule 13. There is no supabase-config.js — GitHub Pages
+│   # cannot serve a gitignored config file, so the anon key lives in a <script>
+│   # block in every page. The anon key is designed to be public; security comes
+│   # from RLS policies. The service_role key must NEVER appear in any file.
+│
 ├── 📄 firebase-config.js            # Legacy — kept for migration reference only
 │
 ├── 📁 /data/                        # System reference data (JSON files)
@@ -53,10 +57,14 @@ dnd-v2/
 │   ├── theme.js                     # Theme loading and applying from database
 │   └── utils.js                     # Shared utilities (escHtml, formatDate, etc.)
 │
-├── 📄 HANDOFF.md                    # ← Update after every PR
+├── 📄 HANDOFF.md                    # ← Update on the PR branch, every PR (rule 28)
+├── 📄 DND-MASTER-PLAN.md            # Full vision, schema, build order
 ├── 📄 DND-ARCHITECTURE-SPEC.md      # Database schema and architectural patterns
+├── 📄 FEATURE-ENGINE-SPEC.md        # Feature engine: @ namespace, definition shape,
+│                                    # resolver contract, block-editor tiers
 ├── 📄 AGENT-RULES.md                # Rules every agent must follow
 ├── 📄 FILE-ORGANIZATION.md          # This file
+├── 📄 GAME-DATA-RULES.md            # JSON data file format rules
 ├── 📄 .gitignore
 └── 📄 README.md
 ```
@@ -79,8 +87,8 @@ Never copy-paste the same function into multiple HTML files.
 
 ```html
 <!-- Every page that needs auth includes this -->
-<script src="/js/supabase-client.js"></script>
-<script src="/js/auth.js"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/auth.js"></script>
 ```
 
 ### Rule 3 — Shared styles go in /css/
@@ -89,10 +97,12 @@ Page-specific styles can live in a `<style>` block in that page's HTML.
 
 ```html
 <!-- Every page includes these -->
-<link rel="stylesheet" href="/css/variables.css">
-<link rel="stylesheet" href="/css/base.css">
-<link rel="stylesheet" href="/css/components.css">
+<link rel="stylesheet" href="css/variables.css">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/components.css">
 ```
+
+(Note: relative paths, no leading slash — see AGENT-RULES.md rule 33.)
 
 ### Rule 4 — System data goes in /data/rulesets/
 D&D reference data (classes, races, weapons, spells) is never hardcoded in
@@ -100,7 +110,7 @@ JavaScript. It always lives in JSON files under `/data/rulesets/{ruleset}/`.
 
 ```js
 // Load class data for a character
-const classData = await fetch(`/data/rulesets/${ruleset}/classes/${className}.json`)
+const classData = await fetch(`data/rulesets/${ruleset}/classes/${className}.json`)
   .then(r => r.json());
 ```
 
@@ -113,9 +123,11 @@ Do not create files named `sheet-1.html`, `sheet-2.html` etc.
 Do not create files named `auth-old.js` or `backup-index.html`.
 If something is replaced, delete the old version in the same PR.
 
-### Rule 7 — Credentials never in the repo
-`supabase-config.js` with real keys is never committed.
-Only `supabase-config.js.template` (with placeholder values) is in the repo.
+### Rule 7 — Credentials
+The Supabase anon key is inlined in each HTML file (it is public by design; RLS is the
+real security boundary). The service_role key and the Firebase service account key are
+NEVER committed in any file. `firebase-config.js` is kept only as legacy migration
+reference and contains no live secrets.
 
 ---
 
@@ -124,7 +136,8 @@ Only `supabase-config.js.template` (with placeholder values) is in the repo.
 ### supabase-client.js
 ```js
 // Single source of truth for Supabase initialization
-// Import this file on every page before any other /js/ files
+// Import this file on every page after the inlined anon-key <script> block
+// and the Supabase CDN script.
 
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 ```
@@ -247,15 +260,15 @@ Contains reusable UI components used across multiple pages:
 
 | URL | Page | Notes |
 |-----|------|-------|
-| `/login.html` | Login | No auth required |
-| `/home.html` | Campaign lobby | Auth required |
-| `/campaign.html?c={id}` | Campaign page | Auth + membership required |
-| `/sheet.html?c={id}` | Character sheet | Auth + membership required |
-| `/combat.html?c={id}` | Combat tracker | Auth + membership required |
+| `login.html` | Login | No auth required |
+| `home.html` | Campaign lobby | Auth required |
+| `campaign.html?c={id}` | Campaign page | Auth + membership required |
+| `sheet.html?c={id}` | Character sheet | Auth + membership required |
+| `combat.html?c={id}` | Combat tracker | Auth + membership required |
 
 The `?c=` parameter is the campaign UUID from Supabase.
 The app determines which character to show based on the user's membership row —
-not from a URL parameter.
+not from a URL parameter. (All URLs are relative — no leading slash, rule 33.)
 
 ---
 
@@ -263,14 +276,17 @@ not from a URL parameter.
 
 | Item | Where it belongs |
 |------|-----------------|
-| Real Supabase keys | Local supabase-config.js only |
-| Firebase service account key | Local only, never committed |
+| Supabase service_role key | Never committed anywhere |
+| Firebase service account key | Never committed anywhere |
 | D&D copyrighted content | Not included at all |
 | Player character data | Supabase database |
 | NPC/quest/shop data | Supabase database |
 | Campaign banners/images | Supabase database (base64) |
 | Session recordings | Not in scope |
 | node_modules | gitignored |
+
+(The Supabase ANON key is the exception — it is inlined in each HTML file on purpose
+per rule 13, because it is public by design and RLS is the real security boundary.)
 
 ---
 
@@ -280,19 +296,20 @@ When creating any new HTML page:
 
 - [ ] File is named according to the naming convention above
 - [ ] Includes Google Fonts link tag
-- [ ] Includes `/css/variables.css`, `/css/base.css`, `/css/components.css`
-- [ ] Includes Supabase CDN script
-- [ ] Includes `supabase-config.js`
-- [ ] Includes `/js/supabase-client.js`
-- [ ] Includes `/js/auth.js` (if auth is needed)
-- [ ] Includes `/js/utils.js`
+- [ ] Includes `css/variables.css`, `css/base.css`, `css/components.css`
+- [ ] Inlines the anon-key `<script>` block (SUPABASE_URL + SUPABASE_ANON_KEY) per rule 13
+- [ ] Includes the Supabase CDN script AFTER the anon-key block
+- [ ] Includes `js/supabase-client.js`
+- [ ] Includes `js/auth.js` (if auth is needed)
+- [ ] Includes `js/utils.js`
 - [ ] Calls `requireAuth()` on DOMContentLoaded if auth is required
 - [ ] Has a `<title>` tag
 - [ ] Has a `<meta name="viewport">` tag
 - [ ] Uses only CSS variables from variables.css for colors
 - [ ] All user-supplied strings pass through `escHtml()`
 - [ ] All Supabase calls have error handling
-- [ ] Added to HANDOFF.md file structure section
+- [ ] All paths are relative (no leading slash, rule 33)
+- [ ] Added to HANDOFF.md file structure section (on the PR branch)
 
 ---
 
@@ -304,4 +321,4 @@ When creating any new HTML page:
 - [ ] No hardcoded strings that should be CSS variables
 - [ ] No direct DOM manipulation that belongs in the HTML file
 - [ ] Added to FILE-ORGANIZATION.md /js/ section
-- [ ] Added to HANDOFF.md file structure section
+- [ ] Added to HANDOFF.md file structure section (on the PR branch)

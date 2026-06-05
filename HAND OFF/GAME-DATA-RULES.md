@@ -36,6 +36,13 @@ Current rulesets:
 6. **Descriptions are plain text.** No HTML, no markdown, no special formatting.
    Line breaks use `\n` if needed.
 
+7. **Feature definitions follow FEATURE-ENGINE-SPEC.md.** When a feature object
+   (in a class file, or homebrew) carries a `definition` block for the feature engine,
+   it must match the shape in FEATURE-ENGINE-SPEC.md, and any formula inside it may use
+   ONLY the ratified `@` tokens from that spec. Conditions are structured triples, never
+   eval-able strings. Do not invent new tokens — adding a token is a change to the engine
+   spec, not to a data file.
+
 ---
 
 ## Folder Structure

@@ -33,6 +33,8 @@ Read this entire document before writing any code. Every decision has been made 
 
 6. **Homebrew layers on top of system data** — campaign homebrew is fetched from the database and merged with the ruleset JSON files at runtime. Homebrew always wins on name conflicts.
 
+7. **The feature engine computes but never enforces** — feature rules are stored as structured JSON in `features.definition` and resolved by a pure function that produces a *proposal*. A separate DM-gated commit step is the only thing that writes state. See FEATURE-ENGINE-SPEC.md. This implements the master plan's "calculator with a DM override button" philosophy.
+
 ---
 
 ## User Roles & Access
@@ -235,6 +237,9 @@ CREATE TABLE features (
   deleted_at TIMESTAMPTZ
 );
 ```
+> NOTE: a `definition JSONB DEFAULT '{}'` column is added to this table for the feature
+> engine. See FEATURE-ENGINE-SPEC.md and the DOC-PATCHES file. Columns above stay for
+> querying/filtering; everything executable lives in `definition`.
 
 ### `resources`
 ```sql
@@ -599,6 +604,8 @@ System reference data lives in the repo, not the database.
   "spellcasting": null
 }
 ```
+> NOTE: feature objects in class files may carry a `definition` block matching
+> FEATURE-ENGINE-SPEC.md. Formulas inside it use only ratified `@` tokens from that spec.
 
 ---
 
@@ -610,13 +617,13 @@ async function loadCharacterData(character, campaignId) {
 
   // 1. Load system data from JSON files
   const [weapons, classData, schema] = await Promise.all([
-    fetch(`/data/rulesets/${ruleset}/weapons.json`).then(r => r.json()),
-    fetch(`/data/rulesets/${ruleset}/classes/${characterClass}.json`).then(r => r.json()),
-    fetch(`/data/rulesets/${ruleset}/sheet_schema.json`).then(r => r.json()),
+    fetch(`data/rulesets/${ruleset}/weapons.json`).then(r => r.json()),
+    fetch(`data/rulesets/${ruleset}/classes/${characterClass}.json`).then(r => r.json()),
+    fetch(`data/rulesets/${ruleset}/sheet_schema.json`).then(r => r.json()),
   ]);
 
   // 2. Load campaign homebrew from Supabase
-  const { data: homebrew } = await supabase
+  const { data: homebrew } = await supabaseClient
     .from('homebrew')
     .select('*')
     .eq('campaign_id', campaignId)
@@ -636,6 +643,7 @@ function mergeByName(system, homebrew) {
   return Object.values(map);
 }
 ```
+(Paths are relative — no leading slash, per AGENT-RULES.md rule 33.)
 
 ---
 
@@ -646,12 +654,12 @@ Never save the entire character object. Only save what changed.
 ```js
 // WRONG — saves everything, causes conflicts
 async function saveCharacter(data) {
-  await supabase.from('characters').update(data).eq('id', characterId);
+  await supabaseClient.from('characters').update(data).eq('id', characterId);
 }
 
 // CORRECT — saves only the changed field
 async function saveField(field, value) {
-  await supabase
+  await supabaseClient
     .from('characters')
     .update({ [field]: value, updated_at: new Date().toISOString() })
     .eq('id', characterId);
@@ -671,7 +679,7 @@ Never set HP to an absolute value from the client. Always use a delta.
 ```js
 // WRONG — two simultaneous saves corrupt the value
 async function setHp(newValue) {
-  await supabase.from('characters').update({ cur_hp: newValue }).eq('id', characterId);
+  await supabaseClient.from('characters').update({ cur_hp: newValue }).eq('id', characterId);
 }
 
 // CORRECT — use a Supabase RPC function
@@ -688,7 +696,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 */
 
 async function adjustHp(delta) {
-  await supabase.rpc('adjust_hp', { 
+  await supabaseClient.rpc('adjust_hp', { 
     character_id: characterId, 
     delta: delta 
   });
@@ -704,7 +712,7 @@ async function adjustHp(delta) {
 ```js
 // Subscribe to character changes (replaces Firestore onSnapshot)
 function subscribeToCharacter(characterId, onUpdate) {
-  return supabase
+  return supabaseClient
     .channel('character-' + characterId)
     .on('postgres_changes', {
       event: '*',
@@ -717,7 +725,7 @@ function subscribeToCharacter(characterId, onUpdate) {
 
 // Subscribe to all characters in a campaign (for party overview)
 function subscribeToParty(campaignId, onUpdate) {
-  return supabase
+  return supabaseClient
     .channel('party-' + campaignId)
     .on('postgres_changes', {
       event: '*',
@@ -730,7 +738,7 @@ function subscribeToParty(campaignId, onUpdate) {
 
 // Subscribe to combat session
 function subscribeToCombat(campaignId, onUpdate) {
-  return supabase
+  return supabaseClient
     .channel('combat-' + campaignId)
     .on('postgres_changes', {
       event: '*',
@@ -743,7 +751,7 @@ function subscribeToCombat(campaignId, onUpdate) {
 
 // Always unsubscribe when leaving a page
 window.addEventListener('beforeunload', () => {
-  supabase.removeAllChannels();
+  supabaseClient.removeAllChannels();
 });
 ```
 
@@ -752,17 +760,16 @@ window.addEventListener('beforeunload', () => {
 ## Auth Flow
 
 ```js
-// Initialize Supabase client (replaces firebase-config.js)
-// Create supabase-config.js:
-const SUPABASE_URL = 'https://your-project.supabase.co';
-const SUPABASE_ANON_KEY = 'your-anon-key';
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// The anon key is inlined in each HTML file (see AGENT-RULES.md rule 13) — there is no
+// supabase-config.js. The client is initialized once in js/supabase-client.js as
+// `supabaseClient` (rule 8). Every page includes the inlined <script> block, then the
+// Supabase CDN script, then js/supabase-client.js.
 
 // Check auth on every page load
 async function requireAuth() {
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { session } } = await supabaseClient.auth.getSession();
   if (!session) {
-    window.location.href = 'login.html';
+    window.location.href = 'login.html';   // relative path, rule 33
     return null;
   }
   return session;
@@ -770,12 +777,12 @@ async function requireAuth() {
 
 // Get current user's membership for a campaign
 async function getMembership(campaignId) {
-  const { data } = await supabase
+  const { data } = await supabaseClient
     .from('memberships')
     .select('*, campaigns(*)')
     .eq('campaign_id', campaignId)
-    .eq('user_id', (await supabase.auth.getUser()).data.user.id)
-    .single();
+    .eq('user_id', (await supabaseClient.auth.getUser()).data.user.id)
+    .maybeSingle();   // never .single() — rule 14
   return data;
 }
 
@@ -786,12 +793,12 @@ async function isDM(campaignId) {
 }
 
 // Token auto-refresh — add this once on page load
-supabase.auth.onAuthStateChange((event, session) => {
+supabaseClient.auth.onAuthStateChange((event, session) => {
   if (event === 'TOKEN_REFRESHED') {
     console.log('Session refreshed automatically');
   }
   if (event === 'SIGNED_OUT') {
-    window.location.href = 'login.html';
+    window.location.href = 'login.html';   // relative path, rule 33
   }
 });
 ```
@@ -804,18 +811,18 @@ supabase.auth.onAuthStateChange((event, session) => {
 // Load and apply theme on every page
 async function applyTheme(campaignId, membershipId) {
   // 1. Get campaign theme (DM controls this)
-  const { data: campaign } = await supabase
+  const { data: campaign } = await supabaseClient
     .from('campaigns')
     .select('theme_preset, theme_vars')
     .eq('id', campaignId)
-    .single();
+    .maybeSingle();
 
   // 2. Get player's personal accent color
-  const { data: membership } = await supabase
+  const { data: membership } = await supabaseClient
     .from('memberships')
     .select('accent_hex')
     .eq('id', membershipId)
-    .single();
+    .maybeSingle();
 
   // 3. Apply campaign theme CSS variables
   applyThemePreset(campaign.theme_preset);
@@ -835,7 +842,7 @@ async function applyTheme(campaignId, membershipId) {
 
 // Save player accent color
 async function saveAccentColor(hex) {
-  await supabase
+  await supabaseClient
     .from('memberships')
     .update({ accent_hex: hex })
     .eq('id', membershipId);
@@ -843,7 +850,7 @@ async function saveAccentColor(hex) {
 
 // Save campaign theme (DM only)
 async function saveCampaignTheme(preset, customVars) {
-  await supabase
+  await supabaseClient
     .from('campaigns')
     .update({ theme_preset: preset, theme_vars: customVars })
     .eq('id', campaignId);
@@ -857,7 +864,7 @@ async function saveCampaignTheme(preset, customVars) {
 ```js
 // Lock a player's sheet (DM only — enforced server-side by RLS)
 async function lockSheet(characterId) {
-  await supabase
+  await supabaseClient
     .from('characters')
     .update({ locked: true })
     .eq('id', characterId);
@@ -865,7 +872,7 @@ async function lockSheet(characterId) {
 }
 
 // On the sheet — check lock status and show banner
-supabase.channel('lock-' + characterId)
+supabaseClient.channel('lock-' + characterId)
   .on('postgres_changes', {
     event: 'UPDATE',
     schema: 'public',
@@ -898,7 +905,7 @@ sheet.html?c={id}&p={characterId} — DM viewing/editing a specific player's she
 combat.html?c={id}      — combat tracker for a campaign
 ```
 
-The app knows who you are from the auth session. It knows which character is yours from the memberships table. No more hardcoded player slots.
+The app knows who you are from the auth session. It knows which character is yours from the memberships table. No more hardcoded player slots. (All paths relative — rule 33.)
 
 ---
 
@@ -919,6 +926,9 @@ The script:
 6. Marks each document as migrated with `_migrated_at`
 7. Is safe to run multiple times — skips already-migrated data
 
+> NOTE: migrate.js uses the service_role key locally. That key is NEVER committed.
+> Keep it in a local environment variable or local-only file, never in the repo.
+
 ---
 
 ## Build Order
@@ -929,7 +939,7 @@ Do not skip phases or combine them. Each phase must be fully working before star
 1. Create Supabase project (manual — owner does this)
 2. Run schema SQL to create all tables
 3. Configure Row Level Security rules
-4. Create `supabase-config.js` replacing `firebase-config.js`
+4. Inline the anon key in each HTML page; create `js/supabase-client.js`
 5. Create `login.html` and `home.html`
 6. Test auth works — sign up, sign in, sign out
 
@@ -980,6 +990,10 @@ Do not skip phases or combine them. Each phase must be fully working before star
 4. Remove ?player= URL parameter system
 5. Final testing
 
+> The Feature Engine (FEATURE-ENGINE-SPEC.md) slots in as its own phase — see the master
+> plan's build order (Phase 3.5 / FE-1 through FE-5d). It conforms to the combat
+> philosophy: computes and proposes, never enforces.
+
 ---
 
 ## What Does NOT Change
@@ -1007,3 +1021,4 @@ Only the data layer changes. If a PR touches CSS or UI structure without being a
 | New ruleset has different sheet fields | `sheet_schema.json` per ruleset defines which sections render. No sheet code changes needed. |
 | Player accent clashes with campaign theme | Warn on low contrast. DM can override in campaign settings. |
 | Real-time drops mid-combat | Visible sync status indicator. Manual refresh button on combat page. |
+| Destructive SQL on a test branch hits live data | One shared Supabase project across branches. Additive-only SQL by default (AGENT-RULES.md rule 26). |
