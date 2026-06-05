@@ -522,6 +522,45 @@
       line-height: 1.45;
     }
 
+    /* ── Feature Definition Block ── */
+    .feature-definition {
+      margin-top: 7px;
+      padding: 6px 9px;
+      background: rgba(0,0,0,0.2);
+      border-left: 2px solid var(--gold);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      font-family: var(--font-body);
+      font-size: 0.82rem;
+      color: var(--ink-light);
+      line-height: 1.5;
+    }
+    .feature-definition-row { margin-bottom: 2px; }
+    .feature-definition-label {
+      font-family: var(--font-heading);
+      font-size: 0.42rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--gold);
+      margin-right: 5px;
+    }
+
+    /* ── Definition toggle in modal ── */
+    .definition-toggle {
+      font-family: var(--font-heading);
+      font-size: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--gold);
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      margin-bottom: 6px;
+      display: block;
+      transition: color var(--transition-fast);
+    }
+    .definition-toggle:hover { color: var(--gold-light); }
+
     /* ── Currency ── */
     .currency-row {
       display: grid;
@@ -1578,6 +1617,18 @@
         <label class="form-label">Description</label>
         <textarea id="feature-desc" class="form-input" rows="3" style="resize:vertical" placeholder="Describe the feature..."></textarea>
       </div>
+      <div class="form-field">
+        <button type="button" class="definition-toggle" id="def-toggle" onclick="toggleDefinitionField()">+ Definition JSON (optional)</button>
+        <div id="definition-field-inner" style="display:none">
+          <textarea id="feature-definition-json" class="form-input" rows="6"
+            style="resize:vertical;font-family:monospace;font-size:0.75rem"
+            placeholder='{"trigger":{"event":"OnAttackRoll"},"effects":[{"kind":"damage","formula":"2d8","damage_type":"radiant"}]}'></textarea>
+          <div class="form-error" id="definition-json-error"></div>
+          <div style="font-family:var(--font-heading);font-size:0.42rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--border-light);margin-top:4px;">
+            Valid JSON · @-tokens from Feature Engine Spec
+          </div>
+        </div>
+      </div>
       <button class="btn btn-gold" onclick="saveFeature()">Add Feature</button>
     </div>
   </div>
@@ -2383,15 +2434,94 @@
         var label = (f.category || 'passive').replace('-', ' ');
         var card  = document.createElement('div');
         card.className = 'feature-card';
+        var defHtml = renderDefinition(f.definition);
         card.innerHTML =
           '<div class="feature-card-header">' +
             '<span class="feature-name">' + escHtml(f.name) + '</span>' +
             '<span class="feature-pill" style="background:' + color + '">' + escHtml(label) + '</span>' +
           '</div>' +
           (f.recharge ? '<div class="feature-recharge">' + escHtml(f.recharge) + '</div>' : '') +
-          (f.description ? '<div class="feature-desc">' + escHtml(f.description) + '</div>' : '');
+          (f.description ? '<div class="feature-desc">' + escHtml(f.description) + '</div>' : '') +
+          (defHtml ? '<div class="feature-definition">' + defHtml + '</div>' : '');
         list.appendChild(card);
       });
+    }
+
+    // Turns a definition JSONB object into the readable rows shown on the feature card.
+    // Formulas are displayed as-is; no evaluation. This renderer is permanent — it
+    // ships in the manual phase and stays in the auto phase (player must see what a
+    // feature does before triggering; DM must see it to override).
+    function renderDefinition(def) {
+      if (!def || typeof def !== 'object' || Array.isArray(def)) return '';
+      if (Object.keys(def).length === 0) return '';
+      var parts = [];
+
+      if (def.trigger) {
+        var t = def.trigger;
+        var tp = [];
+        if (t.event)      tp.push(t.event);
+        if (t.activation) tp.push(t.activation.replace(/_/g, ' '));
+        if (t.target)     tp.push('on ' + t.target);
+        if (tp.length) parts.push('<span class="feature-definition-label">Trigger</span>' + escHtml(tp.join(' · ')));
+      }
+
+      if (def.cost) {
+        var c = def.cost;
+        var cp = [];
+        if (c.action)   cp.push(c.action.replace(/_/g, ' '));
+        if (c.resource) cp.push(c.resource.replace(/_/g, ' ') + (c.quantity ? ' ×' + c.quantity : ''));
+        if (cp.length) parts.push('<span class="feature-definition-label">Cost</span>' + escHtml(cp.join(', ')));
+      }
+
+      if (def.targeting) {
+        var tg = def.targeting;
+        var tgp = [];
+        if (tg.mode)  tgp.push(tg.mode);
+        if (tg.range) tgp.push(tg.range);
+        if (tgp.length) parts.push('<span class="feature-definition-label">Target</span>' + escHtml(tgp.join(', ')));
+      }
+
+      if (def.conditions && def.conditions.length) {
+        var condStr = def.conditions.map(function(cond) {
+          return [cond.lhs, cond.op, cond.rhs].filter(Boolean).join(' ');
+        }).join(' and ');
+        parts.push('<span class="feature-definition-label">Condition</span>' + escHtml(condStr));
+      }
+
+      function renderEffectList(effects, prefix) {
+        (effects || []).forEach(function(eff) {
+          var lbl = prefix || eff.kind || 'effect';
+          var val = '';
+          if (eff.formula)      val = eff.formula + (eff.damage_type ? ' ' + eff.damage_type : '');
+          else if (eff.description) val = eff.description;
+          else                  val = '—';
+          parts.push('<span class="feature-definition-label">' + escHtml(lbl) + '</span>' + escHtml(val));
+        });
+      }
+
+      if (def.effects) renderEffectList(def.effects, null);
+
+      if (def.save) {
+        var s = def.save;
+        var saveTxt = (s.stat ? s.stat.toUpperCase() + ' save' : 'Save') + ' DC ' + (s.dc || '?');
+        parts.push('<span class="feature-definition-label">Save</span>' + escHtml(saveTxt));
+        renderEffectList(def.on_fail,    'on fail');
+        renderEffectList(def.on_success, 'on save');
+      }
+
+      if (!parts.length) return '';
+      return parts.map(function(p) {
+        return '<div class="feature-definition-row">' + p + '</div>';
+      }).join('');
+    }
+
+    function toggleDefinitionField() {
+      var inner  = document.getElementById('definition-field-inner');
+      var toggle = document.getElementById('def-toggle');
+      if (!inner || !toggle) return;
+      var nowOpen = inner.style.display === 'none';
+      inner.style.display  = nowOpen ? '' : 'none';
+      toggle.textContent   = nowOpen ? '− Definition JSON (optional)' : '+ Definition JSON (optional)';
     }
 
     async function saveFeature() {
@@ -2400,11 +2530,35 @@
       var catEl      = document.getElementById('feature-category');
       var rechargeEl = document.getElementById('feature-recharge');
       var descEl     = document.getElementById('feature-desc');
+      var defEl      = document.getElementById('feature-definition-json');
+      var defErrEl   = document.getElementById('definition-json-error');
 
       var name = nameEl ? nameEl.value.trim() : '';
       if (!name) {
         if (nameEl) nameEl.focus();
         return;
+      }
+
+      // Validate definition JSON if the user typed anything in that field
+      var definitionValue = {};
+      if (defEl && defEl.value.trim()) {
+        try {
+          var parsed = JSON.parse(defEl.value.trim());
+          if (typeof parsed !== 'object' || Array.isArray(parsed) || parsed === null) {
+            throw new Error('Definition must be a JSON object { … }, not an array or primitive.');
+          }
+          definitionValue = parsed;
+          if (defErrEl) defErrEl.classList.remove('show');
+        } catch (e) {
+          if (defErrEl) {
+            defErrEl.textContent = e.message;
+            defErrEl.classList.add('show');
+          }
+          if (defEl) defEl.focus();
+          return;
+        }
+      } else {
+        if (defErrEl) defErrEl.classList.remove('show');
       }
 
       var sortOrder = document.querySelectorAll('.features-list .feature-card').length;
@@ -2417,6 +2571,7 @@
         category:     catEl      ? catEl.value              : 'passive',
         recharge:     rechargeEl ? rechargeEl.value.trim()  : '',
         description:  descEl     ? descEl.value.trim()      : '',
+        definition:   definitionValue,
         sort_order:   sortOrder
       });
 
@@ -2429,6 +2584,14 @@
       if (catEl)      catEl.value      = 'action';
       if (rechargeEl) rechargeEl.value = '';
       if (descEl)     descEl.value     = '';
+      if (defEl)      defEl.value      = '';
+      if (defErrEl)   defErrEl.classList.remove('show');
+
+      // Reset definition toggle to collapsed state
+      var defInner  = document.getElementById('definition-field-inner');
+      var defToggle = document.getElementById('def-toggle');
+      if (defInner)  defInner.style.display = 'none';
+      if (defToggle) defToggle.textContent  = '+ Definition JSON (optional)';
 
       closeModal('feature-modal');
       await populateFeatures();
