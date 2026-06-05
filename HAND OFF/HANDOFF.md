@@ -5,6 +5,33 @@
 
 ## What's Been Built
 
+### FE-2 complete — `sheet.html` — Definition renderer + raw JSON authoring
+
+**Definition renderer (`renderDefinition`):**
+- Pure display function — formulas shown as text, nothing evaluated.
+- Renders `features.definition` JSONB into human-readable rows on each feature card.
+- Covered fields: `trigger` (event, activation, target), `cost` (action, resource × quantity),
+  `targeting` (mode, range), `conditions` (lhs op rhs triples), `effects` (kind, formula,
+  damage_type), `save` (stat + DC) with `on_fail` / `on_success` branches.
+- Returns `''` for empty or missing definitions — no visual noise on old features.
+- Appended inside `.feature-definition` block below the description on each card.
+
+**Raw JSON authoring in Add Feature modal:**
+- Collapsible "Definition JSON (optional)" section — toggle button expands textarea.
+- `textarea#feature-definition-json` — monospace, 6 rows, resizable.
+- Inline `.form-error#definition-json-error` — shown when JSON is invalid or root is not `{}`.
+- `toggleDefinitionField()` — opens/closes the panel and flips the button label.
+- `saveFeature()` — validates JSON before insert; rejects with readable error and focuses
+  the textarea. On success: inserts `definition` field, resets textarea + toggle to collapsed.
+
+**SQL run before this PR (column already exists per prompt):**
+```sql
+ALTER TABLE features ADD COLUMN IF NOT EXISTS definition JSONB DEFAULT '{}';
+```
+(The prompt confirmed the column already exists. No SQL to run before testing.)
+
+---
+
 ### PR 5b-4 complete — `sheet.html` — Weapons, Features, Proficiencies, Equipment, Currency (Supabase wiring)
 
 **Currency:**
@@ -120,6 +147,8 @@
 - sheet.html — ability scores, combat stats, HP (with adjust_hp RPC), death saves, saving throws, skills
 - sheet.html — weapons load from DB + add via modal
 - sheet.html — features load from DB with category colors + add via modal
+- sheet.html — definition→readable-text renderer on every feature card (FE-2)
+- sheet.html — Add Feature modal: raw JSON textarea + validator + definition saves to DB (FE-2)
 - sheet.html — proficiencies, languages, equipment text load + save on blur
 - sheet.html — personality (traits/ideals/bonds/flaws) + backstory load + save on blur
 - sheet.html — currency loads from DB + editable on blur via adjust_currency RPC
@@ -192,14 +221,17 @@ Rule: adding tokens later is safe; removing/renaming is NOT (silently breaks fea
 - Condition operator list: proposed ==, !=, >, >=, <, <=, in, not_in. Confirm before
   authoring any feature that carries a condition. Pure-formula features don't need it.
 
-### NEXT TASK — FE-2: definition column + manual renderer + raw JSON authoring
-- ALTER TABLE features ADD COLUMN IF NOT EXISTS definition JSONB DEFAULT '{}';
-- Build the definition→readable-text renderer (permanent, not interim — player must see
-  what a feature does before triggering; DM must see it to override).
-- Add a raw JSON authoring textarea + schema validator to the Add Feature modal (owner is
-  sole author this phase; pretty form comes much later at tier 5).
-- Formulas are DISPLAYED, not evaluated. No resolver yet. Shippable with zero engine code.
-- Author features in real token syntax from day one so nothing is re-entered at FE-3.
+### FE-2 COMPLETE — definition renderer + raw JSON authoring
+- `renderDefinition()` — definition JSONB → human-readable rows on feature card (permanent).
+- Add Feature modal: collapsible JSON textarea + inline validator; saves `definition` to DB.
+- `definition` column already existed. No SQL was run for this PR.
+
+### NEXT TASK — FE-3: Resolver (pure function, no UI, no writes)
+Build `resolve(definition, context) → proposedOutcome` as a pure JS function.
+- No Supabase calls, no side effects, no UI.
+- Context object provides sheet values (@stats, @char.level, @prof_bonus, etc.).
+- Test against `definition` blobs authored via the FE-2 modal — they are the test corpus.
+- Wire into combat only in FE-4. FE-3 ships with zero UI change.
 
 PR 5b-4 is fully complete. The next task is PR 5b-5.
 
