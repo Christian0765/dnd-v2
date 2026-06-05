@@ -2374,7 +2374,12 @@
         if (!isReadOnly) {
           tr.className = 'editable';
           tr.title = 'Click to edit';
-          tr.setAttribute('onclick', 'openEditWeapon(' + JSON.stringify(w.id) + ')');
+          (function(weaponId) {
+            tr.addEventListener('click', function(e) {
+              if (e.target.classList.contains('delete-btn')) return;
+              openEditWeapon(weaponId);
+            });
+          })(w.id);
         }
         tr.innerHTML =
           '<td>' + escHtml(w.name || '') + '</td>' +
@@ -2382,8 +2387,23 @@
           '<td>' + escHtml(dmgStr) + '</td>' +
           '<td>' + escHtml(w.dmg_type || '') + '</td>' +
           '<td>' + escHtml(w.range || '') + '</td>' +
-          '<td>' + escHtml(w.notes || '') + '</td>' +
-          (!isReadOnly ? '<td class="weapon-actions-td"><button class="delete-btn" title="Delete weapon" onclick="deleteWeapon(' + JSON.stringify(w.id) + ');event.stopPropagation()">✕</button></td>' : '');
+          '<td>' + escHtml(w.notes || '') + '</td>';
+        if (!isReadOnly) {
+          (function(weaponId) {
+            var actionsTd = document.createElement('td');
+            actionsTd.className = 'weapon-actions-td';
+            var delBtn = document.createElement('button');
+            delBtn.className = 'delete-btn';
+            delBtn.title = 'Delete weapon';
+            delBtn.textContent = '✕';
+            delBtn.addEventListener('click', function(e) {
+              e.stopPropagation();
+              deleteWeapon(weaponId);
+            });
+            actionsTd.appendChild(delBtn);
+            tr.appendChild(actionsTd);
+          })(w.id);
+        }
         tbody.appendChild(tr);
       });
     }
