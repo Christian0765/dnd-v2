@@ -170,7 +170,7 @@ This matters doubly because homebrew features are DM-authored and merged at runt
 A string condition would be a code-injection vector. A triple cannot execute anything —
 the engine walks a tree it already understands.
 
-Allowed operators (proposed): `==`, `!=`, `>`, `>=`, `<`, `<=`, `in`, `not_in`.
+Allowed operators (ratified ✅ FE-3): `==`, `!=`, `>`, `>=`, `<`, `<=`, `in`, `not_in`.
 
 ### Success / failure branches nest effect lists (do not flatten)
 Saves and other pass/fail mechanics reuse the same effect schema recursively:
@@ -302,8 +302,8 @@ The prebuilt route is the on-ramp.
 
 ## OPEN ITEMS BEFORE TIER 1 IS DONE
 - [x] Ratify the @ namespace. **DONE.**
-- [ ] Confirm the condition operator list (proposed: `==`, `!=`, `>`, `>=`, `<`, `<=`,
-      `in`, `not_in`) — needed before any condition-bearing feature is authored.
+- [x] Confirm the condition operator list: **RATIFIED in FE-3.** Operators are
+      `==`, `!=`, `>`, `>=`, `<`, `<=`, `in`, `not_in`. Implemented in resolver.
 - [ ] Confirm the closed vocabulary for `trigger.event`, `cost.resource`,
       `cost.action`, `targeting.mode`, and `effect.kind` (each must map to an engine
       capability before any block exposes it).
