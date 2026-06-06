@@ -3578,16 +3578,40 @@
         return;
       }
 
-      var entryId  = crypto.randomUUID();
-      var entryIns = await supabaseClient.from('character_inventory').insert({
-        id: entryId, character_id: characterId, item_id: selectedItemId,
-        quantity: qty, equipped: equipped, attuned: attuned, notes: notes
-      });
-      if (entryIns.error) {
-        console.error('[saveInventoryEntry] Entry insert failed:', entryIns.error.message);
-        errEl.textContent = 'Could not add to inventory: ' + entryIns.error.message;
+      var existingRow = await supabaseClient.from('character_inventory')
+        .select('id, quantity')
+        .eq('character_id', characterId)
+        .eq('item_id', selectedItemId)
+        .is('deleted_at', null)
+        .maybeSingle();
+      if (existingRow.error) {
+        console.error('[saveInventoryEntry] Existence check failed:', existingRow.error.message);
+        errEl.textContent = 'Could not check inventory: ' + existingRow.error.message;
         errEl.style.display = '';
         return;
+      }
+      if (existingRow.data) {
+        var stackUpd = await supabaseClient.from('character_inventory')
+          .update({ quantity: existingRow.data.quantity + qty, updated_at: new Date().toISOString() })
+          .eq('id', existingRow.data.id);
+        if (stackUpd.error) {
+          console.error('[saveInventoryEntry] Stack update failed:', stackUpd.error.message);
+          errEl.textContent = 'Could not update quantity: ' + stackUpd.error.message;
+          errEl.style.display = '';
+          return;
+        }
+      } else {
+        var entryId  = crypto.randomUUID();
+        var entryIns = await supabaseClient.from('character_inventory').insert({
+          id: entryId, character_id: characterId, item_id: selectedItemId,
+          quantity: qty, equipped: equipped, attuned: attuned, notes: notes
+        });
+        if (entryIns.error) {
+          console.error('[saveInventoryEntry] Entry insert failed:', entryIns.error.message);
+          errEl.textContent = 'Could not add to inventory: ' + entryIns.error.message;
+          errEl.style.display = '';
+          return;
+        }
       }
       resetInventoryModal();
       closeModal('inventory-modal');
