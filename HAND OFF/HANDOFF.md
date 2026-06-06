@@ -15,6 +15,7 @@
   - **Create New** — name (required), category (7-value enum: weapons/armor/magical/resources/healing/food/misc), weight_lb, value_gp, requires_attunement checkbox, description.
   - Both modes share inventory-entry fields: quantity, equipped checkbox, attuned checkbox, notes.
 - **Edit** — clicking any inventory row opens the same modal pre-filled in edit mode; save issues a field-level UPDATE on `character_inventory`. Item core fields (name, category, weight) are not re-editable from this modal (deferred to INV-2).
+- **Stacking** — "Pick Existing" re-adding an item the character already has increments the existing row's `quantity` instead of inserting a second row. "Create New" always inserts (brand-new item, no existing row to stack onto).
 - **Delete** — soft delete only: sets `deleted_at = new Date().toISOString()` on `character_inventory`. Never `.delete()` (rule 11).
 - **Read-only mode** — "Add Item" button hidden by `applyReadOnlyMode()`; delete buttons and row clicks are not rendered for read-only viewers.
 - All patterns follow the existing weapon/feature implementation: `crypto.randomUUID()` for all inserts (rule 15), `.maybeSingle()` never `.single()` (rule 14), error-checked Supabase calls (rule 12), `escHtml()` on user strings.
@@ -34,6 +35,15 @@
 - Editing item core fields (name, category, weight) from the inventory modal
 
 ---
+
+**Bug fix — INV-1 stacking (this PR):**
+- `saveInventoryEntry` insert path now checks for an existing non-deleted `character_inventory` row with the same `character_id` + `item_id`. If found, increments `quantity` via UPDATE; if not found, inserts as before. Scoped to current character only — never merges across characters. Edit and delete paths are unchanged.
+
+**Schema changes applied to live DB during INV-1 session (do NOT re-run):**
+- `character_inventory` table: `deleted_at TIMESTAMPTZ` and `created_at TIMESTAMPTZ DEFAULT NOW()` columns added
+- `items` table: `requires_attunement BOOLEAN DEFAULT false`, `is_public BOOLEAN DEFAULT false`, `original_item_id UUID` columns added
+- RLS policy `character_inventory_select` added on `character_inventory`
+- RLS policy `character_inventory_write` added on `character_inventory`
 
 **Schema changes applied to live DB in previous sessions (do NOT re-run):**
 - `characters` table: `conditions JSONB DEFAULT '[]'` and `exhaustion INT DEFAULT 0` columns added
@@ -251,6 +261,8 @@ ALTER TABLE features ADD COLUMN IF NOT EXISTS definition JSONB DEFAULT '{}';
 - sheet.html — weapons: click row to edit, ✕ to soft-delete (confirm step)
 - sheet.html — features/cantrips/spells: click card/chip to edit, ✕ to soft-delete (confirm step)
 - sheet.html — edit/delete controls hidden in all read-only modes; future lock toggle will work with zero rework
+- sheet.html — inventory: loads from `character_inventory` joined to `items`; add via modal (Pick Existing or Create New); edit; soft-delete; read-only mode respected
+- sheet.html — inventory stacking: Pick Existing re-adding an existing item_id increments quantity on the existing row instead of inserting a duplicate
 
 ---
 
