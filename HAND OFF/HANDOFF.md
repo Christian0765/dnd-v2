@@ -25,11 +25,11 @@
   row (`source_inventory_id = invId AND deleted_at IS NULL`) after the inventory soft-delete
   succeeds. The weapons error is logged non-fatally (does not block inventory repopulate).
   `populateWeapons()` and `populateInventory()` run in parallel via `Promise.all`.
-- **`deleteWeapon` is NOT modified** — deleting a weapon does not touch inventory. One-directional.
+- **`deleteWeapon` conditional confirm** — linked weapons (those with a `source_inventory_id`) show "Remove this weapon from your Attacks? The inventory item stays in your bag." Unlinked weapons (added directly via Add Weapon) keep "Delete this weapon?". The soft-delete itself and the one-directional cascade rule are unchanged.
 - **`resetInventoryModal`** — hides `#inv-send-attacks-wrap` on every reset.
 
 **New JS functions:** `sendItemToAttacks()`.
-**Modified:** `openEditInventory`, `deleteInventoryEntry`, `resetInventoryModal`.
+**Modified:** `openEditInventory`, `deleteInventoryEntry`, `resetInventoryModal`, `deleteWeapon` (confirm wording only).
 **New HTML element:** `#inv-send-attacks-wrap` (with `#inv-send-attacks-btn` and
 `#inv-send-attacks-indicator`) added to `#inventory-modal` between the item-core box and the
 save buttons.
@@ -37,9 +37,9 @@ save buttons.
 **Files changed:** `sheet.html` only.
 
 **Not touched:** weapons combat math, weapon add/edit modal behavior, `populateWeapons`
-rendering logic, `deleteWeapon`, armor/AC anything (`armor-ac-calculation` branch is still
-next deferred), inventory add/stack paths, non-weapon delete paths (except cascade added),
-campaign.html, home.html, login.html, combat.html, all /css/ and /js/ files.
+rendering logic, the soft-delete in `deleteWeapon`, armor/AC anything (`armor-ac-calculation`
+branch is still next deferred), inventory add/stack paths, non-weapon delete paths (except
+cascade added), campaign.html, home.html, login.html, combat.html, all /css/ and /js/ files.
 
 **SQL run for weapon-send-to-attacks (RUN BEFORE TESTING — not yet applied to live DB):**
 ```sql
