@@ -3347,7 +3347,11 @@
 
     async function deleteWeapon(id) {
       if (isReadOnly) return;
-      if (!confirm('Delete this weapon?')) return;
+      var w = cachedWeapons.find(function(x) { return x.id === id; });
+      var msg = (w && w.source_inventory_id)
+        ? 'Remove this weapon from your Attacks? The inventory item stays in your bag.'
+        : 'Delete this weapon?';
+      if (!confirm(msg)) return;
       var { error } = await supabaseClient
         .from('weapons')
         .update({ deleted_at: new Date().toISOString() })
