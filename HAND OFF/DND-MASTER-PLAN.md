@@ -1493,3 +1493,5 @@ ALTER TABLE factions
 | 26 | Grid battlefield — token placement, movement, distance |
 | 27 | Area effects — spell radius, AoE damage |
 | 28 | Line of sight + cover |
+
+Future refactor: unify item stats into items — see DATA-MODEL-FUTURE-DIRECTION.md."
