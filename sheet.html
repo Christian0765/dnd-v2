@@ -1870,6 +1870,10 @@
         </div>
       </div>
 
+      <div id="inv-send-attacks-wrap" style="display:none;margin-bottom:10px">
+        <button class="btn btn-ghost" id="inv-send-attacks-btn" onclick="sendItemToAttacks()">Send to Attacks</button>
+        <span id="inv-send-attacks-indicator" style="display:none;font-family:var(--font-body);font-size:0.85rem;color:rgba(var(--light-text-rgb),0.65);margin-left:8px">Already in your Attacks list.</span>
+      </div>
       <button class="btn btn-gold" id="inv-save-btn" onclick="saveInventoryEntry()">Add to Inventory</button>
       <button class="btn btn-gold" id="inv-save-shared-btn" style="display:none" onclick="saveItemCore('shared')">Save for Everyone</button>
       <button class="btn btn-ghost" id="inv-save-fork-btn" style="display:none" onclick="saveItemCore('fork')">Save as Copy</button>
@@ -3787,6 +3791,25 @@
       document.getElementById('inv-save-shared-btn').style.display = isDmViewer ? '' : 'none';
       document.getElementById('inv-save-fork-btn').style.display   = '';
 
+      // Send-to-Attacks control: weapons-category items only, never in read-only mode
+      var sendWrap = document.getElementById('inv-send-attacks-wrap');
+      document.getElementById('inv-send-attacks-btn').style.display        = '';
+      document.getElementById('inv-send-attacks-indicator').style.display  = 'none';
+      if (item.category === 'weapons' && !isReadOnly) {
+        sendWrap.style.display = '';
+        (async function() {
+          var chk = await supabaseClient.from('weapons').select('id')
+            .eq('source_inventory_id', invId).is('deleted_at', null).maybeSingle();
+          if (chk.error) { console.error('[openEditInventory] send-check:', chk.error.message); return; }
+          if (chk.data) {
+            document.getElementById('inv-send-attacks-btn').style.display       = 'none';
+            document.getElementById('inv-send-attacks-indicator').style.display = '';
+          }
+        })();
+      } else {
+        sendWrap.style.display = 'none';
+      }
+
       openModal('inventory-modal');
     }
 
@@ -3859,12 +3882,58 @@
       await populateInventory();
     }
 
+    async function sendItemToAttacks() {
+      if (isReadOnly) return;
+      var entry = cachedInventory.find(function(e) { return e.id === inventoryEditId; });
+      if (!entry) return;
+      var item = entry.items || {};
+      // Race guard: re-check not already sent
+      var chk = await supabaseClient.from('weapons').select('id')
+        .eq('source_inventory_id', inventoryEditId).is('deleted_at', null).maybeSingle();
+      if (chk.error) { console.error('[sendItemToAttacks] check failed:', chk.error.message); return; }
+      if (chk.data) {
+        document.getElementById('inv-send-attacks-btn').style.display       = 'none';
+        document.getElementById('inv-send-attacks-indicator').style.display = '';
+        return;
+      }
+      // Determine sort_order: end of existing weapons list
+      var last = await supabaseClient.from('weapons').select('sort_order')
+        .eq('character_id', characterId).is('deleted_at', null)
+        .order('sort_order', { ascending: false }).limit(1).maybeSingle();
+      var sortOrder = (last.data && last.data.sort_order != null) ? last.data.sort_order + 1 : 0;
+      var newId = crypto.randomUUID();
+      var ins = await supabaseClient.from('weapons').insert({
+        id: newId,
+        character_id: characterId,
+        name: item.name || 'Weapon',
+        source_inventory_id: inventoryEditId,
+        atk_bonus: 0,
+        dmg_dice: '1d6',
+        dmg_bonus: 0,
+        dmg_type: 'Slashing',
+        range: '5 ft',
+        notes: '',
+        sort_order: sortOrder
+      });
+      if (ins.error) { console.error('[sendItemToAttacks] insert failed:', ins.error.message); return; }
+      resetInventoryModal();
+      closeModal('inventory-modal');
+      await populateWeapons();
+      await populateInventory();
+    }
+
     async function deleteInventoryEntry(invId) {
       var del = await supabaseClient.from('character_inventory')
         .update({ deleted_at: new Date().toISOString() })
         .eq('id', invId);
       if (del.error) { console.error('[deleteInventoryEntry] Failed:', del.error.message); return; }
-      await populateInventory();
+      // Cascade: soft-delete any linked weapon (one-directional)
+      var wDel = await supabaseClient.from('weapons')
+        .update({ deleted_at: new Date().toISOString() })
+        .eq('source_inventory_id', invId)
+        .is('deleted_at', null);
+      if (wDel.error) { console.error('[deleteInventoryEntry] Weapon cascade failed (non-fatal):', wDel.error.message); }
+      await Promise.all([populateWeapons(), populateInventory()]);
     }
 
     function resetInventoryModal() {
@@ -3888,6 +3957,7 @@
       var addBtn = document.getElementById('inv-save-btn');
       if (addBtn) { addBtn.style.display = ''; addBtn.textContent = 'Add to Inventory'; }
       var errEl = document.getElementById('inv-modal-error'); if (errEl) errEl.style.display = 'none';
+      var sendWrap = document.getElementById('inv-send-attacks-wrap'); if (sendWrap) sendWrap.style.display = 'none';
     }
 
     // ─── Read-Only Mode ───────────────────────────────────────────────────────
