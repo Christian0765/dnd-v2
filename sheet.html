@@ -817,12 +817,33 @@
       --cat-inv-food:      #a89a30;
       --cat-inv-misc:      #6a6a6a;
     }
-    .inventory-table { width: 100%; border-collapse: collapse; font-family: var(--font-body); }
+    .inventory-table { width: 100%; border-collapse: collapse; font-family: var(--font-body); table-layout: fixed; }
+    .inventory-table col.col-item   { width: auto; }
+    .inventory-table col.col-type   { width: 84px; }
+    .inventory-table col.col-status { width: 56px; }
+    .inventory-table col.col-qty    { width: 44px; }
+    .inventory-table col.col-weight { width: 70px; }
+    .inventory-table col.col-gold   { width: 70px; }
+    .inventory-table col.col-action { width: 34px; }
     .inventory-table th {
       font-family: var(--font-heading); font-size: 0.52rem; text-transform: uppercase;
       letter-spacing: 0.08em; color: var(--text-muted); padding: 0 6px 6px; text-align: left;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
-    .inventory-table td { padding: 6px 6px; border-top: 1px solid var(--border-light); vertical-align: middle; font-size: 0.83rem; }
+    .inventory-table th.sortable { cursor: pointer; user-select: none; }
+    .inventory-table th.sortable:hover { color: var(--gold-light); }
+    .inventory-table th .sort-arrow { font-size: 0.6rem; opacity: 0.9; margin-left: 2px; }
+    .inventory-table td {
+      padding: 6px 6px; border-top: 1px solid var(--border-light); vertical-align: middle;
+      font-size: 0.83rem; overflow: hidden; text-overflow: ellipsis;
+    }
+    .inventory-table td.cell-item { white-space: normal; }
+    .inventory-table th.num, .inventory-table td.num { text-align: right; }
+    .inventory-table tfoot td {
+      border-top: 2px solid var(--gold); font-family: var(--font-heading);
+      font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.06em;
+      color: var(--gold-light); padding-top: 8px;
+    }
     .inventory-table tr.inv-row { cursor: pointer; transition: background 0.1s; }
     .inventory-table tr.inv-row:hover { background: rgba(196,146,10,0.07); }
     .inv-category-pill {
@@ -856,6 +877,9 @@
     .inv-qty-cell { width: 38px; }
     .inv-qty-cell input { width: 36px; text-align: center; background: transparent; border: 1px solid var(--border-light); border-radius: 4px; color: var(--ink); font-family: var(--font-body); font-size: 0.82rem; padding: 1px 2px; }
     .inv-empty { color: var(--text-muted); font-family: var(--font-body); font-size: 0.85rem; font-style: italic; text-align: center; padding: 16px 0; }
+    /* Checkbox labels in the inventory modal — keep readable on dark bg.
+       Scoped to labels that are NOT the muted .form-label field headers. */
+    #inventory-modal label:not(.form-label) { color: rgba(var(--light-text-rgb), 0.9); }
 
     /* ══════════════════════════════════════
        CUSTOMISE SYSTEM
@@ -1805,7 +1829,50 @@
       </div>
 
       <div class="form-error" id="inv-modal-error" style="display:none"></div>
+
+      <!-- Item-core editing (shown only in edit mode) -->
+      <div id="inv-edit-core" style="display:none">
+        <div class="sec" style="margin-top:4px">Item Details</div>
+        <div class="form-field">
+          <label class="form-label">Name *</label>
+          <input id="inv-edit-name" type="text" class="form-input">
+        </div>
+        <div style="display:flex;gap:10px">
+          <div class="form-field" style="flex:1">
+            <label class="form-label">Category</label>
+            <select id="inv-edit-category" class="form-input">
+              <option value="misc">Misc</option>
+              <option value="weapons">Weapons</option>
+              <option value="armor">Armor</option>
+              <option value="magical">Magical</option>
+              <option value="resources">Resources</option>
+              <option value="healing">Healing</option>
+              <option value="food">Food</option>
+            </select>
+          </div>
+          <div class="form-field" style="flex:1">
+            <label class="form-label">Weight (lb)</label>
+            <input id="inv-edit-weight" type="number" min="0" step="0.1" class="form-input">
+          </div>
+          <div class="form-field" style="flex:1">
+            <label class="form-label">Value (gp)</label>
+            <input id="inv-edit-value" type="number" min="0" step="0.01" class="form-input">
+          </div>
+        </div>
+        <div style="display:flex;gap:16px;align-items:center;margin-bottom:10px">
+          <label style="display:flex;align-items:center;gap:6px;font-family:var(--font-body);font-size:0.85rem;cursor:pointer">
+            <input type="checkbox" id="inv-edit-attunement"> Requires Attunement
+          </label>
+        </div>
+        <div class="form-field">
+          <label class="form-label">Description</label>
+          <textarea id="inv-edit-desc" class="form-input" rows="2" style="resize:vertical"></textarea>
+        </div>
+      </div>
+
       <button class="btn btn-gold" id="inv-save-btn" onclick="saveInventoryEntry()">Add to Inventory</button>
+      <button class="btn btn-gold" id="inv-save-shared-btn" style="display:none" onclick="saveItemCore('shared')">Save for Everyone</button>
+      <button class="btn btn-ghost" id="inv-save-fork-btn" style="display:none" onclick="saveItemCore('fork')">Save as Copy</button>
     </div>
   </div>
 
@@ -1873,6 +1940,7 @@
     let inventoryEditId      = null;
     let selectedItemId       = null;
     let inventoryMode        = 'pick';
+    let invSort              = { key: 'name', dir: 1 };  // dir: 1 asc, -1 desc
     let cachedCampaignItems  = [];
 
     // ─── On Load Sequence ────────────────────────────────────────────────────
@@ -3409,6 +3477,35 @@
       renderInventory();
     }
 
+    function setInvSort(key) {
+      if (invSort.key === key) { invSort.dir *= -1; }
+      else { invSort.key = key; invSort.dir = 1; }
+      renderInventory();
+    }
+
+    function sortedInventory() {
+      var rows = cachedInventory.slice();
+      var key = invSort.key, dir = invSort.dir;
+      rows.sort(function(a, b) {
+        var ia = a.items || {}, ib = b.items || {};
+        var va, vb;
+        switch (key) {
+          case 'type':   va = ia.category || 'misc'; vb = ib.category || 'misc'; break;
+          case 'qty':    va = a.quantity || 1;       vb = b.quantity || 1;       break;
+          case 'weight': va = (ia.weight   || 0) * (a.quantity || 1);
+                         vb = (ib.weight   || 0) * (b.quantity || 1); break;
+          case 'gold':   va = (ia.value_gp || 0) * (a.quantity || 1);
+                         vb = (ib.value_gp || 0) * (b.quantity || 1); break;
+          default:       va = (ia.name || '').toLowerCase();
+                         vb = (ib.name || '').toLowerCase();
+        }
+        if (va < vb) return -1 * dir;
+        if (va > vb) return  1 * dir;
+        return 0;
+      });
+      return rows;
+    }
+
     function renderInventory() {
       var container = document.getElementById('inventory-list');
       if (!container) return;
@@ -3416,26 +3513,65 @@
         container.innerHTML = '<div class="inv-empty">No items yet — add one below.</div>';
         return;
       }
-      var rows = cachedInventory.map(function(entry) {
+
+      var entries = sortedInventory();
+      var totalWeight = 0, totalGold = 0;
+
+      var rows = entries.map(function(entry) {
         var item = entry.items || {};
         var cat  = item.category || 'misc';
+        var qty  = entry.quantity || 1;
         var pillColor = invCategoryColor(cat);
+        var rowWeight = (item.weight   || 0) * qty;
+        var rowGold   = (item.value_gp || 0) * qty;
+        totalWeight += rowWeight;
+        totalGold   += rowGold;
         var equippedDot = entry.equipped ? '<span class="inv-status-dot equipped" title="Equipped"></span>' : '';
         var attuedDot   = entry.attuned  ? '<span class="inv-status-dot attuned"  title="Attuned"></span>'  : '';
         var noteHtml    = entry.notes    ? '<div class="inv-note-preview">' + escHtml(entry.notes) + '</div>' : '';
         return '<tr class="inv-row" data-inv-id="' + escHtml(entry.id) + '">' +
-          '<td>' + escHtml(item.name || '—') + noteHtml + '</td>' +
+          '<td class="cell-item">' + escHtml(item.name || '—') + noteHtml + '</td>' +
           '<td><span class="inv-category-pill" style="background:' + pillColor + '">' + escHtml(cat) + '</span></td>' +
           '<td>' + equippedDot + attuedDot + '</td>' +
-          '<td>' + (entry.quantity || 1) + '</td>' +
+          '<td class="num">' + qty + '</td>' +
+          '<td class="num">' + (rowWeight ? rowWeight.toFixed(1) : '—') + '</td>' +
+          '<td class="num">' + (rowGold ? rowGold.toFixed(2) : '—') + '</td>' +
           '<td><button class="delete-btn" data-inv-id="' + escHtml(entry.id) + '">✕</button></td>' +
           '</tr>';
       }).join('');
+
+      function arrow(key) {
+        if (invSort.key !== key) return '';
+        return '<span class="sort-arrow">' + (invSort.dir === 1 ? '▲' : '▼') + '</span>';
+      }
+
       container.innerHTML =
         '<table class="inventory-table">' +
-          '<thead><tr><th>Item</th><th>Type</th><th>Status</th><th>Qty</th><th></th></tr></thead>' +
+          '<colgroup>' +
+            '<col class="col-item"><col class="col-type"><col class="col-status">' +
+            '<col class="col-qty"><col class="col-weight"><col class="col-gold"><col class="col-action">' +
+          '</colgroup>' +
+          '<thead><tr>' +
+            '<th class="sortable" data-sort="name">Item' + arrow('name') + '</th>' +
+            '<th class="sortable" data-sort="type">Type' + arrow('type') + '</th>' +
+            '<th>Status</th>' +
+            '<th class="sortable num" data-sort="qty">Qty' + arrow('qty') + '</th>' +
+            '<th class="sortable num" data-sort="weight">Wt' + arrow('weight') + '</th>' +
+            '<th class="sortable num" data-sort="gold">Gold' + arrow('gold') + '</th>' +
+            '<th></th>' +
+          '</tr></thead>' +
           '<tbody>' + rows + '</tbody>' +
+          '<tfoot><tr>' +
+            '<td colspan="4" style="text-align:right">Total</td>' +
+            '<td class="num">' + totalWeight.toFixed(1) + '</td>' +
+            '<td class="num">' + totalGold.toFixed(2) + '</td>' +
+            '<td></td>' +
+          '</tr></tfoot>' +
           '</table>';
+
+      container.querySelectorAll('th.sortable').forEach(function(th) {
+        th.addEventListener('click', function() { setInvSort(th.dataset.sort); });
+      });
       container.querySelectorAll('tr.inv-row').forEach(function(tr) {
         var invId = tr.dataset.invId;
         tr.addEventListener('click', function(e) {
@@ -3452,8 +3588,7 @@
     }
 
     async function openInventoryModal() {
-      inventoryEditId = null;
-      selectedItemId  = null;
+      resetInventoryModal();
       document.getElementById('inv-modal-title').textContent = 'Add Item';
       document.getElementById('inv-modal-sub').textContent   = 'Choose how to add';
       document.getElementById('inv-mode-bar').style.display  = 'flex';
@@ -3635,7 +3770,93 @@
       document.getElementById('inv-entry-notes').value      = entry.notes || '';
       document.getElementById('inv-save-btn').textContent   = 'Save Changes';
       document.getElementById('inv-modal-error').style.display = 'none';
+
+      // Item-core editing
+      var coreBox = document.getElementById('inv-edit-core');
+      coreBox.style.display = '';
+      document.getElementById('inv-edit-name').value         = item.name || '';
+      document.getElementById('inv-edit-category').value     = item.category || 'misc';
+      document.getElementById('inv-edit-weight').value       = item.weight != null ? item.weight : 0;
+      document.getElementById('inv-edit-value').value        = item.value_gp != null ? item.value_gp : 0;
+      document.getElementById('inv-edit-attunement').checked = item.requires_attunement || false;
+      document.getElementById('inv-edit-desc').value         = item.description || '';
+
+      // Edit mode uses the two item-core buttons; hide the add/stack button.
+      var isDmViewer = userMembership && userMembership.role === 'dm';
+      document.getElementById('inv-save-btn').style.display        = 'none';
+      document.getElementById('inv-save-shared-btn').style.display = isDmViewer ? '' : 'none';
+      document.getElementById('inv-save-fork-btn').style.display   = '';
+
       openModal('inventory-modal');
+    }
+
+    // Save edited item-core fields.
+    //   mode 'shared' — DM only: UPDATE the shared items row in place (RLS-enforced).
+    //   mode 'fork'   — anyone: create a private copy and re-point this entry. Never stacks.
+    async function saveItemCore(mode) {
+      if (isReadOnly) return;
+      var errEl = document.getElementById('inv-modal-error');
+      errEl.style.display = 'none';
+
+      var name = document.getElementById('inv-edit-name').value.trim();
+      if (!name) { errEl.textContent = 'Item name is required.'; errEl.style.display = ''; return; }
+
+      var core = {
+        name: name,
+        category: document.getElementById('inv-edit-category').value,
+        weight: parseFloat(document.getElementById('inv-edit-weight').value) || 0,
+        value_gp: parseFloat(document.getElementById('inv-edit-value').value) || 0,
+        requires_attunement: document.getElementById('inv-edit-attunement').checked,
+        description: document.getElementById('inv-edit-desc').value.trim()
+      };
+
+      // Save the inventory ENTRY fields (qty/equipped/attuned/notes) first.
+      var entryUpd = await supabaseClient.from('character_inventory')
+        .update({ quantity: parseInt(document.getElementById('inv-entry-qty').value) || 1,
+                  equipped: document.getElementById('inv-entry-equipped').checked,
+                  attuned:  document.getElementById('inv-entry-attuned').checked,
+                  notes:    document.getElementById('inv-entry-notes').value.trim(),
+                  updated_at: new Date().toISOString() })
+        .eq('id', inventoryEditId);
+      if (entryUpd.error) {
+        console.error('[saveItemCore] Entry update failed:', entryUpd.error.message);
+        errEl.textContent = 'Save failed: ' + entryUpd.error.message;
+        errEl.style.display = ''; return;
+      }
+
+      if (mode === 'shared') {
+        // DM only — UPDATE the shared item in place. RLS rejects this for players.
+        var upd = await supabaseClient.from('items').update(core).eq('id', selectedItemId);
+        if (upd.error) {
+          console.error('[saveItemCore] Shared item update failed:', upd.error.message);
+          errEl.textContent = 'Could not update item: ' + upd.error.message;
+          errEl.style.display = ''; return;
+        }
+      } else {
+        // Fork — new item row, then re-point this inventory entry at it. Never stacks.
+        var newId = crypto.randomUUID();
+        var ins = await supabaseClient.from('items').insert(Object.assign({
+          id: newId, campaign_id: campaignId, source: 'player',
+          original_item_id: selectedItemId
+        }, core));
+        if (ins.error) {
+          console.error('[saveItemCore] Fork insert failed:', ins.error.message);
+          errEl.textContent = 'Could not create copy: ' + ins.error.message;
+          errEl.style.display = ''; return;
+        }
+        var repoint = await supabaseClient.from('character_inventory')
+          .update({ item_id: newId, updated_at: new Date().toISOString() })
+          .eq('id', inventoryEditId);
+        if (repoint.error) {
+          console.error('[saveItemCore] Re-point failed:', repoint.error.message);
+          errEl.textContent = 'Copy made but could not link it: ' + repoint.error.message;
+          errEl.style.display = ''; return;
+        }
+      }
+
+      resetInventoryModal();
+      closeModal('inventory-modal');
+      await populateInventory();
     }
 
     async function deleteInventoryEntry(invId) {
@@ -3659,6 +3880,13 @@
       });
       var qtyEl = document.getElementById('inv-entry-qty'); if (qtyEl) qtyEl.value = '1';
       var catEl = document.getElementById('inv-create-category'); if (catEl) catEl.value = 'misc';
+      // Item-core editing reset
+      var coreBox = document.getElementById('inv-edit-core'); if (coreBox) coreBox.style.display = 'none';
+      ['inv-save-shared-btn','inv-save-fork-btn'].forEach(function(id) {
+        var el = document.getElementById(id); if (el) el.style.display = 'none';
+      });
+      var addBtn = document.getElementById('inv-save-btn');
+      if (addBtn) { addBtn.style.display = ''; addBtn.textContent = 'Add to Inventory'; }
       var errEl = document.getElementById('inv-modal-error'); if (errEl) errEl.style.display = 'none';
     }
 

@@ -1,0 +1,158 @@
+==================================================================
+  GIT & TERMINAL CHEAT SHEET — DND V2
+  Tailored to the AGENT-RULES workflow:
+  branch  ->  work  ->  push  ->  open PR  ->  YOU test  ->  YOU merge
+==================================================================
+
+------------------------------------------------------------------
+THE GOLDEN RULE
+------------------------------------------------------------------
+The agent pushes to a branch and opens a PR. Nothing more.
+YOU test the branch and YOU click merge. Merging is the one
+irreversible act and it belongs to you alone.
+Never push to main. Never merge from the branch side.
+
+
+------------------------------------------------------------------
+WHERE AM I / WHAT'S GOING ON  (run these constantly)
+------------------------------------------------------------------
+git status                 # what's changed, what branch, staged or not
+git branch                 # list local branches; * marks the current one
+git branch -a              # include remote branches (origin/...)
+git log --oneline -10      # last 10 commits, short form
+git remote -v              # show the remote (origin) URLs
+
+
+------------------------------------------------------------------
+STARTING A NEW PR  (the happy path)
+------------------------------------------------------------------
+git checkout main          # go to main
+git pull                   # get the latest main (rule 20: branch from fresh)
+git checkout -b inv-2-edit-item-core   # create + switch to the new branch
+
+# branch names: lowercase, hyphenated, match the PR (rule 19)
+#   good:  inv-2-edit-item-core
+#   good:  fe-4-resolver-into-combat
+
+
+------------------------------------------------------------------
+SWITCHING BETWEEN BRANCHES
+------------------------------------------------------------------
+git checkout main                 # switch to an existing branch
+git checkout INV-2                # switch to a branch you already made
+git fetch origin                  # learn about branches pushed elsewhere
+git checkout INV-2                # ...then this auto-tracks origin/INV-2
+
+# If git refuses to switch because of unsaved changes:
+git status                        # see what's dirty first
+git stash                         # shelve changes temporarily
+git checkout other-branch
+git stash pop                     # bring the shelved changes back
+
+
+------------------------------------------------------------------
+SAVING WORK (staging + committing)
+------------------------------------------------------------------
+git add sheet.html                # stage one file
+git add -A                        # stage everything changed
+git commit -m "INV-2 — edit item core, DM-shared / player-fork"
+
+# Made the final code commit? Last commit updates HANDOFF.md (rule 28):
+git add HANDOFF.md
+git commit -m "INV-2 — update HANDOFF"
+
+
+------------------------------------------------------------------
+PUSHING + OPENING THE PR  (then STOP)
+------------------------------------------------------------------
+git push -u origin inv-2-edit-item-core   # first push of a new branch
+git push                                  # later pushes to the same branch
+
+# Open the PR (needs the GitHub CLI 'gh'):
+gh pr create --title "INV-2 — edit item core fields" --body-file PR-inv-2-edit-item-core.md
+
+# No gh installed? Push, then open the branch on github.com and click
+# "Compare & pull request". Paste the PR .md contents as the description.
+
+# >>> AGENT STOPS HERE. You run the RUN-BEFORE-TESTING SQL, test, merge. <<<
+
+
+------------------------------------------------------------------
+CHECKING THE RIGHT CODE IS ON THE BRANCH
+------------------------------------------------------------------
+git log --oneline -5              # did my commits land?
+grep -c saveItemCore sheet.html   # 0 = the new file isn't committed here yet
+                                  # 1+ = the INV-2 edit is present
+
+# If the new file isn't on the branch: copy it in, then
+git add sheet.html && git commit -m "INV-2 — add edited sheet.html"
+
+
+------------------------------------------------------------------
+UNDOING THINGS (safe -> riskier)
+------------------------------------------------------------------
+git restore sheet.html            # discard unstaged changes to one file
+git restore --staged sheet.html   # unstage (keep the edits, just un-add)
+git checkout -- .                 # discard ALL unstaged changes (careful)
+
+git commit --amend -m "new msg"   # fix the LAST commit message
+                                  # (only before it's pushed/shared)
+
+git revert <commit-hash>          # undo a commit by making a new one
+                                  # (safe — keeps history; good for shared branches)
+
+# AVOID on shared branches: git reset --hard <hash> rewrites history.
+
+
+------------------------------------------------------------------
+SEEING WHAT CHANGED
+------------------------------------------------------------------
+git diff                          # unstaged changes
+git diff --staged                 # staged changes (what will commit)
+git diff main..INV-2              # how this branch differs from main
+git diff main..INV-2 -- sheet.html  # ...just one file
+
+
+------------------------------------------------------------------
+KEEPING A BRANCH FRESH  (if main moved while you worked)
+------------------------------------------------------------------
+git checkout main
+git pull
+git checkout inv-2-edit-item-core
+git merge main                    # pull main's new commits into your branch
+# resolve any conflicts, then: git add -A && git commit
+
+
+------------------------------------------------------------------
+AFTER THE PR IS MERGED (by you, on github.com)
+------------------------------------------------------------------
+git checkout main
+git pull                          # get the merged work locally
+git branch -d inv-2-edit-item-core   # delete the local branch (it's merged)
+# Deleting the REMOTE branch is also yours to do, on GitHub, if you want.
+
+
+------------------------------------------------------------------
+FILE / FOLDER BASICS (plain terminal, not git)
+------------------------------------------------------------------
+pwd                       # print working directory (where am I)
+ls                        # list files here
+ls -la                    # list all, including hidden (.gitignore etc.)
+cd dnd-v2                 # enter a folder
+cd ..                     # go up one folder
+cat HANDOFF.md            # print a file to the screen
+grep -n "saveItemCore" sheet.html   # find text + line numbers in a file
+
+
+------------------------------------------------------------------
+SUPABASE / THIS PROJECT — REMINDERS (not terminal, but easy to forget)
+------------------------------------------------------------------
+- Schema changes are NOT in git. Run "RUN BEFORE TESTING" SQL in the
+  Supabase SQL editor BEFORE testing a branch that needs it.
+- SQL goes in the Supabase SQL editor. JavaScript goes in your code
+  files. They are not interchangeable.
+- Additive SQL only by default: ADD COLUMN IF NOT EXISTS, new policies,
+  new RPCs. Never DROP/destructive as part of normal PR work.
+- The site lives at christian0765.github.io/dnd-v2/ — use relative
+  paths in code, never a leading slash.
+==================================================================
