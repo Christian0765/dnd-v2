@@ -5,6 +5,41 @@
 
 ## What's Been Built
 
+### weapon-builder-fields complete — `sheet.html` — Improved Add / Edit Weapon modal
+
+**What was built:**
+
+- **Reorganised modal layout** — three visual section dividers (Attack / Damage / Range) using
+  `border-top` lines and small uppercase heading spans, matching the existing design system.
+- **Ability Modifier field** — `<select id="weapon-ability-mod">` with options str / dex / con /
+  int / wis / cha / spell. Saved to and loaded from `weapons.ability_mod`. Defaults to `str`.
+- **Prof. Bonus checkbox** — `<input id="weapon-use-prof" type="checkbox">` sits inline beside the
+  Attack Bonus field. Saved to and loaded from `weapons.use_proficiency`. Defaults to checked.
+- **Inline name validation** — `<div class="form-error" id="weapon-name-error">` shown via
+  `.show` class when the user attempts to save with an empty name. Cleared on next save attempt
+  with a valid name and reset by `resetWeaponModal()` and `openEditWeapon()`.
+- **Sensible numeric bounds** — `atk_bonus` clamped −10 to 20 in JS and via `min`/`max` attrs;
+  `dice count` bounded 1 to 20; range inputs bounded 0 to 9999. Damage bonus unchanged (allows
+  negatives; no upper cap needed for penalty use-cases).
+- **UX polish** — Notes placeholder updated to "e.g. Versatile, thrown, silvered…"; Range label
+  changed to "Normal Range"; Damage Dice label updated to "Damage Dice & Bonus"; `title` attrs
+  added to compact inline inputs for screen-reader/hover hints.
+
+**Modified JS:** `saveWeapon()`, `resetWeaponModal()`, `openEditWeapon()`.
+**Modified HTML:** `#weapon-modal` in `sheet.html`.
+
+**Files changed:** `sheet.html` only.
+
+**No SQL needed:** `weapons.ability_mod` and `weapons.use_proficiency` already exist (added in
+the PR-5b-4 ALTER TABLE section of this HANDOFF). Do NOT re-run any SQL.
+
+**Not touched:** `populateWeapons` rendering, weapon→inventory or inventory→weapon cascade,
+`deleteWeapon`, weapon-send-to-attacks behaviour, inventory linking (`source_inventory_id`),
+combat math, other sections, other pages, any CSS/JS module files. The `weapon-item-linking`
+branch remains the next deferred inventory branch.
+
+---
+
 ### weapon-send-to-attacks complete — `sheet.html` — Send weapon items to Attacks tab
 
 **What was built:**
