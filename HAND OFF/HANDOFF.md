@@ -5,6 +5,71 @@
 
 ## What's Been Built
 
+### INV-2 complete — `sheet.html` — Edit item core + inventory table redesign
+
+**What was built:**
+
+*Edit item core fields (DM edits shared / players fork):*
+- The inventory edit modal now exposes item core fields (name, category, weight, value_gp,
+  requires_attunement, description) alongside the existing entry fields (quantity, equipped,
+  attuned, notes).
+- **DM** sees two buttons: **Save for Everyone** (UPDATE the shared `items` row in place) and
+  **Save as Copy** (fork). **Player** sees only **Save as Copy**.
+- Fork = new `items` row via `crypto.randomUUID()`, `original_item_id` set to the source item,
+  `source: 'player'`; the current `character_inventory` row is re-pointed at the new item_id.
+  Never runs the stacking/increment path, so it cannot collide with the `(character_id, item_id)`
+  uniqueness added in INV-1.
+- Entry fields are saved first in both modes so a combined edit persists fully.
+- Role gate is enforced server-side by RLS (`items_update_dm`), not just by hiding the DM button.
+
+*Inventory table redesign:*
+- Fixed column alignment with `table-layout: fixed` + a `<colgroup>` of explicit widths
+  (previously columns sized per-row from content and did not line up).
+- Sortable headers: Item, Type, Qty, Wt, Gold — click to sort, click again to reverse; a ▲/▼
+  arrow marks the active column. Default sort: name ascending.
+- New Weight and Gold columns (quantity × weight, quantity × value_gp).
+- Totals footer sums carried weight and total item gold value. (Delivers the carried-weight
+  calculation deferred from INV-1.)
+- Checkbox labels in the inventory modal (Equipped / Attuned / Requires Attunement) forced
+  readable on the dark background:
+  `#inventory-modal label:not(.form-label) { color: rgba(var(--light-text-rgb), 0.9); }`
+
+**New JS functions:** `saveItemCore(mode)`, `setInvSort(key)`, `sortedInventory()`.
+**Modified:** `renderInventory` (rewritten), `openEditInventory`, `openInventoryModal`,
+`resetInventoryModal`.
+**New state:** `invSort = { key, dir }`.
+
+**Files changed:** `sheet.html` only.
+
+**Not touched:** weapons, features, spells, skills, HP, currency, header, the inventory
+add/stack/delete paths, campaign.html, home.html, login.html, combat.html, all /css/ and /js/ files.
+
+**SQL run for INV-2 (do NOT re-run — already applied to live DB):**
+```sql
+-- DM-only UPDATE on shared items (players fork instead of editing in place)
+CREATE POLICY "items_update_dm" ON items
+  FOR UPDATE USING ( is_dm(campaign_id) );
+-- (items INSERT policy for members already existed from INV-1 — not re-added)
+```
+
+**Known follow-ups (not built — rule 31):**
+- `saveInventoryEntry`'s edit branch is now dead code (edit mode routes through `saveItemCore`);
+  safe to remove in a small later PR.
+- The Gold column shows item VALUE, distinct from the `currency` coin purse; surfacing the purse
+  near inventory is a possible follow-up.
+- A category change can move a weapons/armor item without the Weapons-tab/AC flow reacting —
+  handled by the two split follow-up branches below.
+
+**Next inventory work (two separate branches, one at a time, rule 21):**
+- `weapon-send-to-attacks` — weapon-category items get a "Send to Attacks" option that creates a
+  linked `weapons` row (new col `weapons.source_inventory_id`); removing the item soft-deletes the
+  linked weapon. Sent weapon starts with default combat stats the player edits.
+- `armor-ac-calculation` — auto-calculate AC from equipped armor; store split as
+  `characters.ac_calculated` and `characters.ac_override` (display = override ?? calculated).
+  DM-approval to change AC is deferred to Phase 3 (`dm_allowances`).
+
+---
+
 ### INV-1 complete — `sheet.html` — Structured Inventory (character_inventory + items)
 
 **What was built:**
@@ -29,10 +94,11 @@
 
 **Not touched:** weapons, features, spells, skills, HP, currency, header, campaign.html, home.html, login.html, combat.html, any CSS/JS files outside sheet.html.
 
-**Deferred to INV-2:**
-- Carried-weight calculation (weight column captured on create, not summed or displayed)
-- Weapons/armor auto-flow into the Weapons tab or AC calculation
-- Editing item core fields (name, category, weight) from the inventory modal
+**Deferred to INV-2:** (status after INV-2 — see INV-2 section above)
+- ~~Carried-weight calculation~~ — DONE in INV-2 (totals footer)
+- ~~Editing item core fields from the inventory modal~~ — DONE in INV-2
+- Weapons/armor auto-flow into the Weapons tab / AC calculation — STILL DEFERRED, split into
+  two follow-up branches: `weapon-send-to-attacks` and `armor-ac-calculation`.
 
 ---
 

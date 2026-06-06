@@ -241,6 +241,14 @@ to `main` is what ships.
     the final commit of every branch updates HANDOFF.md, and merging the PR merges the doc
     update atomically. HANDOFF never drifts from the code it describes.
 
+    **Always deliver HANDOFF.md (and any other doc) as a finished, complete, drop-in file —
+    never as a set of "find this / replace with that" edit instructions.** The owner replaces
+    the whole file. Edit-instruction documents have caused the owner to commit the instructions
+    by mistake instead of the actual edit. One file in, one file out. This applies to any
+    document the owner is expected to put into the repo: hand over the full file, ready to save
+    over the old one. Note the real path: HANDOFF.md lives at `HAND OFF/HANDOFF.md` (the folder
+    name contains a space), so quote the path in shell commands: `git add "HAND OFF/HANDOFF.md"`.
+
 29. **Every HANDOFF.md update must reflect:**
     - What this PR built.
     - Current file structure (if it changed).
