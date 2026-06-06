@@ -5,6 +5,49 @@
 
 ## What's Been Built
 
+### weapon-send-to-attacks complete — `sheet.html` — Send weapon items to Attacks tab
+
+**What was built:**
+
+- **Send to Attacks control** — inside the inventory edit modal, a `#inv-send-attacks-wrap` div
+  (containing a "Send to Attacks" `.btn-ghost` button and an "Already in your Attacks list."
+  indicator span) appears only when `item.category === 'weapons'` AND `!isReadOnly`.
+- **Double-send guard** — `openEditInventory` fires an async query against `weapons` for a
+  non-deleted row with `source_inventory_id === invId`. If found, the button is hidden and the
+  indicator is shown instead. The button is never shown when already sent.
+- **`sendItemToAttacks()`** — race-guard re-check (`.maybeSingle()`) first; if clear, inserts a
+  `weapons` row via `crypto.randomUUID()` with `character_id`, `name` from the item,
+  `source_inventory_id: inventoryEditId`, and defaults `atk_bonus:0, dmg_dice:'1d6',
+  dmg_bonus:0, dmg_type:'Slashing', range:'5 ft', notes:''`, `sort_order` at end of list.
+  On success: `resetInventoryModal()`, `closeModal('inventory-modal')`, then `populateWeapons()`
+  and `populateInventory()`.
+- **One-directional cascade** — `deleteInventoryEntry(invId)` soft-deletes any linked `weapons`
+  row (`source_inventory_id = invId AND deleted_at IS NULL`) after the inventory soft-delete
+  succeeds. The weapons error is logged non-fatally (does not block inventory repopulate).
+  `populateWeapons()` and `populateInventory()` run in parallel via `Promise.all`.
+- **`deleteWeapon` is NOT modified** — deleting a weapon does not touch inventory. One-directional.
+- **`resetInventoryModal`** — hides `#inv-send-attacks-wrap` on every reset.
+
+**New JS functions:** `sendItemToAttacks()`.
+**Modified:** `openEditInventory`, `deleteInventoryEntry`, `resetInventoryModal`.
+**New HTML element:** `#inv-send-attacks-wrap` (with `#inv-send-attacks-btn` and
+`#inv-send-attacks-indicator`) added to `#inventory-modal` between the item-core box and the
+save buttons.
+
+**Files changed:** `sheet.html` only.
+
+**Not touched:** weapons combat math, weapon add/edit modal behavior, `populateWeapons`
+rendering logic, `deleteWeapon`, armor/AC anything (`armor-ac-calculation` branch is still
+next deferred), inventory add/stack paths, non-weapon delete paths (except cascade added),
+campaign.html, home.html, login.html, combat.html, all /css/ and /js/ files.
+
+**SQL run for weapon-send-to-attacks (RUN BEFORE TESTING — not yet applied to live DB):**
+```sql
+ALTER TABLE weapons ADD COLUMN IF NOT EXISTS source_inventory_id UUID;
+```
+
+---
+
 ### INV-2 complete — `sheet.html` — Edit item core + inventory table redesign
 
 **What was built:**
@@ -58,15 +101,7 @@ CREATE POLICY "items_update_dm" ON items
 - The Gold column shows item VALUE, distinct from the `currency` coin purse; surfacing the purse
   near inventory is a possible follow-up.
 - A category change can move a weapons/armor item without the Weapons-tab/AC flow reacting —
-  handled by the two split follow-up branches below.
-
-**Next inventory work (two separate branches, one at a time, rule 21):**
-- `weapon-send-to-attacks` — weapon-category items get a "Send to Attacks" option that creates a
-  linked `weapons` row (new col `weapons.source_inventory_id`); removing the item soft-deletes the
-  linked weapon. Sent weapon starts with default combat stats the player edits.
-- `armor-ac-calculation` — auto-calculate AC from equipped armor; store split as
-  `characters.ac_calculated` and `characters.ac_override` (display = override ?? calculated).
-  DM-approval to change AC is deferred to Phase 3 (`dm_allowances`).
+  handled by `armor-ac-calculation` (next deferred branch).
 
 ---
 
@@ -97,8 +132,7 @@ CREATE POLICY "items_update_dm" ON items
 **Deferred to INV-2:** (status after INV-2 — see INV-2 section above)
 - ~~Carried-weight calculation~~ — DONE in INV-2 (totals footer)
 - ~~Editing item core fields from the inventory modal~~ — DONE in INV-2
-- Weapons/armor auto-flow into the Weapons tab / AC calculation — STILL DEFERRED, split into
-  two follow-up branches: `weapon-send-to-attacks` and `armor-ac-calculation`.
+- Weapons/armor auto-flow into the Weapons tab / AC calculation — weapons DONE in weapon-send-to-attacks; armor still deferred to `armor-ac-calculation`.
 
 ---
 
@@ -329,6 +363,8 @@ ALTER TABLE features ADD COLUMN IF NOT EXISTS definition JSONB DEFAULT '{}';
 - sheet.html — edit/delete controls hidden in all read-only modes; future lock toggle will work with zero rework
 - sheet.html — inventory: loads from `character_inventory` joined to `items`; add via modal (Pick Existing or Create New); edit; soft-delete; read-only mode respected
 - sheet.html — inventory stacking: Pick Existing re-adding an existing item_id increments quantity on the existing row instead of inserting a duplicate
+- sheet.html — inventory edit: item core fields editable; DM saves shared, players fork; sortable table with weight+gold totals
+- sheet.html — Send to Attacks: weapon-category items show "Send to Attacks" in edit modal; double-send guard; deleting the inventory item cascades to soft-delete the linked weapon
 
 ---
 
@@ -492,12 +528,12 @@ No SQL was run for this PR. No UI changes. No existing files touched.
 
 ---
 
-### NEXT TASK — PR 6: Layout persistence via ui_preferences
-Phase 1 complete. PR 6 wires the Customise panel's section order and hidden-section
-toggles to the `ui_preferences` table so layout state persists across sessions.
-The `ui_preferences` table is already in DND-MASTER-PLAN.md Part Two.
+### NEXT TASK — `armor-ac-calculation`
+Auto-calculate AC from equipped armor; store split as `characters.ac_calculated` and
+`characters.ac_override` (display = override ?? calculated). DM-approval to change AC
+is deferred to Phase 3 (`dm_allowances`). This is the remaining deferred inventory branch.
 
-### FE-4 — Wire resolver into combat (parallel track, after PR 6)
+### FE-4 — Wire resolver into combat (parallel track, after armor-ac-calculation)
 Feed `resolve(definition, context)` into the DM decision card in `combat.html`.
 The DM's Apply/Adjust/Override decision triggers the SEPARATE commit step
 (`commitOutcome`) that spawns `active_effects` and writes HP/resource deltas.
