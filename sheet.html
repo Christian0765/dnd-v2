@@ -807,6 +807,56 @@
       padding: 2px 7px;
     }
 
+    /* ── Inventory Section ── */
+    :root {
+      --cat-inv-weapons:   #c04040;
+      --cat-inv-armor:     #4a8aaa;
+      --cat-inv-magical:   #9a5ab5;
+      --cat-inv-resources: #c05a20;
+      --cat-inv-healing:   #3a9a5a;
+      --cat-inv-food:      #a89a30;
+      --cat-inv-misc:      #6a6a6a;
+    }
+    .inventory-table { width: 100%; border-collapse: collapse; font-family: var(--font-body); }
+    .inventory-table th {
+      font-family: var(--font-heading); font-size: 0.52rem; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--text-muted); padding: 0 6px 6px; text-align: left;
+    }
+    .inventory-table td { padding: 6px 6px; border-top: 1px solid var(--border-light); vertical-align: middle; font-size: 0.83rem; }
+    .inventory-table tr.inv-row { cursor: pointer; transition: background 0.1s; }
+    .inventory-table tr.inv-row:hover { background: rgba(196,146,10,0.07); }
+    .inv-category-pill {
+      display: inline-block; font-size: 0.58rem; font-family: var(--font-heading);
+      text-transform: uppercase; letter-spacing: 0.07em;
+      padding: 1px 6px; border-radius: 8px; color: #fff; font-weight: 700;
+    }
+    .inv-status-dot {
+      display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+      margin-right: 3px; vertical-align: middle;
+    }
+    .inv-status-dot.equipped { background: #4a8; }
+    .inv-status-dot.attuned  { background: #9a5ab5; }
+    .inv-note-preview { color: var(--text-muted); font-size: 0.75rem; font-style: italic; }
+    .item-pick-list { max-height: 200px; overflow-y: auto; border: 1px solid var(--border-light); border-radius: 6px; margin-bottom: 8px; }
+    .item-pick-row {
+      padding: 7px 10px; cursor: pointer; border-bottom: 1px solid var(--border-light);
+      font-family: var(--font-body); font-size: 0.85rem; display: flex; align-items: center; gap: 8px;
+      transition: background 0.1s;
+    }
+    .item-pick-row:last-child { border-bottom: none; }
+    .item-pick-row:hover, .item-pick-row.selected { background: rgba(196,146,10,0.12); }
+    .item-pick-row .pick-name { flex: 1; }
+    .inv-mode-bar { display: flex; gap: 0; margin-bottom: 14px; border: 1px solid var(--border-light); border-radius: 6px; overflow: hidden; }
+    .inv-mode-btn {
+      flex: 1; background: transparent; border: none; color: var(--text-muted);
+      font-family: var(--font-heading); font-size: 0.6rem; text-transform: uppercase;
+      letter-spacing: 0.08em; padding: 7px 4px; cursor: pointer; transition: background 0.15s, color 0.15s;
+    }
+    .inv-mode-btn.active { background: var(--gold); color: var(--bg); }
+    .inv-qty-cell { width: 38px; }
+    .inv-qty-cell input { width: 36px; text-align: center; background: transparent; border: 1px solid var(--border-light); border-radius: 4px; color: var(--ink); font-family: var(--font-body); font-size: 0.82rem; padding: 1px 2px; }
+    .inv-empty { color: var(--text-muted); font-family: var(--font-body); font-size: 0.85rem; font-style: italic; text-align: center; padding: 16px 0; }
+
     /* ══════════════════════════════════════
        CUSTOMISE SYSTEM
     ══════════════════════════════════════ */
@@ -1531,6 +1581,14 @@
         <button id="add-spell-btn" class="btn btn-ghost" onclick="openAddSpell()">＋ Add Spell</button>
       </div>
 
+      <!-- ── Inventory ── -->
+      <div class="sheet-section-wrap" id="section-inventory">
+        <div class="section-handle">&#x283F;</div>
+        <div class="sec">Inventory</div>
+        <div id="inventory-list"></div>
+        <button id="add-item-btn" class="btn btn-gold" style="margin-top:10px" onclick="openInventoryModal()">&#xFF0B; Add Item</button>
+      </div>
+
     </div>
   </div>
 
@@ -1667,6 +1725,90 @@
     </div>
   </div>
 
+  <!-- ── Inventory Modal ── -->
+  <div class="modal-overlay" id="inventory-modal">
+    <div class="modal-box" style="max-width:520px">
+      <button class="modal-close" onclick="resetInventoryModal();closeModal('inventory-modal')">&#x2715;</button>
+      <div class="modal-title" id="inv-modal-title">Add Item</div>
+      <div class="modal-sub" id="inv-modal-sub">Choose how to add</div>
+
+      <div class="inv-mode-bar" id="inv-mode-bar">
+        <button class="inv-mode-btn active" id="inv-mode-btn-pick" onclick="setInventoryMode('pick')">Pick Existing</button>
+        <button class="inv-mode-btn" id="inv-mode-btn-create" onclick="setInventoryMode('create')">Create New</button>
+      </div>
+
+      <div id="inv-pick-panel">
+        <div class="form-field">
+          <label class="form-label">Search items</label>
+          <input id="inv-pick-search" type="text" class="form-input" placeholder="Type to filter&hellip;" oninput="filterItemPickList()">
+        </div>
+        <div class="item-pick-list" id="inv-pick-list"></div>
+      </div>
+
+      <div id="inv-create-panel" style="display:none">
+        <div class="form-field">
+          <label class="form-label">Name *</label>
+          <input id="inv-create-name" type="text" class="form-input" placeholder="e.g. Longsword">
+        </div>
+        <div style="display:flex;gap:10px">
+          <div class="form-field" style="flex:1">
+            <label class="form-label">Category</label>
+            <select id="inv-create-category" class="form-input">
+              <option value="misc">Misc</option>
+              <option value="weapons">Weapons</option>
+              <option value="armor">Armor</option>
+              <option value="magical">Magical</option>
+              <option value="resources">Resources</option>
+              <option value="healing">Healing</option>
+              <option value="food">Food</option>
+            </select>
+          </div>
+          <div class="form-field" style="flex:1">
+            <label class="form-label">Weight (lb)</label>
+            <input id="inv-create-weight" type="number" min="0" step="0.1" value="0" class="form-input">
+          </div>
+          <div class="form-field" style="flex:1">
+            <label class="form-label">Value (gp)</label>
+            <input id="inv-create-value" type="number" min="0" step="0.01" value="0" class="form-input">
+          </div>
+        </div>
+        <div style="display:flex;gap:16px;align-items:center;margin-bottom:10px">
+          <label style="display:flex;align-items:center;gap:6px;font-family:var(--font-body);font-size:0.85rem;cursor:pointer">
+            <input type="checkbox" id="inv-create-attunement"> Requires Attunement
+          </label>
+        </div>
+        <div class="form-field">
+          <label class="form-label">Description</label>
+          <textarea id="inv-create-desc" class="form-input" rows="2" style="resize:vertical"></textarea>
+        </div>
+      </div>
+
+      <div id="inv-entry-fields">
+        <div style="display:flex;gap:10px;align-items:flex-end">
+          <div class="form-field" style="width:72px">
+            <label class="form-label">Qty</label>
+            <input id="inv-entry-qty" type="number" min="1" value="1" class="form-input">
+          </div>
+          <div style="display:flex;gap:16px;align-items:center;padding-bottom:6px">
+            <label style="display:flex;align-items:center;gap:6px;font-family:var(--font-body);font-size:0.85rem;cursor:pointer">
+              <input type="checkbox" id="inv-entry-equipped"> Equipped
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;font-family:var(--font-body);font-size:0.85rem;cursor:pointer">
+              <input type="checkbox" id="inv-entry-attuned"> Attuned
+            </label>
+          </div>
+        </div>
+        <div class="form-field">
+          <label class="form-label">Notes</label>
+          <input id="inv-entry-notes" type="text" class="form-input" placeholder="Optional note for this item">
+        </div>
+      </div>
+
+      <div class="form-error" id="inv-modal-error" style="display:none"></div>
+      <button class="btn btn-gold" id="inv-save-btn" onclick="saveInventoryEntry()">Add to Inventory</button>
+    </div>
+  </div>
+
   <!-- ── Customise Modal ── -->
   <div class="modal-overlay" id="customise-modal">
     <div class="modal-box">
@@ -1727,6 +1869,11 @@
     let cachedWeapons    = [];
     let cachedFeatures   = [];
     let cachedSpells     = [];
+    let cachedInventory      = [];
+    let inventoryEditId      = null;
+    let selectedItemId       = null;
+    let inventoryMode        = 'pick';
+    let cachedCampaignItems  = [];
 
     // ─── On Load Sequence ────────────────────────────────────────────────────
     document.addEventListener('DOMContentLoaded', async function () {
@@ -1821,6 +1968,7 @@
         await populateFeatures();
         await populateSpellSlots();
         await populateSpells();
+        await populateInventory();
 
         if (isReadOnly) {
           applyReadOnlyMode();
@@ -1864,6 +2012,7 @@
           await populateFeatures();
           await populateSpellSlots();
           await populateSpells();
+          await populateInventory();
         }
 
         subscribeToCharacter();
@@ -3228,6 +3377,291 @@
       document.documentElement.style.setProperty('--accent-rgb', hexToRgb(hex));
     }
 
+
+    // --- Inventory Helpers ---
+
+    function invCategoryColor(cat) {
+      var map = {
+        weapons:   'var(--cat-inv-weapons)',
+        armor:     'var(--cat-inv-armor)',
+        magical:   'var(--cat-inv-magical)',
+        resources: 'var(--cat-inv-resources)',
+        healing:   'var(--cat-inv-healing)',
+        food:      'var(--cat-inv-food)',
+        misc:      'var(--cat-inv-misc)'
+      };
+      return map[cat] || map['misc'];
+    }
+
+    async function populateInventory() {
+      if (!characterId) return;
+      var result = await supabaseClient
+        .from('character_inventory')
+        .select('*, items(*)')
+        .eq('character_id', characterId)
+        .is('deleted_at', null)
+        .order('created_at', { ascending: true });
+      if (result.error) {
+        console.error('[populateInventory] Failed:', result.error.message);
+        return;
+      }
+      cachedInventory = result.data || [];
+      renderInventory();
+    }
+
+    function renderInventory() {
+      var container = document.getElementById('inventory-list');
+      if (!container) return;
+      if (!cachedInventory.length) {
+        container.innerHTML = '<div class="inv-empty">No items yet — add one below.</div>';
+        return;
+      }
+      var rows = cachedInventory.map(function(entry) {
+        var item = entry.items || {};
+        var cat  = item.category || 'misc';
+        var pillColor = invCategoryColor(cat);
+        var equippedDot = entry.equipped ? '<span class="inv-status-dot equipped" title="Equipped"></span>' : '';
+        var attuedDot   = entry.attuned  ? '<span class="inv-status-dot attuned"  title="Attuned"></span>'  : '';
+        var noteHtml    = entry.notes    ? '<div class="inv-note-preview">' + escHtml(entry.notes) + '</div>' : '';
+        return '<tr class="inv-row" data-inv-id="' + escHtml(entry.id) + '">' +
+          '<td>' + escHtml(item.name || '—') + noteHtml + '</td>' +
+          '<td><span class="inv-category-pill" style="background:' + pillColor + '">' + escHtml(cat) + '</span></td>' +
+          '<td>' + equippedDot + attuedDot + '</td>' +
+          '<td>' + (entry.quantity || 1) + '</td>' +
+          '<td><button class="delete-btn" data-inv-id="' + escHtml(entry.id) + '">✕</button></td>' +
+          '</tr>';
+      }).join('');
+      container.innerHTML =
+        '<table class="inventory-table">' +
+          '<thead><tr><th>Item</th><th>Type</th><th>Status</th><th>Qty</th><th></th></tr></thead>' +
+          '<tbody>' + rows + '</tbody>' +
+          '</table>';
+      container.querySelectorAll('tr.inv-row').forEach(function(tr) {
+        var invId = tr.dataset.invId;
+        tr.addEventListener('click', function(e) {
+          if (e.target.classList.contains('delete-btn') || e.target.closest('.delete-btn')) return;
+          openEditInventory(invId);
+        });
+      });
+      container.querySelectorAll('.delete-btn[data-inv-id]').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          deleteInventoryEntry(btn.dataset.invId);
+        });
+      });
+    }
+
+    async function openInventoryModal() {
+      inventoryEditId = null;
+      selectedItemId  = null;
+      document.getElementById('inv-modal-title').textContent = 'Add Item';
+      document.getElementById('inv-modal-sub').textContent   = 'Choose how to add';
+      document.getElementById('inv-mode-bar').style.display  = 'flex';
+      document.getElementById('inv-save-btn').textContent    = 'Add to Inventory';
+      document.getElementById('inv-modal-error').style.display = 'none';
+      setInventoryMode('pick');
+      await loadCampaignItems();
+      openModal('inventory-modal');
+    }
+
+    function setInventoryMode(mode) {
+      inventoryMode = mode;
+      document.getElementById('inv-pick-panel').style.display   = mode === 'pick'   ? '' : 'none';
+      document.getElementById('inv-create-panel').style.display = mode === 'create' ? '' : 'none';
+      document.getElementById('inv-mode-btn-pick').classList.toggle('active',   mode === 'pick');
+      document.getElementById('inv-mode-btn-create').classList.toggle('active', mode === 'create');
+    }
+
+    async function loadCampaignItems() {
+      if (!campaignId) return;
+      var result = await supabaseClient
+        .from('items')
+        .select('id, name, category, requires_attunement, icon')
+        .eq('campaign_id', campaignId)
+        .is('deleted_at', null)
+        .order('name', { ascending: true });
+      if (result.error) {
+        console.error('[loadCampaignItems] Failed:', result.error.message);
+        cachedCampaignItems = [];
+      } else {
+        cachedCampaignItems = result.data || [];
+      }
+      renderItemPickList(cachedCampaignItems);
+    }
+
+    function filterItemPickList() {
+      var q = (document.getElementById('inv-pick-search').value || '').toLowerCase();
+      var filtered = cachedCampaignItems.filter(function(it) { return it.name.toLowerCase().includes(q); });
+      renderItemPickList(filtered);
+    }
+
+    function renderItemPickList(items) {
+      var list = document.getElementById('inv-pick-list');
+      if (!list) return;
+      if (!items.length) {
+        list.innerHTML = '<div class="item-pick-row" style="cursor:default;color:var(--text-muted)">No items found</div>';
+        return;
+      }
+      list.innerHTML = items.map(function(it) {
+        var sel = it.id === selectedItemId ? ' selected' : '';
+        var cat = it.category || 'misc';
+        var pillColor = invCategoryColor(cat);
+        return '<div class="item-pick-row' + sel + '" data-item-id="' + escHtml(it.id) + '">' +
+          '<span class="inv-category-pill" style="background:' + pillColor + '">' + escHtml(cat) + '</span>' +
+          '<span class="pick-name">' + escHtml(it.name) + '</span>' +
+          (it.requires_attunement ? '<span style="font-size:0.7rem;color:var(--text-muted)">(attunement)</span>' : '') +
+          '</div>';
+      }).join('');
+      list.querySelectorAll('.item-pick-row[data-item-id]').forEach(function(row) {
+        row.addEventListener('click', function() { selectPickItem(row.dataset.itemId); });
+      });
+    }
+
+    function selectPickItem(itemId) {
+      selectedItemId = itemId;
+      document.querySelectorAll('#inv-pick-list .item-pick-row').forEach(function(r) {
+        r.classList.toggle('selected', r.dataset.itemId === itemId);
+      });
+    }
+
+    async function saveInventoryEntry() {
+      var errEl = document.getElementById('inv-modal-error');
+      errEl.style.display = 'none';
+      var qty      = parseInt(document.getElementById('inv-entry-qty').value) || 1;
+      var equipped = document.getElementById('inv-entry-equipped').checked;
+      var attuned  = document.getElementById('inv-entry-attuned').checked;
+      var notes    = document.getElementById('inv-entry-notes').value.trim();
+
+      if (inventoryEditId) {
+        var upd = await supabaseClient.from('character_inventory')
+          .update({ quantity: qty, equipped: equipped, attuned: attuned, notes: notes,
+                    updated_at: new Date().toISOString() })
+          .eq('id', inventoryEditId);
+        if (upd.error) {
+          console.error('[saveInventoryEntry] Update failed:', upd.error.message);
+          errEl.textContent = 'Save failed: ' + upd.error.message;
+          errEl.style.display = '';
+          return;
+        }
+        resetInventoryModal();
+        closeModal('inventory-modal');
+        await populateInventory();
+        return;
+      }
+
+      if (inventoryMode === 'create') {
+        var name = document.getElementById('inv-create-name').value.trim();
+        if (!name) { errEl.textContent = 'Item name is required.'; errEl.style.display = ''; return; }
+        var category = document.getElementById('inv-create-category').value;
+        var weight   = parseFloat(document.getElementById('inv-create-weight').value) || 0;
+        var valueGp  = parseFloat(document.getElementById('inv-create-value').value)  || 0;
+        var reqAttn  = document.getElementById('inv-create-attunement').checked;
+        var desc     = document.getElementById('inv-create-desc').value.trim();
+        var itemId   = crypto.randomUUID();
+        var itemIns  = await supabaseClient.from('items').insert({
+          id: itemId, campaign_id: campaignId, name: name, category: category,
+          weight: weight, value_gp: valueGp, requires_attunement: reqAttn,
+          description: desc, source: 'player'
+        });
+        if (itemIns.error) {
+          console.error('[saveInventoryEntry] Item insert failed:', itemIns.error.message);
+          errEl.textContent = 'Could not create item: ' + itemIns.error.message;
+          errEl.style.display = '';
+          return;
+        }
+        selectedItemId = itemId;
+      }
+
+      if (!selectedItemId) {
+        errEl.textContent = 'Please select an item from the list.';
+        errEl.style.display = '';
+        return;
+      }
+
+      var existingRow = await supabaseClient.from('character_inventory')
+        .select('id, quantity')
+        .eq('character_id', characterId)
+        .eq('item_id', selectedItemId)
+        .is('deleted_at', null)
+        .maybeSingle();
+      if (existingRow.error) {
+        console.error('[saveInventoryEntry] Existence check failed:', existingRow.error.message);
+        errEl.textContent = 'Could not check inventory: ' + existingRow.error.message;
+        errEl.style.display = '';
+        return;
+      }
+      if (existingRow.data) {
+        var stackUpd = await supabaseClient.from('character_inventory')
+          .update({ quantity: existingRow.data.quantity + qty, updated_at: new Date().toISOString() })
+          .eq('id', existingRow.data.id);
+        if (stackUpd.error) {
+          console.error('[saveInventoryEntry] Stack update failed:', stackUpd.error.message);
+          errEl.textContent = 'Could not update quantity: ' + stackUpd.error.message;
+          errEl.style.display = '';
+          return;
+        }
+      } else {
+        var entryId  = crypto.randomUUID();
+        var entryIns = await supabaseClient.from('character_inventory').insert({
+          id: entryId, character_id: characterId, item_id: selectedItemId,
+          quantity: qty, equipped: equipped, attuned: attuned, notes: notes
+        });
+        if (entryIns.error) {
+          console.error('[saveInventoryEntry] Entry insert failed:', entryIns.error.message);
+          errEl.textContent = 'Could not add to inventory: ' + entryIns.error.message;
+          errEl.style.display = '';
+          return;
+        }
+      }
+      resetInventoryModal();
+      closeModal('inventory-modal');
+      await populateInventory();
+    }
+
+    function openEditInventory(invId) {
+      var entry = cachedInventory.find(function(e) { return e.id === invId; });
+      if (!entry) return;
+      inventoryEditId = invId;
+      selectedItemId  = entry.item_id;
+      var item = entry.items || {};
+      document.getElementById('inv-modal-title').textContent  = 'Edit: ' + escHtml(item.name || 'Item');
+      document.getElementById('inv-modal-sub').textContent    = 'Update inventory entry';
+      document.getElementById('inv-mode-bar').style.display   = 'none';
+      document.getElementById('inv-pick-panel').style.display   = 'none';
+      document.getElementById('inv-create-panel').style.display = 'none';
+      document.getElementById('inv-entry-qty').value        = entry.quantity || 1;
+      document.getElementById('inv-entry-equipped').checked = entry.equipped || false;
+      document.getElementById('inv-entry-attuned').checked  = entry.attuned  || false;
+      document.getElementById('inv-entry-notes').value      = entry.notes || '';
+      document.getElementById('inv-save-btn').textContent   = 'Save Changes';
+      document.getElementById('inv-modal-error').style.display = 'none';
+      openModal('inventory-modal');
+    }
+
+    async function deleteInventoryEntry(invId) {
+      var del = await supabaseClient.from('character_inventory')
+        .update({ deleted_at: new Date().toISOString() })
+        .eq('id', invId);
+      if (del.error) { console.error('[deleteInventoryEntry] Failed:', del.error.message); return; }
+      await populateInventory();
+    }
+
+    function resetInventoryModal() {
+      inventoryEditId = null;
+      selectedItemId  = null;
+      inventoryMode   = 'pick';
+      ['inv-create-name','inv-create-weight','inv-create-value','inv-create-desc',
+       'inv-entry-notes','inv-pick-search'].forEach(function(id) {
+        var el = document.getElementById(id); if (el) el.value = '';
+      });
+      ['inv-create-attunement','inv-entry-equipped','inv-entry-attuned'].forEach(function(id) {
+        var el = document.getElementById(id); if (el) el.checked = false;
+      });
+      var qtyEl = document.getElementById('inv-entry-qty'); if (qtyEl) qtyEl.value = '1';
+      var catEl = document.getElementById('inv-create-category'); if (catEl) catEl.value = 'misc';
+      var errEl = document.getElementById('inv-modal-error'); if (errEl) errEl.style.display = 'none';
+    }
+
     // ─── Read-Only Mode ───────────────────────────────────────────────────────
     function applyReadOnlyMode() {
       const pill = document.querySelector('.sync-status');
@@ -3246,6 +3680,8 @@
       if (addCantripBtn) addCantripBtn.style.display = 'none';
       var addSpellBtn = document.getElementById('add-spell-btn');
       if (addSpellBtn) addSpellBtn.style.display = 'none';
+      var addItemBtn = document.getElementById('add-item-btn');
+      if (addItemBtn) addItemBtn.style.display = 'none';
       // Disable condition pills and exhaustion buttons
       document.querySelectorAll('.condition-pill').forEach(function(p) {
         p.onclick = null;
@@ -3433,7 +3869,8 @@
       { id: 'section-backstory',      name: 'Backstory' },
       { id: 'section-conditions',     name: 'Conditions' },
       { id: 'section-spell-slots',    name: 'Spell Slots' },
-      { id: 'section-spells',         name: 'Spells' }
+      { id: 'section-spells',         name: 'Spells' },
+      { id: 'section-inventory',     name: 'Inventory' }
     ];
 
     const DEFAULT_ORDER = SECTIONS.map(s => s.id);

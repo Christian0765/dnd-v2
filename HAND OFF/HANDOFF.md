@@ -5,6 +5,59 @@
 
 ## What's Been Built
 
+### INV-1 complete — `sheet.html` — Structured Inventory (character_inventory + items)
+
+**What was built:**
+- New **Inventory section** on the character sheet (`#section-inventory`), added to the `SECTIONS` array so it appears in the Customise panel and can be reordered/hidden.
+- Each `character_inventory` row is joined to its `items` row via `.select('*, items(*)')` and rendered as a table: name, category pill (color-coded), qty, equipped dot (green), attuned dot (purple), per-item notes, and a ✕ delete button.
+- **"Add Item" modal** with two modes, switchable via a mode bar:
+  - **Pick Existing** — searches all non-deleted items scoped to the campaign (`campaign_id`), renders a scrollable pick list; selecting a row stores `selectedItemId`.
+  - **Create New** — name (required), category (7-value enum: weapons/armor/magical/resources/healing/food/misc), weight_lb, value_gp, requires_attunement checkbox, description.
+  - Both modes share inventory-entry fields: quantity, equipped checkbox, attuned checkbox, notes.
+- **Edit** — clicking any inventory row opens the same modal pre-filled in edit mode; save issues a field-level UPDATE on `character_inventory`. Item core fields (name, category, weight) are not re-editable from this modal (deferred to INV-2).
+- **Stacking** — "Pick Existing" re-adding an item the character already has increments the existing row's `quantity` instead of inserting a second row. "Create New" always inserts (brand-new item, no existing row to stack onto).
+- **Delete** — soft delete only: sets `deleted_at = new Date().toISOString()` on `character_inventory`. Never `.delete()` (rule 11).
+- **Read-only mode** — "Add Item" button hidden by `applyReadOnlyMode()`; delete buttons and row clicks are not rendered for read-only viewers.
+- All patterns follow the existing weapon/feature implementation: `crypto.randomUUID()` for all inserts (rule 15), `.maybeSingle()` never `.single()` (rule 14), error-checked Supabase calls (rule 12), `escHtml()` on user strings.
+
+**New JS functions (13 total):**
+`invCategoryColor`, `populateInventory`, `renderInventory`, `openInventoryModal`, `setInventoryMode`, `loadCampaignItems`, `filterItemPickList`, `renderItemPickList`, `selectPickItem`, `saveInventoryEntry`, `openEditInventory`, `deleteInventoryEntry`, `resetInventoryModal`
+
+**New state variables:** `cachedInventory`, `inventoryEditId`, `selectedItemId`, `inventoryMode`, `cachedCampaignItems`
+
+**Files changed:** `sheet.html` only.
+
+**Not touched:** weapons, features, spells, skills, HP, currency, header, campaign.html, home.html, login.html, combat.html, any CSS/JS files outside sheet.html.
+
+**Deferred to INV-2:**
+- Carried-weight calculation (weight column captured on create, not summed or displayed)
+- Weapons/armor auto-flow into the Weapons tab or AC calculation
+- Editing item core fields (name, category, weight) from the inventory modal
+
+---
+
+**Bug fix — INV-1 stacking (this PR):**
+- `saveInventoryEntry` insert path now checks for an existing non-deleted `character_inventory` row with the same `character_id` + `item_id`. If found, increments `quantity` via UPDATE; if not found, inserts as before. Scoped to current character only — never merges across characters. Edit and delete paths are unchanged.
+
+**Schema changes applied to live DB during INV-1 session (do NOT re-run):**
+- `character_inventory` table: `deleted_at TIMESTAMPTZ` and `created_at TIMESTAMPTZ DEFAULT NOW()` columns added
+- `items` table: `requires_attunement BOOLEAN DEFAULT false`, `is_public BOOLEAN DEFAULT false`, `original_item_id UUID` columns added
+- RLS policy `character_inventory_select` added on `character_inventory`
+- RLS policy `character_inventory_write` added on `character_inventory`
+
+**Schema changes applied to live DB in previous sessions (do NOT re-run):**
+- `characters` table: `conditions JSONB DEFAULT '[]'` and `exhaustion INT DEFAULT 0` columns added
+- `features` constraint `features_category_check` widened to include all category values
+- `adjust_spell_slot` RPC created
+- `spell_slots_write_dm` RLS policy added
+
+**Undocumented RLS helpers in live DB (discovered during 5b-5 testing):**
+- `in_campaign(campaign_id UUID)` — returns true if the calling user has a membership row for that campaign
+- `is_dm(campaign_id UUID)` — returns true if the calling user has `role = 'dm'` in that campaign
+- These are referenced by RLS policies on several tables. If you add a new table and get 403 errors, add policies using these helpers.
+
+---
+
 ### fix-weapon-delete-hitbox complete — `sheet.html` — Weapon delete button no longer opens edit modal
 
 **Bug fixed:**
@@ -208,6 +261,8 @@ ALTER TABLE features ADD COLUMN IF NOT EXISTS definition JSONB DEFAULT '{}';
 - sheet.html — weapons: click row to edit, ✕ to soft-delete (confirm step)
 - sheet.html — features/cantrips/spells: click card/chip to edit, ✕ to soft-delete (confirm step)
 - sheet.html — edit/delete controls hidden in all read-only modes; future lock toggle will work with zero rework
+- sheet.html — inventory: loads from `character_inventory` joined to `items`; add via modal (Pick Existing or Create New); edit; soft-delete; read-only mode respected
+- sheet.html — inventory stacking: Pick Existing re-adding an existing item_id increments quantity on the existing row instead of inserting a duplicate
 
 ---
 
